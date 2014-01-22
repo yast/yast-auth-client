@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE profile SYSTEM "/usr/share/autoinstall/dtd/profile.dtd">
+<profile xmlns="http://www.suse.com/1.0/yast2ns" xmlns:config="http://www.suse.com/1.0/configns">
+<auth-client>
+<oes config:type="boolean">false</oes>
+<nssldap config:type="boolean">false</nssldap>
+<sssd config:type="boolean">true</sssd>
+<sssd_config>
+<sssd> 
+   <config_file_version config:type="integer">2<config_file_version>
+   <services>nss,pam,autofs</services>
+   <domains>default</default>
+</sssd> 
+<pam>
+</pam>
+<nss> 
+<auth_domains config:type="list">
+ <domain>
+    <domain_name>default</domain_name>
+    <ldap_uri>ldap://ldap.suse.de</ldap_uri>
+    <ldap_search_base>dc=suse,dc=de</ldap_search_base> 
+    <ldap_schema>rfc2307bis</ldap_schema>
+    <id_provider>ldap</id_provider>
+    <ldap_id_use_start_tls config:type="boolean">True</ldap_id_use_start_tls>
+    <enumerate config:type="boolean">False</enumerate>
+    <cache_credentials config:type="boolean">False</cache_credentials>
+    <chpass_provider>ldap</chpass_provider>
+    <auth_provider>ldap</auth_provider>
+    <ldap_tls_reqcert>never</ldap_tls_reqcert>
+    <ldap_autofs_search_base>ou=mounts,dc=suse,dc=de</ldap_autofs_search_base>
+    <ldap_autofs_map_object_class>nisMap</ldap_autofs_map_object_class>
+    <ldap_autofs_map_name>nisMapName</ldap_autofs_map_name>
+    <ldap_autofs_entry_object_class>nisObject</ldap_autofs_entry_object_class>
+    <ldap_autofs_entry_value>nisMapEntry</ldap_autofs_entry_value>
+    <ldap_autofs_entry_key>cn</ldap_autofs_entry_key>
+  </domains>
+</auth_domains> 
+</sssd_config>
+</auth-client>
