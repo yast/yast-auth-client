@@ -1,0 +1,13 @@
+1. Setup a server providing ldap-server & nfs server.
+2. Export a directory via nfs-server 
+3. Create autfs maps in ldap-server
+4. Setup an other machine as sssd client of this server
+5. Try to change in the exported directory on the clien
+
+Setup via autoyast:
+Server:
+nfs and ldap server > test2-server.xml
+ldap entries > test2-ldap.ldif
+
+Client
+sssd configuration >  test2-sssd.xml

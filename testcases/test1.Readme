@@ -1,0 +1,36 @@
+Testing sssd for LDAP in SUSE network
+1. Configure the server as ldap client with sssd.
+Create following /etc/sssd/sssd.conf
+----------------------------------------------------- 
+[sssd] 
+config_file_version = 2 
+services = nss,pam,autofs 
+domains = default 
+[pam] 
+[nss] 
+[domain/default] 
+ldap_uri = ldap://ldap.suse.de 
+ldap_search_base = dc=suse,dc=de 
+ldap_schema = rfc2307bis 
+id_provider = ldap 
+ldap_id_use_start_tls = True 
+enumerate = False 
+cache_credentials = False 
+chpass_provider = ldap 
+auth_provider = ldap 
+ldap_tls_reqcert=never 
+ldap_autofs_search_base = ou=mounts,dc=suse,dc=de 
+ldap_autofs_map_object_class = nisMap 
+ldap_autofs_map_name = nisMapName 
+ldap_autofs_entry_object_class = nisObject 
+ldap_autofs_entry_value = nisMapEntry 
+ldap_autofs_entry_key = cn 
+-------------------------------- 
+This configuration can be created via autyast. 
+Correspondig xml file is: test1-sssd.xml
+2. Now sssd and autofs must be (re)restart: 
+systemctl start sssd.service 
+systemctl start autofs.service
+3. The test is to list the /mount directory ls /mount/*
+
+

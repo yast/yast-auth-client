@@ -1,0 +1,7 @@
+-------------------------------------------------------------------
+Tue Jan 14 15:07:39 UTC 2014 - varkoly@suse.com
+
+- Initial version of yast2-auth-client module. This module will
+  subtituate the yast2 modules: yast2-ldap-client yast2-kerberos-client
+  yast2-samba-client and provides multi domain authentication
+
