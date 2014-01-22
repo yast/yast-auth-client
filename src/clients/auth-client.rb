@@ -19,13 +19,12 @@
 # current contact information at www.novell.com.
 # ------------------------------------------------------------------------------
 
-# File: clients/auth-client.ycp
+# File: clients/auth-client.rb
 # Module:       Configuration of authentication client
 # Summary:      Client file, including commandline handlers
 # Authors:      Peter Varkoly <varkoly@suse.com>
 #               Christian Kornacker <ckornacker@suse.com>
 #
-# $Id$
 
 #**
 # <h3>Configuration of the authentication client</h3>

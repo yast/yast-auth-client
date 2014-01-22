@@ -25,7 +25,6 @@
 # Authors:      Peter Varkoly <varkoly@suse.com>
 #               Christian Kornacker <ckornacker@suse.com>
 #
-# $Id$
 
 module Yast
   module AuthClientWizardsInclude

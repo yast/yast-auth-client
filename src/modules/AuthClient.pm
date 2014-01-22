@@ -26,7 +26,6 @@
 # Authors:      Peter Varkoly <varkoly@suse.com>
 #               Christian Kornacker <ckornacker@suse.com>
 #
-# $Id$
 package AuthClient;
 
 use strict;
@@ -116,7 +115,7 @@ sub Read
        {
            foreach my $p ( $sssd_conf->Parameters($s) )
            {
-	       $auth->{"sssd_conf"}->{$s}->{$p} = $sssd_conf->val($s,$p);
+               $auth->{"sssd_conf"}->{$s}->{$p} = $sssd_conf->val($s,$p);
            }
        }
     }
@@ -196,7 +195,7 @@ y2milestone("Auth Hash after editing".Dumper($auth));
        if( "##DeleteValue##" eq $auth->{"sssd_conf"}->{$s}->{$p} )
        {
           $sssd_conf->delval( $s, $p );
-	  next;
+          next;
        }
        if( ! $sssd_conf->exists( $s, $p ) )
        {

@@ -126,11 +126,11 @@ auth_domains =
   element auth_domains {
     LIST,
     element domain {
-	element min_id{ INTEGER }? &
-	element max_id{ INTEGER }? &
-	element enumerate{ BOOLEAN }? &
-	element force_timeout{ INTEGER }? &
-	element entry_cache_timeout{ INTEGER }? &
+        element min_id{ INTEGER }? &
+        element max_id{ INTEGER }? &
+        element enumerate{ BOOLEAN }? &
+        element force_timeout{ INTEGER }? &
+        element entry_cache_timeout{ INTEGER }? &
         element entry_cache_user_timeout{ INTEGER }? &
         element entry_cache_group_timeout{ INTEGER }? &
         element entry_cache_netgroup_timeout{ INTEGER }? &

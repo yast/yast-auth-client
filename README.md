@@ -6,7 +6,7 @@ With this YaST2 module you can configure the authentication on your machine
 Features
 --------
 
-  * Configure authntication via sssd
+  * Configure authentication via sssd
   * Multi domain facility
 
 Installation
