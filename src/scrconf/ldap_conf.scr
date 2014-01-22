@@ -21,7 +21,6 @@
  *   Write(.etc.ldap_conf.v."/etc/ldap/conf".base, "dc=myodmain, dc=com")
  *   (true)
  *
- * $Id$
  *
  *    .etc.ldap_conf
  */

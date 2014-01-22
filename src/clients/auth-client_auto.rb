@@ -25,7 +25,6 @@
 # Authors:      Peter Varkoly <varkoly@suse.com>
 #               Christian Kornacker <ckornacker@suse.com>
 #
-# $Id$
 # This is a client for autoinstallation. It takes its arguments,
 # goes through the configuration and return the setting.
 # Does not do any changes to the configuration.
@@ -60,32 +59,32 @@ module Yast
       Builtins.y2milestones("param=%1", @param)
       case @func
         when "Import"
-	  @ret = AuthClient.Import(@param)
-	when "Summary"
-	  @ret = AuthClient.Summary()
-	when "Reset"
-	  AuthClient.Import({})
-	  AuthClient.SetModified(false)
-	  @ret = {}
-	when "Change"
-	  AuthClient.SetModified(true)
-	when "Export"
-	  @ret = AuthClient.Export
-	when "Read"
-	  AuthClient.Read
-	  @ret = AuthClient.Export
-	when "GetModified"
-	  @ret = AuthClient.GetModified
-	when "SetModified"
-	  AuthClient.SetModified(true)
-	  @ret = true
-	when "Write"
-	  AuthClient.Write
-	when "Packages"
-	  @ret = { "install" => ["sssd","krb5-client" ], "remove" => [] }
-	else
-	  Builtins.y2error("Unknown function: %1", @func)
-	  @ret = false
+          @ret = AuthClient.Import(@param)
+        when "Summary"
+          @ret = AuthClient.Summary()
+        when "Reset"
+          AuthClient.Import({})
+          AuthClient.SetModified(false)
+          @ret = {}
+        when "Change"
+          AuthClient.SetModified(true)
+        when "Export"
+          @ret = AuthClient.Export
+        when "Read"
+          AuthClient.Read
+          @ret = AuthClient.Export
+        when "GetModified"
+          @ret = AuthClient.GetModified
+        when "SetModified"
+          AuthClient.SetModified(true)
+          @ret = true
+        when "Write"
+          AuthClient.Write
+        when "Packages"
+          @ret = { "install" => ["sssd","krb5-client" ], "remove" => [] }
+        else
+          Builtins.y2error("Unknown function: %1", @func)
+          @ret = false
       end
       Builtins.y2debug("ret=%1", @ret)
       Builtins.y2milestone("AuthClient auto finished")

@@ -4,7 +4,6 @@
  * Summary:
  *   SCR Agent for reading/writing /etc/nscd.conf using the ini-agent
  *
- * $Id$
  *
  *    .etc.ldap_conf
  */

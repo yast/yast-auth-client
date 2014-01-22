@@ -22,7 +22,7 @@ X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,krb5
 Icon=yast-ldap
 Exec=xdg-su -c "/sbin/yast2 auth-client"
 
-Name=LDAP Client
+Name=Authentication Client
 GenericName=Configure the authentication client (sssd)
 StartupNotify=true
 
