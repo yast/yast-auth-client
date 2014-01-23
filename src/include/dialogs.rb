@@ -45,17 +45,17 @@ module Yast
         _HELP=""
         parameters.each { |parameter|
             _DESC = GetDescription(parameter)
-            if( _DESC == "" )
+            if _DESC == ""
                 _HELP = _HELP + _("There is no help for this parameter.") + parameter
             else
                     _HELP = _HELP + "\n" + parameter + ":\n" + _DESC
             end
             _DEF = GetParameterDefault(parameter)
-            if( _DEF != "" )
+            if _DEF != ""
                 _HELP = _HELP + "\n" + _("Default value: ") + String(_DEF)
             end
             _VALUES = GetParameterValues(parameter)
-            if( _VALUES != [] )
+            if _VALUES != []
                 _HELP = _HELP + "\n" + _("Available values: ") + _VALUES.join(", ")
             end
             _HELP = _HELP + "\n"
@@ -66,7 +66,7 @@ module Yast
     def GetDescription(parameter)
             @params.each_key { |s|
            @params[s].each_key { |k| 
-              if( k == parameter && @params[s][k].has_key?("desc") ) 
+              if k == parameter && @params[s][k].has_key?("desc")
                       return @params[s][k]["desc"]
               end
            }
@@ -77,7 +77,7 @@ module Yast
     def GetParameterType(parameter)
             @params.each_key { |s|
            @params[s].each_key { |k| 
-              if( k == parameter && @params[s][k].has_key?("type") ) 
+              if k == parameter && @params[s][k].has_key?("type")
                       return @params[s][k]["type"]
               end
            }
@@ -88,7 +88,7 @@ module Yast
     def GetParameterDefault(parameter)
             @params.each_key { |s|
            @params[s].each_key { |k| 
-              if( k == parameter && @params[s][k].has_key?("def") ) 
+              if k == parameter && @params[s][k].has_key?("def")
                       return @params[s][k]["def"]
               end
            }
@@ -99,7 +99,7 @@ module Yast
     def GetParameterValues(parameter)
             @params.each_key { |s|
            @params[s].each_key { |k| 
-              if( k == parameter && @params[s][k].has_key?("vals") ) 
+              if k == parameter && @params[s][k].has_key?("vals")
                       return @params[s][k]["vals"].split(%r{,\s*})
               end
            }
@@ -171,7 +171,7 @@ module Yast
 
     def SelectParameter(section)
         _PARS = []
-        if( section =~ /^domain/ )
+        if section =~ /^domain/
             _id_provider   = nil 
             _auth_provider = nil
             if @auth["sssd_conf"][section].has_key?("id_provider")
@@ -180,17 +180,17 @@ module Yast
             if @auth["sssd_conf"][section].has_key?("auth_provider")
                _auth_provider = @auth["sssd_conf"][section]["auth_provider"]
             end
-            if( _id_provider != nil )
+            if _id_provider != nil
                _PARS.concat( @params[_id_provider].keys )
             end
-            if( _auth_provider != nil && _id_provider != _auth_provider )
+            if _auth_provider != nil && _id_provider != _auth_provider
                _PARS.concat( @params[_auth_provider].keys )
             end
             _PARS.concat( @params["domain"].keys )
         else
            _PARS.concat( @params[section].keys )
         end
-        if( _PARS == [] )
+        if _PARS == []
             Popup.Warning( Builtins.sformat(_("Section '%1' has no attributes."), section) )
             return true
         end
@@ -311,7 +311,7 @@ module Yast
                     HelpForParameter(@auth["sssd_conf"][section].keys)
             when :add
                ret = SelectParameter(section)
-               if( ret == :ok )
+               if ret == :ok
                    UI.ReplaceWidget(Id(:rep_params), BuildSection(section) )
                end
                ret = nil
@@ -375,7 +375,7 @@ module Yast
                    @auth["sssd_conf"][name] = Hash.new
                    @auth["sssd_conf"][name]["id_provider"] =   UI.QueryWidget(Id(:id_provider),:CurrentItem)
                    auth_provider = UI.QueryWidget(Id(:auth_provider),:CurrentItem)
-                   if( auth_provider != "default" )
+                   if auth_provider != "default"
                       @auth["sssd_conf"][name]["auth_provider"] = auth_provider
                    end   
                    if Convert.to_boolean(UI.QueryWidget(Id(:activate),:Value))
@@ -400,11 +400,11 @@ module Yast
         _term = Builtins.add( _term, Left(PushButton(Id(:sssd), "&sssd")) )
         _term = Builtins.add( _term, Left(Label(_("Services:"))) )
         _SERVICES = @auth["sssd_conf"]["sssd"]["services"].split(%r{,\s*}) 
-        _term = Builtins.add( _term, Left(PushButton(Id(:nss),    "&nss")) ) if( _SERVICES.index("nss") != nil ) 
-        _term = Builtins.add( _term, Left(PushButton(Id(:pam),    "&pam")) ) if( _SERVICES.index("pam") != nil ) 
-        _term = Builtins.add( _term, Left(PushButton(Id(:sudo),   "&sudo")) ) if( _SERVICES.index("sudo") != nil ) 
-        _term = Builtins.add( _term, Left(PushButton(Id(:autofs), "&autofs")) ) if( _SERVICES.index("autofs") != nil ) 
-        _term = Builtins.add( _term, Left(PushButton(Id(:ssh),    "&ssh")) ) if( _SERVICES.index("ssh") != nil ) 
+        _term = Builtins.add( _term, Left(PushButton(Id(:nss),    "&nss")) )    if _SERVICES.index("nss") != nil
+        _term = Builtins.add( _term, Left(PushButton(Id(:pam),    "&pam")) )    if _SERVICES.index("pam") != nil
+        _term = Builtins.add( _term, Left(PushButton(Id(:sudo),   "&sudo")) )   if _SERVICES.index("sudo") != nil
+        _term = Builtins.add( _term, Left(PushButton(Id(:autofs), "&autofs")) ) if _SERVICES.index("autofs") != nil
+        _term = Builtins.add( _term, Left(PushButton(Id(:ssh),    "&ssh")) )    if _SERVICES.index("ssh") != nil
         _term
     end
 
@@ -459,7 +459,7 @@ module Yast
       Builtins.y2milestone("--Start AuthClient MainDialog ---")
       @auth = AuthClient.Export
       Builtins.y2milestone("auth %1", @auth);
-      if( @auth["nssldap"] == "1" && ! Mode.autoinst )
+      if @auth["nssldap"] == "1" && ! Mode.autoinst
           if ! Popup.YesNo(
             _( "Your system is configured for using nss_ldap.\n" +
            "This module is designed to configure your system via sssd.\n" +
@@ -469,7 +469,7 @@ module Yast
             return :abort
           end
       end
-      if( @auth["oes"] == "1" && ! Mode.autoinst )
+      if @auth["oes"] == "1" && ! Mode.autoinst
           if ! Popup.YesNo(
             _( "Your system is configured as OES client.\n" +
            "This module is designed to configure your system via sssd.\n" +
