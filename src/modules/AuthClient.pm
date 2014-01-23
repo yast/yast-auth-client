@@ -138,7 +138,6 @@ sub Write
     # Nothing to do
     return 1
   }  
-y2milestone("Auth Hash after editing".Dumper($auth));
   #Activate pam sss
   Pam->Add("sss");
   foreach my $db (@sss_dbs)
@@ -221,6 +220,7 @@ y2milestone("Auth Hash after editing".Dumper($auth));
   }
   #Enable sssd only if there is min one domain activated
   if( scalar @domains ) {
+    Service->Disable("nscd");
     Service->Enable("sssd");
     Service->Restart("sssd");
   }
@@ -241,7 +241,31 @@ BEGIN { $TYPEINFO{Import} = ["function", "boolean", [ "map", "any", "any" ] ]; }
 sub Import {
     my $self = shift;
     my $hash = shift;
-    $auth = $hash;
+    $auth = {};
+    foreach my $k (keys %$hash )
+    {
+       next if( $k eq "sssd_conf" );
+       $auth->{$k} = $hash->{$k};
+    }
+    return 1 if( ! defined $hash->{'sssd_conf'} );
+
+    foreach my $k (keys %{$hash->{'sssd_conf'}} )
+    {
+       next if( $k eq "auth_domains" );
+       $auth->{'sssd_conf'}->{$k} = $hash->{'sssd_conf'}->{$k};
+    }
+    return 1 if( ! defined $hash->{'sssd_conf'}->{'auth_domains'} );
+
+    foreach my $domain ( @{$hash->{'sssd_conf'}->{'auth_domains'}} )
+    {
+       my $domain_name = $domain->{'domain_name'};
+       foreach my $k ( keys %{$domain})
+       {
+          next if( $k eq 'domain_name' );
+          $auth->{'sssd_conf'}->{"domain/$domain_name"}->{$k} = $domain->{$k};
+       }
+    }
+
     return 1;
 }
 # end Import
@@ -254,9 +278,43 @@ sub Import {
 BEGIN { $TYPEINFO{Export}  =["function", [ "map", "any", "any" ] ]; }
 sub Export {
     my $self = shift;
-    return $auth;  
+    my $hash = {};
+
+    foreach my $k (keys %$auth )
+    {
+       next if( $k eq "sssd_conf" );
+       $hash->{$k} = $auth->{$k};
+    }
+    return $hash if( ! defined $auth->{'sssd_conf'} );
+
+    foreach my $k (keys %{$auth->{'sssd_conf'}} )
+    {
+       if( /^domain\/(.*)/ )
+       {
+	  my %domain = %{$auth->{'sssd_conf'}->{$k}};
+	  $domain{'domain_name'} = $1;
+	  push @{$hash->{'sssd_conf'}->{'auth_domains'}}, %domain; 
+       }
+       else
+       {
+          $hash->{'sssd_conf'}->{$k} = $auth->{'sssd_conf'}->{$k};
+       }
+    }
+    return $hash;  
 }
 # end Export
+#################################################################
+
+#################################################################
+# GetConfig()
+# Exports clients authentication configuration.
+# @return map Dumped settings (later acceptable by Import ())
+BEGIN { $TYPEINFO{GetConfig}  =["function", [ "map", "any", "any" ] ]; }
+sub GetConfig {
+    my $self = shift;
+    return $auth;  
+}
+# end GetConfig
 #################################################################
 
 #################################################################

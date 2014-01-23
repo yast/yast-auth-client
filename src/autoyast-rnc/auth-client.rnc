@@ -126,6 +126,7 @@ auth_domains =
   element auth_domains {
     LIST,
     element domain {
+        element domain_name { text }? &
         element min_id{ INTEGER }? &
         element max_id{ INTEGER }? &
         element enumerate{ BOOLEAN }? &

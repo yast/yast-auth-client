@@ -457,7 +457,7 @@ module Yast
 
     def MainDialog
       Builtins.y2milestone("--Start AuthClient MainDialog ---")
-      @auth = AuthClient.Export
+      @auth = AuthClient.GetConfig
       Builtins.y2milestone("auth %1", @auth);
       if @auth["nssldap"] == "1" && ! Mode.autoinst
           if ! Popup.YesNo(
