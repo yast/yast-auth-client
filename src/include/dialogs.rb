@@ -399,12 +399,14 @@ module Yast
         _term = Builtins.add( _term, Left(Label(_("Basic Settings:"))) )
         _term = Builtins.add( _term, Left(PushButton(Id(:sssd), "&sssd")) )
         _term = Builtins.add( _term, Left(Label(_("Services:"))) )
-        _SERVICES = @auth["sssd_conf"]["sssd"]["services"].split(%r{,\s*}) 
-        _term = Builtins.add( _term, Left(PushButton(Id(:nss),    "&nss")) )    if _SERVICES.index("nss") != nil
-        _term = Builtins.add( _term, Left(PushButton(Id(:pam),    "&pam")) )    if _SERVICES.index("pam") != nil
-        _term = Builtins.add( _term, Left(PushButton(Id(:sudo),   "&sudo")) )   if _SERVICES.index("sudo") != nil
-        _term = Builtins.add( _term, Left(PushButton(Id(:autofs), "&autofs")) ) if _SERVICES.index("autofs") != nil
-        _term = Builtins.add( _term, Left(PushButton(Id(:ssh),    "&ssh")) )    if _SERVICES.index("ssh") != nil
+        if @auth["sssd_conf"]["sssd"].has_key?("services")
+          _SERVICES = @auth["sssd_conf"]["sssd"]["services"].split(%r{,\s*})
+          _term = Builtins.add( _term, Left(PushButton(Id(:nss),    "&nss")) )    if _SERVICES.index("nss") != nil
+          _term = Builtins.add( _term, Left(PushButton(Id(:pam),    "&pam")) )    if _SERVICES.index("pam") != nil
+          _term = Builtins.add( _term, Left(PushButton(Id(:sudo),   "&sudo")) )   if _SERVICES.index("sudo") != nil
+          _term = Builtins.add( _term, Left(PushButton(Id(:autofs), "&autofs")) ) if _SERVICES.index("autofs") != nil
+          _term = Builtins.add( _term, Left(PushButton(Id(:ssh),    "&ssh")) )    if _SERVICES.index("ssh") != nil
+        end
         _term
     end
 

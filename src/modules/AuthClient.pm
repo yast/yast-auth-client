@@ -137,26 +137,36 @@ sub Write
   {
     # Nothing to do
     return 1
-  }  
+  }
+  if( ! defined $sssd_conf )
+  {
+    $sssd_conf = Config::IniFiles->new( -file => "/etc/sssd/sssd.conf" );
+  }
+  #Define some variables which may not be undefined
+  my @domains       = ();
+  my @services      = ();
+  my @filter_groups = ();
+  my @filter_users  = ();
+
   #Activate pam sss
   Pam->Add("sss");
-  foreach my $db (@sss_dbs)
-  {
-    push @{$nsswitch->{$db}}, 'sss' if( !contains('sss',$nsswitch->{$db}));
-  }
   foreach my $db (@nss_dbs)
   {
     $nsswitch->{$db} = Nsswitch->ReadDb($db);
     my @tmp = grep(!/^ldap/,@{$nsswitch->{$db}});
     $nsswitch->{$db} = \@tmp;
   }
+  foreach my $db (@sss_dbs)
+  {
+    push @{$nsswitch->{$db}}, 'sss' if( !contains('sss',$nsswitch->{$db}));
+  }
   foreach my $db (@nss_dbs)
   {
     Nsswitch->WriteDb($db,$nsswitch->{$db});
   }
   #Activate deactivate automount in nssswitch
-  my @services = split /,\s*/, $auth->{"sssd_conf"}->{"sssd"}->{"services"};
-  my @domains  = split /,/, $auth->{"sssd_conf"}->{"sssd"}->{"domains"};
+  @services = split /,\s*/, $auth->{"sssd_conf"}->{"sssd"}->{"services"} if( defined $auth->{"sssd_conf"}->{"sssd"}->{"services"} );
+  @domains  = split /,/, $auth->{"sssd_conf"}->{"sssd"}->{"domains"}     if( defined $auth->{"sssd_conf"}->{"sssd"}->{"domains"} );
   if( contains( "autofs", \@services ) && scalar @domains )
   {
      my $db = "automount";
@@ -175,8 +185,8 @@ sub Write
   Nsswitch->Write();
   
   #Be shure filter_groups and filter_users contains root in nss section
-  my @filter_groups = split /,/, $auth->{"sssd_conf"}->{"nss"}->{"filter_groups"};
-  my @filter_users  = split /,/, $auth->{"sssd_conf"}->{"nss"}->{"filter_users"};
+  @filter_groups = split /,/, $auth->{"sssd_conf"}->{"nss"}->{"filter_groups"} if( defined $auth->{"sssd_conf"}->{"nss"}->{"filter_groups"} );
+  @filter_users  = split /,/, $auth->{"sssd_conf"}->{"nss"}->{"filter_users"}  if( defined $auth->{"sssd_conf"}->{"nss"}->{"filter_users"} );
   push @filter_groups, "root" if( ! contains("root",\@filter_groups));
   push @filter_users,  "root" if( ! contains("root",\@filter_users));
   $auth->{"sssd_conf"}->{"nss"}->{"filter_groups"} = join(",",@filter_groups);
@@ -220,6 +230,8 @@ sub Write
   }
   #Enable sssd only if there is min one domain activated
   if( scalar @domains ) {
+    y2milestone("Activate sssd and deactivate nscd");
+    Service->Stop("nscd");
     Service->Disable("nscd");
     Service->Enable("sssd");
     Service->Restart("sssd");
