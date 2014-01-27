@@ -197,7 +197,7 @@ module Yast
         _PARS = _PARS.select { |a| a !~ /^$/ }
         if @auth["sssd_conf"].has_key?(section)
             #List only not exisstent parameter
-            _PARS = _PARS.select { |a| @auth["sssd_conf"][section].keys.index(a) == nil }
+            _PARS = _PARS.select { |a| ! @auth["sssd_conf"][section].keys.include?(a) }
         end
         #No we open the dialog
         UI.OpenDialog(
@@ -248,7 +248,7 @@ module Yast
         if @auth["sssd_conf"][section].has_key?("id_provider")
            _id_provider = @auth["sssd_conf"][section]["id_provider"]
            @params[_id_provider].each_key { |k| 
-             if @params[_id_provider][k].has_key?("req") && _params.index(k) == nil
+             if @params[_id_provider][k].has_key?("req") && ! _params.include?(k)
                @auth["sssd_conf"][section][k] = GetParameterDefault(k)
                _params.push(k)
              end
@@ -257,7 +257,7 @@ module Yast
         if @auth["sssd_conf"][section].has_key?("auth_provider")
            _auth_provider = @auth["sssd_conf"][section]["auth_provider"]
            @params[_auth_provider].each_key { |k| 
-             if @params[_auth_provider][k].has_key?("req") && _params.index(k) == nil
+             if @params[_auth_provider][k].has_key?("req") && ! _params.include?(k)
                @auth["sssd_conf"][section][k] = GetParameterDefault(k)
                _params.push(k)
              end
@@ -401,11 +401,11 @@ module Yast
         _term = Builtins.add( _term, Left(Label(_("Services:"))) )
         if @auth["sssd_conf"]["sssd"].has_key?("services")
           _SERVICES = @auth["sssd_conf"]["sssd"]["services"].split(%r{,\s*})
-          _term = Builtins.add( _term, Left(PushButton(Id(:nss),    "&nss")) )    if _SERVICES.index("nss") != nil
-          _term = Builtins.add( _term, Left(PushButton(Id(:pam),    "&pam")) )    if _SERVICES.index("pam") != nil
-          _term = Builtins.add( _term, Left(PushButton(Id(:sudo),   "&sudo")) )   if _SERVICES.index("sudo") != nil
-          _term = Builtins.add( _term, Left(PushButton(Id(:autofs), "&autofs")) ) if _SERVICES.index("autofs") != nil
-          _term = Builtins.add( _term, Left(PushButton(Id(:ssh),    "&ssh")) )    if _SERVICES.index("ssh") != nil
+          _term = Builtins.add( _term, Left(PushButton(Id(:nss),    "&nss")) )    if _SERVICES.include?("nss")
+          _term = Builtins.add( _term, Left(PushButton(Id(:pam),    "&pam")) )    if _SERVICES.include?("pam")
+          _term = Builtins.add( _term, Left(PushButton(Id(:sudo),   "&sudo")) )   if _SERVICES.include?("sudo")
+          _term = Builtins.add( _term, Left(PushButton(Id(:autofs), "&autofs")) ) if _SERVICES.include?("autofs")
+          _term = Builtins.add( _term, Left(PushButton(Id(:ssh),    "&ssh")) )    if _SERVICES.include?("ssh")
         end
         _term
     end
@@ -430,7 +430,7 @@ module Yast
                 _acd.push("domain/"+d)
              }
              _DOMAINS.each { |d| 
-               if _acd.index(d) == nil
+               if ! _acd.include?(d)
                         _inactiv_domains.push(d)
                else
                      _activ_domains = _activ_domains + 1
