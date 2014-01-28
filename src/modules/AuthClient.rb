@@ -27,7 +27,6 @@
 #
 # $Id$
 require "yast"
-require "inifile"
 
 module Yast
   class AuthClientClass < Module
@@ -52,9 +51,6 @@ module Yast
 
       @nss_dbs     = ["passwd", "group", "passwd_compat", "group_compat", "services", "netgroup", "aliases"]
       @sss_dbs     = ["passwd", "group" ]
-
-      #IniFile
-      @sssd_conf   = nil
 
       # the auth configuration
       make_hash = proc do |hash,key|
@@ -91,12 +87,15 @@ module Yast
       @auth["sssd"] = @nsswitch["passwd"].include?("sss")
 
       if @auth["sssd"]
-         @sssd_conf = IniFile.load('/etc/sssd/sssd.conf' )
-         @sssd_conf.each do |section, parameter, value|
-             @auth["ssd_conf"][section][parameter] = value
-         end
+	 _sections = SCR.Dir(path(".etc.sssd_conf.section"))
+	 _sections.each { |s|
+	    _values = SCR.Read(path(".etc.sssd_conf.all."+s ))
+	    _values["value"].each { |v|
+	      next if v["kind"] == "comment"
+              @auth["sssd_conf"][s][v["name"]] = v["value"]
+	    }
+	 }
       end
-      #Builtins.y2milestone("nssldap: %1; sssd: %2; oes: %3",@auth["nssldap"],@auth["sssd"],@auth["oes"])
       Builtins.y2milestone("auth: %1",@auth)
       true
     end
@@ -108,7 +107,7 @@ module Yast
     # Writes the clients authentication configuration.
     # @return true or false
     def Write
-      if ! @sssd
+      if ! @auth['sssd']
         # Nothing to do
         return true
       end
@@ -139,9 +138,7 @@ module Yast
 
       #Remove kerberos if activated
       if Pam.Enabled("krb5")
-        Builtins.y2milestone(
-          "configuring 'sss', so 'krb5' will be removed"
-        )
+        Builtins.y2milestone( "configuring 'sss', so 'krb5' will be removed")
         Pam.Remove("ldap-account_only")
         Pam.Remove("krb5")
       end
@@ -168,13 +165,46 @@ module Yast
       end
       filter_users.push("root")  if ! filter_users.include?("root")
       filter_groups.push("root") if ! filter_groups.include?("root")
-      @auth["sssd_conf"]["nss"]["filter_users"]  = filter_users,join(", ")
-      @auth["sssd_conf"]["nss"]["filter_groups"] = filter_groups,join(", ")
+      @auth["sssd_conf"]["nss"]["filter_users"]  = filter_users.join(", ")
+      @auth["sssd_conf"]["nss"]["filter_groups"] = filter_groups.join(", ")
 
-      #Now we write the nss configuration
-      nss = @sssd_conf["nss"];
-      @auth["ssd_conf"].each_key {
+      #Now we write the sssd configuration
+      @auth["sssd_conf"].each_key { |s|
+        if @auth["sssd_conf"][s].has_key?('DeleteSection')
+           SCR.Write(path(".etc.sssd_conf.section."+s), nil )
+	   next
+	end
+	@auth["sssd_conf"][s].each_key { |k|
+          if @auth["sssd_conf"][s][k] == "##DeleteValue##"
+             SCR.Write(path(".etc.sssd_conf.value."+s+"."+k), nil )
+	  else
+Builtins.y2milestone("Writing section: %1, parameter: %2, value %3",s,k,@auth["sssd_conf"][s][k])
+             SCR.Write(path(".etc.sssd_conf.value."+s+"."+k),@auth["sssd_conf"][s][k])
+	  end
+	}
       }
+      SCR.Write(path(".etc.sssd_conf"),nil)
+
+      #Enable autofs only if there is min one domain activated and autofs service is enabled
+      if services.include?("autofs")
+        Service.Enable("autofs")
+        Service.Restart("autofs")
+      else
+        Service.Disable("autofs")
+        Service.Stop("autofs")
+      end
+
+      #Start sssd only if there are more then one domain defined
+      if domains.count > 0
+        Service.Enable("sssd")
+        Service.Disable("nscd")
+        Service.Stop("nscd")
+        Service.Start("sssd")
+      else
+        Service.Disable("sssd")
+        Service.Stop("sssd")
+      end
+      return true
     end
     # end Write
     #################################################################
@@ -182,9 +212,53 @@ module Yast
     #################################################################
     # Import()
     # Imports clients authentication configuration.
+    # 
     # @return true or false
     def Import(settings)
-      @auth = settings
+      @auth = {}
+      #Read the basic settings of auth client
+      settings.each_key { |s|
+        next if s == "sssd_conf"
+	@auth[s] = settings[s]
+      }
+
+      #Evaluate if the settings are valid
+      if settings.has_key?('sssd')
+        if settings['sssd'] && !settings.has_key?('sssd_conf') 
+	  Builtin.y2milestone("There are no sssd configuration provided but sssd is enabled.")
+	  return false
+	end
+      else
+        if settings.has_key?('sssd_conf') 
+	  Builtin.y2milestone("There are sssd configuration provided but sssd is not enabled.")
+	  return false
+	end
+	Builtin.y2milestone("Authentication will not made via sssd.")
+	 @auth['sssd'] = false
+        return true 
+      end
+
+      #Read sssd basic settings
+      settings['sssd_conf'].each_key { |s|
+        next if s == "auth_domains"
+	@auth['sssd_conf'][s] = settings['sssd_conf'][s]
+      }
+      if !settings['sssd_conf'].has_key?('auth_domains')
+        Builtin.y2milestone("There are no authentication domain defined")
+        return false
+      end
+
+      #Read authentication domains
+      settings['sssd_conf']['auth_domains'].each { |d|
+        if !d.has_key?('domain_name')
+	  Builtin.y2milestone("Domain has no domain_name: %1",d)
+	end
+        name = 'domain/' + d['domain_name'] 
+	d.each_key { |k|
+	  next if k == 'domain_name'
+	  @auth['sssd_conf'][name][k] = d[k]
+	}
+      }
       true
     end
     # end Import
@@ -193,9 +267,31 @@ module Yast
     #################################################################
     # Export()
     # Exports clients authentication configuration.
-    # @return true or false
+    # @return map Dumped settings (later acceptable by Import ())
     def Export
-      deep_copy(@auth)
+
+       settings = Hash.new
+
+       #Write basic settings
+       @auth.each_key { |s|
+         next if k == "sssd_conf"
+         settings[s] = @auth[s]
+       }
+       return settings if ! @auth.has_key?("sssd_conf")
+
+       #Write sssd settings
+       settings["sssd_conf"] = Hash.new
+       settings["sssd_conf"]["auth_domains"] = Array.new
+       @auth["sssd_conf"].each_key { |s|
+          if s =~ /^domain\//
+	    domain = @auth["sssd_conf"][s]
+	    domain["domain_name"] = s.sub!("domain/","")
+	    settings["sssd_conf"]["auth_domains"].push(domain)
+	  else
+	    settings[s] = @auth["sssd_conf"][s]
+	  end
+       }
+       return settings
     end
     # end Export
     #################################################################
@@ -211,9 +307,9 @@ module Yast
       end
       if @auth["sssd"]
          summary = _( "System is configured for using sssd.\n" )
-         @sssd_conf.each_section do |section|
-           summary += "<br>" + section.to_s
-         end
+         @auth["sssd_conf"].each_key { |sec|
+           summary += "<br> In section: '" + sec + "' are following parameter defined: " + @auth["sssd_conf"][sec].keys.join(",")
+         }
       end
       if @auth["oes"]
          summary = _( "System is configured for using OES.\n" )
@@ -221,16 +317,40 @@ module Yast
       if summary == ""
          summary = _( "System is configured for using /etc/passwd only\n" )
       end
-      @sssd_conf.write(:filename => "/tmp/sssd.conf")
       summary
     end
     # end Summary
     #################################################################
 
-    publish :variable => :auth,    :type => "map"
-    publish :function => :Summary, :type => "string ()"
+    #################################################################
+    # CreateBasicSSSD()
+    # Create empty authentication configuration.
+    def CreateBasicSSSD
+       @auth["sssd"]    = true
+       @auth["oes"]     = false
+       @auth["nssldap"] = false
+       @auth["sssd_conf"]["sssd"]["config_file_version"] = 2
+       @auth["sssd_conf"]["sssd"]["services"] = "nss, pam"
+       return @auth
+    end
+    #
+    #################################################################
+
+    #################################################################
+    # GetConfig()
+    # Returns the authentication configuration.
+    def GetConfig
+      return @auth
+    end
+    #################################################################
+    
+    publish :variable => :auth,   :type => "map"
     publish :function => :Read,    :type => "boolean ()"
     publish :function => :Write,   :type => "boolean ()"
+    publish :function => :Import,  :type => "boolean ()"
+    publish :function => :Export,  :type => "map ()"
+    publish :function => :Summary, :type => "string ()"
+    publish :function => :CreateBasicSSSD, :type => "map ()"
   end
 
   AuthClient = AuthClientClass.new

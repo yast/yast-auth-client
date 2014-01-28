@@ -23,7 +23,7 @@ module Yast
       make_hash = proc do |hash,key|
          hash[key] = Hash.new(&make_hash)
       end
-      @auth = Hash.new(&make_hash)
+      AuthClient.auth = Hash.new(&make_hash)
 
     end
 
@@ -33,12 +33,12 @@ module Yast
         if ! Popup.YesNo( Builtins.sformat(_("Do you realy want to delete the domain '%1'." ),_name) )
            return
         end
-        if @auth["sssd_conf"]["sssd"].has_key?("domains")
-           domains = @auth["sssd_conf"]["sssd"]["domains"].split(%r{,\s*})
+        if AuthClient.auth["sssd_conf"]["sssd"].has_key?("domains")
+           domains = AuthClient.auth["sssd_conf"]["sssd"]["domains"].split(%r{,\s*})
            domains = domains.select { |a| a != _name } 
-           @auth["sssd_conf"]["sssd"]["domains"] = domains.join(", ")
+           AuthClient.auth["sssd_conf"]["sssd"]["domains"] = domains.join(", ")
         end
-        @auth["sssd_conf"][_Domain]["DeleteSection"] = true
+        AuthClient.auth["sssd_conf"][_Domain]["DeleteSection"] = true
     end
 
     def HelpForParameter(parameters)
@@ -158,10 +158,10 @@ module Yast
             when :cancel
                break
             when :ok
-                if !@auth["sssd_conf"].has_key?(section)
-                    @auth["sssd_conf"][section] = Hash.new
+                if !AuthClient.auth["sssd_conf"].has_key?(section)
+                    AuthClient.auth["sssd_conf"][section] = Hash.new
                 end
-                @auth["sssd_conf"][section][parameter] = ConvertToString(:value,parameter)
+                AuthClient.auth["sssd_conf"][section][parameter] = ConvertToString(:value,parameter)
                 break
           end
         end
@@ -174,11 +174,11 @@ module Yast
         if section =~ /^domain/
             _id_provider   = nil 
             _auth_provider = nil
-            if @auth["sssd_conf"][section].has_key?("id_provider")
-               _id_provider = @auth["sssd_conf"][section]["id_provider"]
+            if AuthClient.auth["sssd_conf"][section].has_key?("id_provider")
+               _id_provider = AuthClient.auth["sssd_conf"][section]["id_provider"]
             end   
-            if @auth["sssd_conf"][section].has_key?("auth_provider")
-               _auth_provider = @auth["sssd_conf"][section]["auth_provider"]
+            if AuthClient.auth["sssd_conf"][section].has_key?("auth_provider")
+               _auth_provider = AuthClient.auth["sssd_conf"][section]["auth_provider"]
             end
             if _id_provider != nil
                _PARS.concat( @params[_id_provider].keys )
@@ -195,9 +195,9 @@ module Yast
             return true
         end
         _PARS = _PARS.select { |a| a !~ /^$/ }
-        if @auth["sssd_conf"].has_key?(section)
+        if AuthClient.auth["sssd_conf"].has_key?(section)
             #List only not exisstent parameter
-            _PARS = _PARS.select { |a| ! @auth["sssd_conf"][section].keys.include?(a) }
+            _PARS = _PARS.select { |a| ! AuthClient.auth["sssd_conf"][section].keys.include?(a) }
         end
         #No we open the dialog
         UI.OpenDialog(
@@ -238,34 +238,34 @@ module Yast
     def BuildSection(section)
         _term = VBox()
         #Empy section
-        return _term if ! @auth["sssd_conf"].has_key?(section)
+        return _term if ! AuthClient.auth["sssd_conf"].has_key?(section)
 
-        _params = @auth["sssd_conf"][section].keys
+        _params = AuthClient.auth["sssd_conf"][section].keys
 
         #Check if a domain have all its obligatical parameter
         _id_provider   = nil
         _auth_provider = nil
-        if @auth["sssd_conf"][section].has_key?("id_provider")
-           _id_provider = @auth["sssd_conf"][section]["id_provider"]
+        if AuthClient.auth["sssd_conf"][section].has_key?("id_provider")
+           _id_provider = AuthClient.auth["sssd_conf"][section]["id_provider"]
            @params[_id_provider].each_key { |k| 
              if @params[_id_provider][k].has_key?("req") && ! _params.include?(k)
-               @auth["sssd_conf"][section][k] = GetParameterDefault(k)
+               AuthClient.auth["sssd_conf"][section][k] = GetParameterDefault(k)
                _params.push(k)
              end
            }
         end
-        if @auth["sssd_conf"][section].has_key?("auth_provider")
-           _auth_provider = @auth["sssd_conf"][section]["auth_provider"]
+        if AuthClient.auth["sssd_conf"][section].has_key?("auth_provider")
+           _auth_provider = AuthClient.auth["sssd_conf"][section]["auth_provider"]
            @params[_auth_provider].each_key { |k| 
              if @params[_auth_provider][k].has_key?("req") && ! _params.include?(k)
-               @auth["sssd_conf"][section][k] = GetParameterDefault(k)
+               AuthClient.auth["sssd_conf"][section][k] = GetParameterDefault(k)
                _params.push(k)
              end
            }
         end
         _params.each { |k|
            type = GetParameterType(k)
-           v    = @auth["sssd_conf"][section][k]
+           v    = AuthClient.auth["sssd_conf"][section][k]
            case type 
              when "int"
                 _term = Builtins.add( _term, Left( IntField( Id(k), k, 0, @MAXINT, v.to_i )) )
@@ -276,7 +276,7 @@ module Yast
                    _term = Builtins.add( _term, Left( CheckBox( Id(k), k, false )) )
                 end   
              when "string"
-                _term = Builtins.add( _term, Left( TextEntry( Id(k), k, v)) )
+                _term = Builtins.add( _term, Left( InputField(Id(k), Opt(:hstretch), k, v)) )
            end
         }
         return _term
@@ -308,7 +308,7 @@ module Yast
             when :cancel
                break
             when :help
-                    HelpForParameter(@auth["sssd_conf"][section].keys)
+                    HelpForParameter(AuthClient.auth["sssd_conf"][section].keys)
             when :add
                ret = SelectParameter(section)
                if ret == :ok
@@ -316,8 +316,8 @@ module Yast
                end
                ret = nil
             when :ok
-                @auth["sssd_conf"][section].each_key { |k|
-                    @auth["sssd_conf"][section][k] = ConvertToString(k,k)
+                AuthClient.auth["sssd_conf"][section].each_key { |k|
+                    AuthClient.auth["sssd_conf"][section][k] = ConvertToString(k,k)
                 }
           end
         end
@@ -372,21 +372,21 @@ module Yast
                         ret = nil
                 else
                    name  = "domain/" + dname
-                   @auth["sssd_conf"][name] = Hash.new
-                   @auth["sssd_conf"][name]["id_provider"] =   UI.QueryWidget(Id(:id_provider),:CurrentItem)
+                   AuthClient.auth["sssd_conf"][name] = Hash.new
+                   AuthClient.auth["sssd_conf"][name]["id_provider"] =   UI.QueryWidget(Id(:id_provider),:CurrentItem)
                    auth_provider = UI.QueryWidget(Id(:auth_provider),:CurrentItem)
                    if auth_provider != "default"
-                      @auth["sssd_conf"][name]["auth_provider"] = auth_provider
+                      AuthClient.auth["sssd_conf"][name]["auth_provider"] = auth_provider
                    end   
                    if Convert.to_boolean(UI.QueryWidget(Id(:activate),:Value))
-                      if ! @auth["sssd_conf"]["sssd"].has_key?("domains")
-                          @auth["sssd_conf"]["sssd"]["domains"]= dname
+                      if ! AuthClient.auth["sssd_conf"]["sssd"].has_key?("domains")
+                          AuthClient.auth["sssd_conf"]["sssd"]["domains"]= dname
                       else
-                          @auth["sssd_conf"]["sssd"]["domains"] = @auth["sssd_conf"]["sssd"]["domains"]  + ", "+ dname
+                          AuthClient.auth["sssd_conf"]["sssd"]["domains"] = AuthClient.auth["sssd_conf"]["sssd"]["domains"]  + ", "+ dname
                       end
                    end
                    ConfigureSection(name)
-                         Builtins.y2milestone("auth %1", @auth)
+                         Builtins.y2milestone("auth %1", AuthClient.auth)
                 end
           end
         end
@@ -399,8 +399,8 @@ module Yast
         _term = Builtins.add( _term, Left(Label(_("Basic Settings:"))) )
         _term = Builtins.add( _term, Left(PushButton(Id(:sssd), "&sssd")) )
         _term = Builtins.add( _term, Left(Label(_("Services:"))) )
-        if @auth["sssd_conf"]["sssd"].has_key?("services")
-          _SERVICES = @auth["sssd_conf"]["sssd"]["services"].split(%r{,\s*})
+        if AuthClient.auth["sssd_conf"]["sssd"].has_key?("services")
+          _SERVICES = AuthClient.auth["sssd_conf"]["sssd"]["services"].split(%r{,\s*})
           _term = Builtins.add( _term, Left(PushButton(Id(:nss),    "&nss")) )    if _SERVICES.include?("nss")
           _term = Builtins.add( _term, Left(PushButton(Id(:pam),    "&pam")) )    if _SERVICES.include?("pam")
           _term = Builtins.add( _term, Left(PushButton(Id(:sudo),   "&sudo")) )   if _SERVICES.include?("sudo")
@@ -411,9 +411,9 @@ module Yast
     end
 
     def ListDomains
-        _DOMAINS = @auth["sssd_conf"].keys;
+        _DOMAINS = AuthClient.auth["sssd_conf"].keys;
         _DOMAINS = _DOMAINS.select { |a| a =~ /^domain/ }
-        _DOMAINS = _DOMAINS.select { |a| ! @auth["sssd_conf"][a].has_key?("DeleteSection") }
+        _DOMAINS = _DOMAINS.select { |a| ! AuthClient.auth["sssd_conf"][a].has_key?("DeleteSection") }
         _DOMAINS
     end
 
@@ -424,9 +424,9 @@ module Yast
        _DOMAINS = ListDomains()
 
        if _DOMAINS != []
-          if @auth["sssd_conf"]["sssd"].has_key?("domains")
+          if AuthClient.auth["sssd_conf"]["sssd"].has_key?("domains")
              _acd = []
-             @auth["sssd_conf"]["sssd"]["domains"].split(%r{,\s*}).each { |d| 
+             AuthClient.auth["sssd_conf"]["sssd"]["domains"].split(%r{,\s*}).each { |d| 
                 _acd.push("domain/"+d)
              }
              _DOMAINS.each { |d| 
@@ -459,9 +459,7 @@ module Yast
 
     def MainDialog
       Builtins.y2milestone("--Start AuthClient MainDialog ---")
-      @auth = AuthClient.GetConfig
-      Builtins.y2milestone("auth %1", @auth);
-      if @auth["nssldap"] == "1" && ! Mode.autoinst
+      if AuthClient.auth["nssldap"] == "1" && ! Mode.autoinst
           if ! Popup.YesNo(
             _( "Your system is configured for using nss_ldap.\n" +
            "This module is designed to configure your system via sssd.\n" +
@@ -471,7 +469,7 @@ module Yast
             return :abort
           end
       end
-      if @auth["oes"] == "1" && ! Mode.autoinst
+      if AuthClient.auth["oes"] == "1" && ! Mode.autoinst
           if ! Popup.YesNo(
             _( "Your system is configured as OES client.\n" +
            "This module is designed to configure your system via sssd.\n" +
@@ -481,11 +479,11 @@ module Yast
             return :abort
           end
       end
-      @auth["sssd"]    = true; 
-      @auth["nssldap"] = false; 
-      @auth["oes"]     = false; 
-      if ! @auth.has_key?("sssd_conf")
-         @auth = AuthClient.CreateBasicSSSD
+      AuthClient.auth["sssd"]    = true; 
+      AuthClient.auth["nssldap"] = false; 
+      AuthClient.auth["oes"]     = false; 
+      if ! AuthClient.auth.has_key?("sssd_conf")
+         AuthClient.CreateBasicSSSD
       end
       # Main dialog contents
       contents = Frame(
@@ -573,7 +571,6 @@ module Yast
 
     def WriteDialog
       Builtins.y2milestone("--Start AuthClient WriteDialog ---")
-      AuthClient.Import(@auth)
       ret = AuthClient.Write
       ret ? :next : :abort
     end
