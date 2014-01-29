@@ -18,7 +18,6 @@ _yardoc
 doc/
 
 Makefile
-Makefile.am
 Makefile.am.common
 Makefile.in
 aclocal.m4
