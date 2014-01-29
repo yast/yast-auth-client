@@ -62,7 +62,7 @@ using sssd.
 %{yast_desktopdir}/auth-client.desktop
 %dir %{yast_yncludedir}/auth-client
 %{yast_yncludedir}/auth-client/*
-%{yast_moduledir}/AuthClient.pm
+%{yast_moduledir}/AuthClient.rb
 %{yast_clientdir}/auth-client*.rb
 %{yast_scrconfdir}/*.scr
 %{yast_schemadir}/autoyast/rnc/auth-client.rnc
