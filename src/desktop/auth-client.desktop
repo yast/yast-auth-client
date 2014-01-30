@@ -19,7 +19,7 @@ X-SuSE-YaST-AutoInstRequires=
 X-SuSE-YaST-AutoInstSchema=auth-client.rnc
 X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,krb5
 
-Icon=yast-ldap
+Icon=yast-kerberos
 Exec=xdg-su -c "/sbin/yast2 auth-client"
 
 Name=Authentication Client

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 29 11:47:02 UTC 2014 - varkoly@suse.com
+
+- Replace AuthClient.pm by AuthClient.rb 
+
+-------------------------------------------------------------------
 Tue Jan 14 15:07:39 UTC 2014 - varkoly@suse.com
 
 - Initial version of yast2-auth-client module. This module will
