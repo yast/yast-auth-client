@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jan 31 14:00:33 UTC 2014 - varkoly@suse.com
+
+- Increase version. It is needed for conflicting old yast2-ldap-client versions. 
+
+-------------------------------------------------------------------
 Wed Jan 29 11:47:02 UTC 2014 - varkoly@suse.com
 
 - Replace AuthClient.pm by AuthClient.rb 
