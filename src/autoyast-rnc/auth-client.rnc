@@ -298,7 +298,7 @@ auth_domains =
         element ldap_idmap_range_size{ INTEGER }? &
         element ldap_idmap_default_domain_sid{ text }? &
         element ldap_idmap_default_domain{ text }? &
-        element ldap_idmap_autorid_compat{ text }? &
+        element ldap_idmap_autorid_compat{ text }? 
      }+
   }
 
