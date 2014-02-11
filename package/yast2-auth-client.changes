@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Feb 11 11:26:30 UTC 2014 - varkoly@suse.com
+
+- Move ldap_conf.scr into yast2-ldap 
+
+-------------------------------------------------------------------
 Thu Feb  6 10:34:48 UTC 2014 - varkoly@suse.com
 
 - Fix syntax error in autoyast file
