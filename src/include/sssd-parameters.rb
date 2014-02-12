@@ -425,6 +425,11 @@ module Yast
                             "type" => "string",
                             "def"  => "",
                             "desc" => _("Comma separated list of groups that are explicitly denied access. This applies only to groups within this SSSD domain.")
+                        },
+                        "ldap_sudo_search_base" => {
+                            "type" => "string",
+                            "def"  => "",
+                            "desc" => _("The default base DN to use for performing LDAP sudo rules.")
                         }
                    },
                    #The local domain section
