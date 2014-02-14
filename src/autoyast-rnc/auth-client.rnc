@@ -175,6 +175,7 @@ auth_domains =
         element ldap_chpass_uri{ text }? &
         element ldap_chpass_backup_uri{ text }? &
         element ldap_search_base{ text }? &
+        element ldap_sudo_search_base{ text }? &
         element ldap_schema{ text }? &
         element ldap_default_bind_dn{ text }? &
         element ldap_default_authtok_type{ text }? &

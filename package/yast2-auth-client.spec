@@ -17,7 +17,7 @@
 
 
 Name:           yast2-auth-client
-Version:        3.1.5
+Version:        3.1.6
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -33,6 +33,7 @@ PreReq:         %fillup_prereq
 Requires:	yast2 >= 2.21.22
 Requires:	yast2-pam >= 2.20.0
 Requires:	perl-Config-IniFiles
+Obsoletes:      yast2-ldap-client yast2-kerberos-client
 
 BuildArchitectures:	noarch
 

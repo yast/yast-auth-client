@@ -14,8 +14,7 @@ ynclude_DATA = \
   include/sssd-parameters.rb
 
 scrconf_DATA = \
-  scrconf/nscd_conf.scr \
-  scrconf/ldap_conf.scr
+  scrconf/nscd_conf.scr
 
 schemafilesdir = $(schemadir)/autoyast/rnc
 schemafiles_DATA = \
