@@ -39,7 +39,7 @@ module Yast
     def main
       textdomain "auth-client"
       Builtins.y2milestone("----------------------------------------")
-      Builtins.y2milestone("Ldap auto started")
+      Builtins.y2milestone("auth-client auto started")
       Yast.import "AuthClient"
       @ret = nil
       @func = ""
