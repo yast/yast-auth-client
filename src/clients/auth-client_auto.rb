@@ -55,8 +55,8 @@ module Yast
         end
       end
       #TODO make y2debug if it works correctly
-      Builtins.y2milestones("func=%1",  @func)
-      Builtins.y2milestones("param=%1", @param)
+      Builtins.y2milestone("func=%1",  @func)
+      Builtins.y2milestone("param=%1", @param)
       case @func
         when "Import"
           @ret = AuthClient.Import(@param)
