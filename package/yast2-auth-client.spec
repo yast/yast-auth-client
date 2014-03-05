@@ -32,7 +32,7 @@ PreReq:         %fillup_prereq
 
 Requires:	yast2 >= 2.21.22
 Requires:	yast2-pam >= 2.20.0
-Requires:	perl-Config-IniFiles
+Requires:	sssd
 Obsoletes:      yast2-ldap-client yast2-kerberos-client
 
 BuildArchitectures:	noarch
