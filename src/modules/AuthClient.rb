@@ -192,12 +192,14 @@ module Yast
       }
       SCR.Write(path(".etc.sssd_conf"),nil)
 
-      need_sssd.each_key { |k|
-        if need_sssd[k] and !Package.Installed("sssd-".k) and Package.Available("sssd-".k)
-	   to_install.push("sssd-".k) 
-	end
-      }
-      Package.DoInstall(to_install) if !to_install.empty?
+      need_sssd.each_pair do |key, needed|
+        pkg = "sssd-#{key}"
+        if needed && !Package.Installed(pkg) && Package.Available(pkg)
+          to_install << pkg
+        end
+      end
+
+      Package.DoInstall(to_install) unless to_install.empty?
 
       #Enable autofs only if there is min one domain activated and autofs service is enabled
       if services.include?("autofs")
