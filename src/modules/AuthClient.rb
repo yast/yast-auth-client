@@ -115,6 +115,15 @@ module Yast
       services = []
       filter_groups = []
       filter_users  = []
+      to_install    = []
+
+      need_sssd = {
+         "ldap"  => false,
+         "ipa"   => false,
+         "ad"    => false,
+         "krb5"  => false,
+         "proxy" => false
+      }
 
       #Add sss to pam
       Pam.Add("sss")
@@ -176,9 +185,21 @@ module Yast
           else
              SCR.Write(path(".etc.sssd_conf.value."+s+"."+k),@auth["sssd_conf"][s][k])
           end
+	  if k == "id_provider" or k == "auth_provider" 
+	     need_sssd[@auth["sssd_conf"][s][k]] = true;
+	  end
         }
       }
       SCR.Write(path(".etc.sssd_conf"),nil)
+
+      need_sssd.each_pair do |key, needed|
+        pkg = "sssd-#{key}"
+        if needed && !Package.Installed(pkg) && Package.Available(pkg)
+          to_install << pkg
+        end
+      end
+
+      Package.DoInstall(to_install) unless to_install.empty?
 
       #Enable autofs only if there is min one domain activated and autofs service is enabled
       if services.include?("autofs")
@@ -331,7 +352,7 @@ module Yast
     #################################################################
 
     
-    publish :variable => :auth,   :type => "map"
+    publish :variable => :auth,    :type => "map"
     publish :function => :Read,    :type => "boolean ()"
     publish :function => :Write,   :type => "boolean ()"
     publish :function => :Import,  :type => "boolean ()"
