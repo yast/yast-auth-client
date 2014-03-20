@@ -41,6 +41,9 @@ module Yast
       Yast.import "Pam"
       Yast.import "Service"
 
+      # configuration modification switch
+      @modified = false
+
       # stored values of /etc/nsswitch.conf
       @nsswitch = {
         "passwd"        => [],
@@ -55,16 +58,17 @@ module Yast
 
 
       # the auth configuration
-      make_hash = proc do |hash,key|
-         hash[key] = Hash.new(&make_hash)
+      @make_hash = proc do |hash,key|
+         hash[key] = Hash.new(&@make_hash)
       end
-      @auth = Hash.new(&make_hash)
+
+      @auth = Hash.new(&@make_hash)
 
     end
 
     # Check if current machine runs OES
     def CheckOES
-      @oes = Package.Installed("NOVLam")
+      return Package.Installed("NOVLam")
     end
 
     #################################################################
@@ -231,7 +235,8 @@ module Yast
     # 
     # @return true or false
     def Import(settings)
-      @auth = {}
+      @auth = Hash.new(&@make_hash)
+
       #Read the basic settings of auth client
       settings.each_key { |s|
         next if s == "sssd_conf"
@@ -241,15 +246,15 @@ module Yast
       #Evaluate if the settings are valid
       if settings.has_key?('sssd')
         if settings['sssd'] && !settings.has_key?('sssd_conf') 
-          Builtin.y2milestone("There are no sssd configuration provided but sssd is enabled.")
+          Builtins.y2milestone("There are no sssd configuration provided but sssd is enabled.")
           return false
         end
       else
         if settings.has_key?('sssd_conf') 
-          Builtin.y2milestone("There are sssd configuration provided but sssd is not enabled.")
+          Builtins.y2milestone("There are sssd configuration provided but sssd is not enabled.")
           return false
         end
-        Builtin.y2milestone("Authentication will not made via sssd.")
+        Builtins.y2milestone("Authentication will not made via sssd.")
          @auth['sssd'] = false
         return true 
       end
@@ -260,14 +265,14 @@ module Yast
         @auth['sssd_conf'][s] = settings['sssd_conf'][s]
       }
       if !settings['sssd_conf'].has_key?('auth_domains')
-        Builtin.y2milestone("There are no authentication domain defined")
+        Builtins.y2milestone("There are no authentication domain defined")
         return false
       end
 
       #Read authentication domains
       settings['sssd_conf']['auth_domains'].each { |d|
         if !d.has_key?('domain_name')
-          Builtin.y2milestone("Domain has no domain_name: %1",d)
+          Builtins.y2milestone("Domain has no domain_name: %1",d)
         end
         name = 'domain/' + d['domain_name'] 
         d.each_key { |k|
@@ -290,7 +295,7 @@ module Yast
 
        #Write basic settings
        @auth.each_key { |s|
-         next if k == "sssd_conf"
+         next if s == "sssd_conf"
          settings[s] = @auth[s]
        }
        return settings if ! @auth.has_key?("sssd_conf")
@@ -301,7 +306,7 @@ module Yast
        @auth["sssd_conf"].each_key { |s|
           if s =~ /^domain\//
             domain = @auth["sssd_conf"][s]
-            domain["domain_name"] = s.sub!("domain/","")
+            domain["domain_name"] = s.sub("domain/","")
             settings["sssd_conf"]["auth_domains"].push(domain)
           else
             settings[s] = @auth["sssd_conf"][s]
@@ -347,17 +352,39 @@ module Yast
        @auth["nssldap"] = false
        @auth["sssd_conf"]["sssd"]["config_file_version"] = 2
        @auth["sssd_conf"]["sssd"]["services"] = "nss, pam"
+
+       @modified        = true
     end
     #
     #################################################################
 
+    #################################################################
+    # SetModified()
+    # Sets configuration modification switch
+    def SetModified(value)
+       @modified    = value
+    end
+    #
+    #################################################################
     
+    #################################################################
+    # GetModified()
+    # Returns configuration modification switch
+    # @return modified
+    def GetModified
+       return @modified
+    end
+    #
+    #################################################################
+
     publish :variable => :auth,    :type => "map"
     publish :function => :Read,    :type => "boolean ()"
     publish :function => :Write,   :type => "boolean ()"
     publish :function => :Import,  :type => "boolean ()"
     publish :function => :Export,  :type => "map ()"
     publish :function => :Summary, :type => "string ()"
+    publish :function => :SetModified,     :type => "boolean ()"
+    publish :function => :GetModified,     :type => "boolean ()"
     publish :function => :CreateBasicSSSD, :type => "map ()"
   end
 
