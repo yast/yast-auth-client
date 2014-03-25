@@ -30,7 +30,7 @@ module Yast
     def DeleteDomain
         _Domain = Convert.to_string( UI.QueryWidget(Id(:domains), :CurrentItem))
         _name   = _Domain.gsub("domain/","")
-        if ! Popup.YesNo( Builtins.sformat(_("Do you realy want to delete the domain '%1'." ),_name) )
+        if ! Popup.YesNo( Builtins.sformat(_("Do you really want to delete the domain '%1'?" ),_name) )
            return
         end
         if AuthClient.auth["sssd_conf"]["sssd"].has_key?("domains")
@@ -438,7 +438,7 @@ module Yast
              end
           end
           if _inactiv_domains != []
-             if ! Popup.YesNo( _("There are some domains you have not activated it:\n" +
+             if ! Popup.YesNo( _("There are some domains you have not activated:\n" +
                                  _inactiv_domains.join(", ") + "\n" +
                                  "Do you want to write this configuration?")
                                )
@@ -455,7 +455,7 @@ module Yast
           if ! Popup.YesNo(
             _( "Your system is configured for using nss_ldap.\n" +
            "This module is designed to configure your system via sssd.\n" +
-           "If you are using this module your nss_ldap configuration will be removed.\n" +
+           "If you continue, your nss_ldap configuration will be removed.\n" +
            "Do you want to continue?" )
           )
             return :abort
@@ -465,7 +465,7 @@ module Yast
           if ! Popup.YesNo(
             _( "Your system is configured as OES client.\n" +
            "This module is designed to configure your system via sssd.\n" +
-           "If you are using this module your OES client configuration will be deactivated.\n" +
+           "If you continue, your OES client configuration will be deactivated.\n" +
            "Do you want to continue?" )
           )
             return :abort

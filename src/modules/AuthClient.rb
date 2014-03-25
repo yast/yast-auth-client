@@ -336,7 +336,7 @@ module Yast
          summary = _( "System is configured for using OES.\n" )
       end
       if summary == ""
-         summary = _( "System is configured for using /etc/passwd only\n" )
+         summary = _( "System is configured for using /etc/passwd only.\n" )
       end
       summary
     end

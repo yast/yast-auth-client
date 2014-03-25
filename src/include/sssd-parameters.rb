@@ -29,7 +29,7 @@ module Yast
                         "domains" => {
                             "type" => "string",
                             "desc" => _("SSSD can use more domains at the same time, but at least one must be configured or SSSD won't start.") +
-                                      _("This parameter described the list of domains in the order you want them to be queried.")
+                                      _("This parameter contains the list of domains in the order these will be queried.")
                         },
                         "re_expression" => {
                             "type" => "string",
@@ -100,7 +100,7 @@ module Yast
                         "enum_cache_timeout" => {
                             "type" => "int",
                             "def"  =>  120,
-                            "desc" => _("How many seconds should nss_sss cache enumerations (requests for info about all users)")
+                            "desc" => _("How many seconds should cache nss_sss enumerations (requests for info about all users)?")
                         },
                         "entry_cache_nowait_percentage" => {
                             "type" => "int",
@@ -125,7 +125,7 @@ module Yast
                         "filter_users_in_groups" => {
                             "type" => "boolean",
                             "def"  =>  true,
-                            "desc" => _("If you want filtered user still be group members set this option to false.")
+                            "desc" => _("If you want filtered user to still be group members set this option to false.")
                         },
                         "override_homedir" => {
                             "type" => "string",
@@ -164,7 +164,7 @@ module Yast
                         "memcache_timeout" => {
                             "type" => "int",
                             "def"  => 300,
-                            "desc" => _("Specifies time in seconds for which records in the in-memory cache will be valid")
+                            "desc" => _("Specifies time in seconds for which records in the in-memory cache will be valid.")
                         }
                    },
                    #PAM configuration options
@@ -172,7 +172,7 @@ module Yast
                         "offline_credentials_expiration" => {
                             "type" => "int",
                             "def"  => 0,
-                            "desc" => _("If the authentication provider is offline, how long should we allow cached logins (in days since the last successful online login).")
+                            "desc" => _("If the authentication provider is offline, how long we should allow cached logins (in days since the last successful online login).")
                         },
                         "offline_failed_login_attempts" => {
                             "type" => "int",
@@ -218,7 +218,7 @@ module Yast
                         "autofs_negative_timeout" => {
                             "type" => "int",
                             "def"  => 15,
-                            "desc" => _("Specifies for how many seconds should the autofs responder negative cache hits before asking the back end again.")
+                            "desc" => _("Specifies for how many seconds the autofs responder should cache negative hits before asking the back end again.")
                         }
                   },
                   #SSH configuration options
@@ -255,47 +255,47 @@ module Yast
                         "force_timeout" => {
                             "type" => "int",
                             "def"  => 60,
-                            "desc" => _("If the service does not terminate after “force_timeout” seconds, the monitor will forcibly shut it down by sending a SIGKILL signal")
+                            "desc" => _("If the service does not terminate after “force_timeout” seconds, the monitor will forcibly shut it down by sending a SIGKILL signal.")
                         },
                         "entry_cache_timeout" => {
                             "type" => "int",
                             "def"  => 5400,
-                            "desc" => _("How many seconds should nss_sss consider entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss schould consider entries valid before asking the backend again.")
                         },
                         "entry_cache_user_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds should nss_sss consider user entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss schould consider user entries valid before asking the backend again.")
                         },
                         "entry_cache_group_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds should nss_sss consider group entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss schould consider group entries valid before asking the backend again.")
                         },
                         "entry_cache_netgroup_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds should nss_sss consider netgroup entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss schould consider netgroup entries valid before asking the backend again.")
                         },
                         "entry_cache_service_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds should nss_sss consider service entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss schould consider service entries valid before asking the backend again.")
                         },
                         "entry_cache_sudo_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds should sudo consider rules valid before asking the backend again.")
+                            "desc" => _("How many seconds sudo should consider rules valid before asking the backend again.")
                         },
                         "entry_cache_autofs_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds should the autofs service consider automounter maps valid before asking the backend again.")
+                            "desc" => _("How many seconds the autofs service should consider automounter maps valid before asking the backend again.")
                         },
                         "cache_credentials" => {
                             "type" => "boolean",
                             "def"  => false,
-                            "desc" => _("Determines if user credentials are also cached in the local LDB cache")
+                            "desc" => _("Determines if user credentials are also cached in the local LDB cache.")
                         },
                         "account_cache_expiration" => {
                             "type" => "int",
@@ -383,7 +383,7 @@ module Yast
                         },
                         "dns_discovery_domain" => {
                             "type" => "string",
-                            "def"  => _("Use the domain part of machine's hostname"),
+                            "def"  => _("Use the domain part of machine's hostname."),
                             "desc" => _("If service discovery is used in the back end, specifies the domain part of the service discovery DNS query.")
                         },
                         "override_gid" => {
@@ -940,7 +940,7 @@ module Yast
                         "ldap_access_filter" => {
                             "type" => "string",
                             "def"  => "",
-                            "desc" => _("If using access_provider = ldap and ldap_access_order = filter (default), this option is mandatory. It specifies an LDAP search filter criteria that must be met for the user to be granted access on this host.")
+                            "desc" => _("If using access_provider = ldap and ldap_access_order = filter (default), this option is mandatory. It specifies an LDAP search filter criterion that must be met for the user to be granted access on this host.")
                         },
                         "ldap_account_expire_policy" => {
                             "type" => "string",
@@ -1008,7 +1008,7 @@ module Yast
                         "krb5_ccachedir" => {
                             "type" => "string",
                             "def"  => "/tmp",
-                            "desc" => _("Directory to store credential caches")
+                            "desc" => _("Directory to store credential caches.")
                         },        
                         "krb5_ccname_template" => {
                             "type" => "string",
@@ -1041,7 +1041,7 @@ module Yast
                         },
                         "krb5_lifetime" => {
                             "type" => "string",
-                            "desc" => _("Request ticket with a with a lifetime, given as an integer immediately followed by a time unit")
+                            "desc" => _("Request ticket with a with a lifetime, given as an integer immediately followed by a time unit.")
                         },
                         "krb5_renew_interval" => {
                             "type" => "int",
