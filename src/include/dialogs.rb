@@ -411,8 +411,8 @@ module Yast
 
    def CheckSettings
        _ret = :next
-       _inactiv_domains = [] # List of domain which ar defined but not activated
-       _activ_domains = 0    # Count of activ domains 
+       _inactive_domains = [] # List of domain which ar defined but not activated
+       _active_domains = 0    # Count of activ domains 
        _domains = ListDomains()
 
        if _domains != []
@@ -423,24 +423,25 @@ module Yast
              }
              _domains.each { |d| 
                if ! _acd.include?(d)
-                        _inactiv_domains.push(d)
+                        _inactive_domains.push(d)
                else
-                     _activ_domains = _activ_domains + 1
+                     _active_domains = _active_domains + 1
                end
              }
           end
-          if _activ_domains == 0
+          if _active_domains == 0
              if ! Popup.YesNo( _("There are no activated domains in the [sssd] section.\n" +
                                  "sssd will not be started. Only local authentication will be available.\n" +
                                  "Do you want to write this configuration?")
-                               )
+                               e
                  return :go_on
              end
           end
-          if _inactiv_domains != []
+          if _inactive_domains != []
+		# TRANSLATORS: %s stands for list of inactive domains
              if ! Popup.YesNo( _("There are some domains you have not activated:\n" +
-                                 _inactiv_domains.join(", ") + "\n" +
-                                 "Do you want to write this configuration?")
+				   "%s \n" +
+				 "Do you want to write this configuration?") % _inactive_domains.join(", ")
                                )
                  return :go_on
              end
