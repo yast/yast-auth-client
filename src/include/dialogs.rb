@@ -30,7 +30,7 @@ module Yast
     def DeleteDomain
         _Domain = Convert.to_string( UI.QueryWidget(Id(:domains), :CurrentItem))
         _name   = _Domain.gsub("domain/","")
-        if ! Popup.YesNo( Builtins.sformat(_("Do you realy want to delete the domain '%1'." ),_name) )
+        if ! Popup.YesNo( Builtins.sformat(_("Do you really want to delete the domain '%1'?" ),_name) )
            return
         end
         if AuthClient.auth["sssd_conf"]["sssd"].has_key?("domains")
@@ -411,8 +411,8 @@ module Yast
 
    def CheckSettings
        _ret = :next
-       _inactiv_domains = [] # List of domain which ar defined but not activated
-       _activ_domains = 0    # Count of activ domains 
+       _inactive_domains = [] # List of domain which ar defined but not activated
+       _active_domains = 0    # Count of active domains 
        _domains = ListDomains()
 
        if _domains != []
@@ -423,24 +423,25 @@ module Yast
              }
              _domains.each { |d| 
                if ! _acd.include?(d)
-                        _inactiv_domains.push(d)
+                        _inactive_domains.push(d)
                else
-                     _activ_domains = _activ_domains + 1
+                     _active_domains = _active_domains + 1
                end
              }
           end
-          if _activ_domains == 0
+          if _active_domains == 0
              if ! Popup.YesNo( _("There are no activated domains in the [sssd] section.\n" +
                                  "sssd will not be started. Only local authentication will be available.\n" +
                                  "Do you want to write this configuration?")
-                               )
+                               e
                  return :go_on
              end
           end
-          if _inactiv_domains != []
-             if ! Popup.YesNo( _("There are some domains you have not activated it:\n" +
-                                 _inactiv_domains.join(", ") + "\n" +
-                                 "Do you want to write this configuration?")
+          if _inactive_domains != []
+		# TRANSLATORS: %s stands for list of inactive domains
+             if ! Popup.YesNo( _("There are some domains you have not activated:\n" +
+				   "%s \n" +
+				 "Do you want to write this configuration?") % _inactive_domains.join(", ")
                                )
                  return :go_on
              end
@@ -455,7 +456,7 @@ module Yast
           if ! Popup.YesNo(
             _( "Your system is configured for using nss_ldap.\n" +
            "This module is designed to configure your system via sssd.\n" +
-           "If you are using this module your nss_ldap configuration will be removed.\n" +
+           "If you continue, your nss_ldap configuration will be removed.\n" +
            "Do you want to continue?" )
           )
             return :abort
@@ -465,7 +466,7 @@ module Yast
           if ! Popup.YesNo(
             _( "Your system is configured as OES client.\n" +
            "This module is designed to configure your system via sssd.\n" +
-           "If you are using this module your OES client configuration will be deactivated.\n" +
+           "If you continue, your OES client configuration will be deactivated.\n" +
            "Do you want to continue?" )
           )
             return :abort
