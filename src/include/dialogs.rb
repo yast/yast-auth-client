@@ -432,8 +432,7 @@ module Yast
           if _active_domains == 0
              if ! Popup.YesNo( _("There are no activated domains in the [sssd] section.\n" +
                                  "sssd will not be started. Only local authentication will be available.\n" +
-                                 "Do you want to write this configuration?")
-                               e
+                                 "Do you want to write this configuration?"));
                  return :go_on
              end
           end
