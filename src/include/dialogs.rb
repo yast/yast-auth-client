@@ -412,7 +412,7 @@ module Yast
    def CheckSettings
        _ret = :next
        _inactive_domains = [] # List of domain which ar defined but not activated
-       _active_domains = 0    # Count of activ domains 
+       _active_domains = 0    # Count of active domains 
        _domains = ListDomains()
 
        if _domains != []
