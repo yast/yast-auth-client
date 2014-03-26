@@ -966,7 +966,7 @@ module Yast
                         "" => {
                             "type" => "string",
                             "def"  => "",
-                            "desc" => _("")
+                            "desc" => ""
                         },
 #                        "" => {
 #                            "type" => "string",
