@@ -3,7 +3,7 @@ Wed Mar 26 11:27:22 UTC 2014 - varkoly@suse.com
 
 - bnc#870075 - Typos in aut-client.pot
 - Fix handling domain names with "."
-- 3.1.20 
+- 3.1.10 
 
 -------------------------------------------------------------------
 Tue Mar 18 10:34:46 UTC 2014 - ckornacker@suse.com
