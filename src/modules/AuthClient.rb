@@ -93,7 +93,7 @@ module Yast
       if @auth["sssd"]
          _sections = SCR.Dir(path(".etc.sssd_conf.section"))
          _sections.each { |s|
-            _values = SCR.Read(path(".etc.sssd_conf.all."+s ))
+            _values = SCR.Read(path( ".etc.sssd_conf.all.\"#{s}\"" ) )
             _values["value"].each { |v|
               next if v["kind"] == "comment"
               @auth["sssd_conf"][s][v["name"]] = v["value"]
@@ -115,6 +115,7 @@ module Yast
         # Nothing to do
         return true
       end
+      Builtins.y2milestone("auth: %1",@auth)
       domains  = []
       services = []
       filter_groups = []
@@ -180,14 +181,14 @@ module Yast
       #Now we write the sssd configuration
       @auth["sssd_conf"].each_key { |s|
         if @auth["sssd_conf"][s].has_key?('DeleteSection')
-           SCR.Write(path(".etc.sssd_conf.section."+s), nil )
+           SCR.Write(path(".etc.sssd_conf.\"#{s}\""), nil )
            next
         end
         @auth["sssd_conf"][s].each_key { |k|
           if @auth["sssd_conf"][s][k] == "##DeleteValue##"
-             SCR.Write(path(".etc.sssd_conf.value."+s+"."+k), nil )
+             SCR.Write(path(".etc.sssd_conf.value.\"#{s}\".#{k}"), nil )
           else
-             SCR.Write(path(".etc.sssd_conf.value."+s+"."+k),@auth["sssd_conf"][s][k])
+             SCR.Write(path(".etc.sssd_conf.value.\"#{s}\".#{k}"),@auth["sssd_conf"][s][k])
           end
 	  if k == "id_provider" or k == "auth_provider" 
 	     need_sssd[@auth["sssd_conf"][s][k]] = true;
