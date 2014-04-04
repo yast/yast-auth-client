@@ -280,7 +280,7 @@ module Yast
         UI.OpenDialog(
                 Opt(:decorated),
                 VBox(
-                        Frame( Builtins.sformat(_("Edit ssd section '%1'"), section),
+                        Frame( Builtins.sformat(_("Edit sssd section '%1'"), section),
                                 ReplacePoint(Id(:rep_params), BuildSection(section) )
                         ),
                         ButtonBox(
