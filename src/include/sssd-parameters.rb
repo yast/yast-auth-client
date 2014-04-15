@@ -1132,6 +1132,40 @@ module Yast
 #                            "desc" => _("")
 #                        }
                   },
+                #The Active Directory domain section
+                "ipa" => {
+                        "ipa_domain" => {
+                            "type" => "string",
+                            "desc" => _("Specifies the name of the IPA domain.")
+                        },
+                        "ipa_server," => {
+                            "type" => "string",
+                            "desc" => _("The comma-separated list of IP addresses or hostnames of the IPA servers to which SSSD should connect in the order of preference.")
+                        },
+                        "ipa_hostname" => {
+                            "type" => "string",
+                            "desc" => _("May be set on machines where the hostname(5) does not reflect the fully qualified name.")
+                        },
+                        "dyndns_update" => {
+                            "type" => "boolean",
+                            "def"  => "False",
+                            "desc" => _("This option tells SSSD to automatically update the DNS server built into FreeIPA v2 with the IP address of this client.")
+                        },
+                        "dyndns_ttl" => {
+                            "type" => "int",
+                            "def"  => "1200",
+                            "desc" => _("The TTL to apply to the client DNS record when updating it.")
+                        },
+                        "dyndns_iface" => {
+                            "type" => "string",
+                            "desc" => _("Choose the interface whose IP address should be used for dynamic DNS updates.")
+                        }
+	#                        "" => {
+	#                            "type" => "string",
+	#                            "def"  => "",
+	#                            "desc" => _("")
+	#                        },
+		}
 
         }
     end

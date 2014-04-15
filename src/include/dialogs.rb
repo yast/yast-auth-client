@@ -227,6 +227,18 @@ module Yast
         return ret
     end
 
+    def MakeSelectedList(list,value)
+        _ret = Array.new
+	list.each { |k|
+	    if k == value
+	        _ret << Item(Id(k),k,true)
+	    else
+	        _ret << Item(Id(k),k)
+	    end
+	}
+	return _ret
+    end
+
     def BuildSection(section)
         _term = VBox()
         #Empy section
@@ -258,6 +270,7 @@ module Yast
         _params.each { |k|
            type = GetParameterType(k)
            v    = AuthClient.auth["sssd_conf"][section][k]
+           vals = GetParameterValues(k)
            case type 
              when "int"
                 _term.params << Left( IntField( Id(k), k, 0, @MAXINT, v.to_i ))
@@ -268,7 +281,11 @@ module Yast
                    _term.params << Left( CheckBox( Id(k), k, false ))
                 end   
              when "string"
-                _term.params << Left( InputField(Id(k), Opt(:hstretch), k, v))
+                if vals.empty?
+                   _term.params << Left( InputField(Id(k), Opt(:hstretch), k, v))
+                else
+                   _term.params << Left( ComboBox(Id(k),k, MakeSelectedList(vals,v)))
+                end
            end
         }
         return _term
