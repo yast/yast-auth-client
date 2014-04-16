@@ -228,15 +228,7 @@ module Yast
     end
 
     def MakeSelectedList(list,value)
-        _ret = Array.new
-	list.each { |k|
-	    if k == value
-	        _ret << Item(Id(k),k,true)
-	    else
-	        _ret << Item(Id(k),k)
-	    end
-	}
-	return _ret
+	return list.map { |k| k == value ? Item(Id(k),k,true) : Item(Id(k),k) }
     end
 
     def BuildSection(section)

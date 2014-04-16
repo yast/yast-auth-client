@@ -1160,11 +1160,6 @@ module Yast
                             "type" => "string",
                             "desc" => _("Choose the interface whose IP address should be used for dynamic DNS updates.")
                         }
-	#                        "" => {
-	#                            "type" => "string",
-	#                            "def"  => "",
-	#                            "desc" => _("")
-	#                        },
 		}
 
         }
