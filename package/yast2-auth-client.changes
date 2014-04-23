@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Apr 16 10:14:23 UTC 2014 - varkoly@suse.com
+
+- 3.1.12
+- Add some ipa parameter.
+- Use ComboBox if only certain values are allowed for a parameter.
+- bnc#870645 - yast/wfm.rb:202 Internal error. undefined method `each_key' for nil:NilClass 
+
+-------------------------------------------------------------------
 Tue Apr  1 16:17:08 UTC 2014 - varkoly@suse.com
 
 - bnc#870649 - Typo in yast2 sssd configuration
