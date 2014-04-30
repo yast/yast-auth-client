@@ -111,7 +111,7 @@ module Yast
     # Writes the clients authentication configuration.
     # @return true or false
     def Write
-      if ! @auth['sssd']
+      if ! @auth['sssd_conf']['sssd'].has_key?("domains")
         # Nothing to do
         return true
       end
