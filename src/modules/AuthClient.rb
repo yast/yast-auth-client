@@ -31,7 +31,7 @@ require "yast"
 module Yast
   class AuthClientClass < Module
 
-    NSS_DBS = ["passwd", "group", "passwd_compat", "group_compat", "services", "netgroup", "aliases"]
+    NSS_DBS = ["passwd", "group", "passwd_compat", "group_compat", "services", "netgroup", "aliases", "automount" ]
     SSS_DBS = ["passwd", "group" ]
 
     def main
@@ -142,9 +142,6 @@ module Yast
       # Add "sss" to the passwd and group databases in nsswitch.conf
       SSS_DBS.each { |db| @nsswitch[db].push("sss") if ! @nsswitch[db].include?("sss") }
 
-      # Write the new nss tables
-      NSS_DBS.each { |db| Nsswitch.WriteDb(db,@nsswitch[db]) }
-      Nsswitch.Write
 
       #Remove kerberos if activated
       if Pam.Enabled("krb5")
@@ -157,6 +154,17 @@ module Yast
       if @auth["sssd_conf"]["sssd"].has_key?("services")
          services = @auth["sssd_conf"]["sssd"]["services"].split(%r{,\s*})
       end
+
+      #Enable autofs if service is enabled
+      if services.include?("autofs")
+         @nsswitch["automount"].push("sss") if ! @nsswitch["automount"].include?("sss") 
+         Service.Enable("autofs")
+         Service.Start("autofs")
+      end
+
+      # Write the new nss tables
+      NSS_DBS.each { |db| Nsswitch.WriteDb(db,@nsswitch[db]) }
+      Nsswitch.Write
 
       if @auth["sssd_conf"]["sssd"].has_key?("domains")
          domains = @auth["sssd_conf"]["sssd"]["domains"].split(%r{,\s*})
@@ -190,10 +198,15 @@ module Yast
           else
              SCR.Write(path(".etc.sssd_conf.value.\"#{s}\".#{k}"),@auth["sssd_conf"][s][k])
           end
-	  if k == "id_provider" or k == "auth_provider" 
-	     need_sssd[@auth["sssd_conf"][s][k]] = true;
-	  end
+          if k == "id_provider" or k == "auth_provider" 
+             need_sssd[@auth["sssd_conf"][s][k]] = true;
+          end
         }
+      }
+      #Add section for each services
+      _sections = SCR.Dir(path(".etc.sssd_conf.section"))
+      services.each { |s|
+        SCR.Write(path(".etc.sssd_conf.section_comment.\"#{s}\""),'') if ! _sections.include?(s)
       }
       SCR.Write(path(".etc.sssd_conf"),nil)
 
@@ -206,14 +219,6 @@ module Yast
 
       Package.DoInstall(to_install) unless to_install.empty?
 
-      #Enable autofs only if there is min one domain activated and autofs service is enabled
-      if services.include?("autofs")
-        Service.Enable("autofs")
-        Service.Restart("autofs")
-      else
-        Service.Disable("autofs")
-        Service.Stop("autofs")
-      end
 
       #Start sssd only if there are more then one domain defined
       if !domains.empty?
@@ -310,7 +315,7 @@ module Yast
             domain["domain_name"] = s.sub("domain/","")
             settings["sssd_conf"]["auth_domains"].push(domain)
           else
-            settings[s] = @auth["sssd_conf"][s]
+            settings["sssd_conf"][s] = @auth["sssd_conf"][s]
           end
        }
        return settings
