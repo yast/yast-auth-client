@@ -163,7 +163,7 @@ module Yast
       end
 
       # Write the new nss tables
-      NSS_DBS.each { |db| Nsswitch.WriteDb(db,@nsswitch[db]) }
+      NSS_DBS.each { |db| Nsswitch.WriteDb(db, @nsswitch[db]) }
       Nsswitch.Write
 
       if @auth["sssd_conf"]["sssd"].has_key?("domains")
@@ -193,20 +193,21 @@ module Yast
            next
         end
         @auth["sssd_conf"][s].each_key { |k|
-          if @auth["sssd_conf"][s][k] == "##DeleteValue##"
+	  value = @auth["sssd_conf"][s][k]
+          if value == "##DeleteValue##"
              SCR.Write(path(".etc.sssd_conf.value.\"#{s}\".#{k}"), nil )
           else
-             SCR.Write(path(".etc.sssd_conf.value.\"#{s}\".#{k}"),@auth["sssd_conf"][s][k])
+             SCR.Write(path(".etc.sssd_conf.value.\"#{s}\".#{k}"),value)
           end
           if k == "id_provider" or k == "auth_provider" 
-             need_sssd[@auth["sssd_conf"][s][k]] = true;
+             need_sssd[value] = true;
           end
         }
       }
       #Add section for each services
       _sections = SCR.Dir(path(".etc.sssd_conf.section"))
       services.each { |s|
-        SCR.Write(path(".etc.sssd_conf.section_comment.\"#{s}\""),'') if ! _sections.include?(s)
+        SCR.Write(path(".etc.sssd_conf.section_comment.\"#{s}\""), '') if ! _sections.include?(s)
       }
       SCR.Write(path(".etc.sssd_conf"),nil)
 

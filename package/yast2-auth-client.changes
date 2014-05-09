@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 Thu May  8 12:05:25 UTC 2014 - varkoly@suse.com
 
-- Fix autoyast xml structure
+- bnc#877133 - yast2-auth-client exports bad formatted hash.
 - Fix activating autofs
 - 3.1.14
 
