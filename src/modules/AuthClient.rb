@@ -226,7 +226,7 @@ module Yast
         Service.Enable("sssd")
         Service.Disable("nscd")
         Service.Stop("nscd")
-        Service.Start("sssd")
+        Service.Active("sssd") ? Service.Restart("sssd") : Service.Start("sssd")
       else
         Service.Disable("sssd")
         Service.Stop("sssd")
