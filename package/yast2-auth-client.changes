@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Thu May  8 12:05:25 UTC 2014 - varkoly@suse.com
+
+- bnc#877133 - yast2-auth-client exports bad formatted hash.
+- Fix activating autofs
+- The default ldap schema rfc2307 is deprecated use rfc2307bis.
+- Restart sssd after saving the configuration.
+- 3.1.14
+
+-------------------------------------------------------------------
 Wed Apr 30 14:40:16 UTC 2014 - ckornacker@suse.com
 
 - Don't enable sssd if no domains are configured (bnc#870905)
