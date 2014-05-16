@@ -429,6 +429,7 @@ module Yast
                         "ldap_sudo_search_base" => {
                             "type" => "string",
                             "def"  => "",
+                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
                             "desc" => _("The default base DN to use for performing LDAP sudo rules.")
                         }
                    },
@@ -475,25 +476,30 @@ module Yast
                         "ldap_uri" => {
                             "type" => "string",
                             "req"  => 1,
+                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference.")
                         },
                         "ldap_backup_uri" => {
                             "type" => "string",
+                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference.")
                         },
                         "ldap_chpass_uri" => {
                             "type" => "string",
-                            "def"  => "ldap_uri",
+                            "def"  => "",
+                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference to change the password of a user.")
                         },
                         "ldap_chpass_backup_uri" => {
                             "type" => "string",
-                            "def"  => "ldap_uri",
+                            "def"  => "",
+                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference to change the password of a user.")
                         },
                         "ldap_search_base" => {
                             "type" => "string",
                             "req"  => 1,
+                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
                             "desc" => _("The default base DN to use for performing LDAP user operations.")
                         },
                         "ldap_schema" => {
@@ -794,6 +800,7 @@ module Yast
                         "ldap_service_search_base" => {
                             "type" => "string",
                             "def"  => "the value of ldap_search_base",
+                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
                             "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
                         },
                         "ldap_search_timeout" => {
@@ -844,6 +851,7 @@ module Yast
                         "ldap_tls_reqcert" => {
                             "type" => "string",
                             "def"  => "hard",
+                            "vals" => "never, allow, try, demand, hard",
                             "desc" => _("Specifies what checks to perform on server certificates in a TLS session, if any.")
                         },
                         "ldap_tls_cacert" => {

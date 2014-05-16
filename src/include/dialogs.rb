@@ -113,6 +113,15 @@ module Yast
         end
     end
 
+    def ValidateInput(item,parameter)
+        @params.each_key { |s|
+	  if @params[s][parameter] && @params[s][parameter].has_key?("rule")
+             return ConvertToString(item,parameter) =~ @params[s][parameter]["rule"]
+          end
+        }
+        return true
+    end
+
     def AddParameter(section,parameter)
         Builtins.y2milestone("--Add Parameter %1 in section %2 called",parameter,section)
         _type = GetParameterType(parameter)
@@ -153,7 +162,12 @@ module Yast
                 if !AuthClient.auth["sssd_conf"].has_key?(section)
                     AuthClient.auth["sssd_conf"][section] = Hash.new
                 end
-                AuthClient.auth["sssd_conf"][section][parameter] = ConvertToString(:value,parameter)
+                if ValidateInput(:value,parameter)
+                  AuthClient.auth["sssd_conf"][section][parameter] = ConvertToString(:value,parameter)
+                else
+                  Popup.Error( Builtins.sformat(_("Value for parameter '%1' is invalid."), parameter))
+                  ret = nil
+                end
                 break
           end
         end
@@ -318,7 +332,12 @@ module Yast
                ret = nil
             when :ok
                 AuthClient.auth["sssd_conf"][section].each_key { |k|
+                  if ValidateInput(k,k)
                     AuthClient.auth["sssd_conf"][section][k] = ConvertToString(k,k)
+                  else
+                    Popup.Error( Builtins.sformat(_("Value for parameter '%1' is invalid."), k))
+                    ret = nil
+                  end
                 }
           end
         end
