@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri May 16 15:00:25 UTC 2014 - ckornacker@suse.com
+
+- Validate sssd.conf config parameter values (bnc#876721)
+- 3.1.14
+
+-------------------------------------------------------------------
 Wed Apr 30 14:40:16 UTC 2014 - ckornacker@suse.com
 
 - Don't enable sssd if no domains are configured (bnc#870905)
