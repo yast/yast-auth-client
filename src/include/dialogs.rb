@@ -405,8 +405,10 @@ module Yast
                           AuthClient.auth["sssd_conf"]["sssd"]["domains"] = AuthClient.auth["sssd_conf"]["sssd"]["domains"]  + ", "+ dname
                       end
                    end
+		   #The default ldap schema rfc2307 is deprecated use rfc2307bis
+		   AuthClient.auth["sssd_conf"][name]["ldap_schema"] = 'RFC2307bis' if AuthClient.auth["sssd_conf"][name]["id_provider"] == "ldap"
                    ConfigureSection(name)
-                         Builtins.y2milestone("auth %1", AuthClient.auth)
+                   Builtins.y2milestone("auth %1", AuthClient.auth)
                 end
           end
         end
