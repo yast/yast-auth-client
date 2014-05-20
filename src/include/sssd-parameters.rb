@@ -260,27 +260,27 @@ module Yast
                         "entry_cache_timeout" => {
                             "type" => "int",
                             "def"  => 5400,
-                            "desc" => _("How many seconds nss_sss schould consider entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss should consider entries valid before asking the backend again.")
                         },
                         "entry_cache_user_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds nss_sss schould consider user entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss should consider user entries valid before asking the backend again.")
                         },
                         "entry_cache_group_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds nss_sss schould consider group entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss should consider group entries valid before asking the backend again.")
                         },
                         "entry_cache_netgroup_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds nss_sss schould consider netgroup entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss should consider netgroup entries valid before asking the backend again.")
                         },
                         "entry_cache_service_timeout" => {
                             "type" => "int",
                             "def"  => "entry_cache_timeout",
-                            "desc" => _("How many seconds nss_sss schould consider service entries valid before asking the backend again.")
+                            "desc" => _("How many seconds nss_sss should consider service entries valid before asking the backend again.")
                         },
                         "entry_cache_sudo_timeout" => {
                             "type" => "int",
