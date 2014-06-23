@@ -135,7 +135,7 @@ module Yast
 
       #Remove ldap only nss databases
       NSS_DBS.each { |db|
-        @nsswitch[db] = Nsswitch.ReadDb(db).select{ |v| v =~ /ldap/ }
+        @nsswitch[db] = Nsswitch.ReadDb(db).reject{ |v| v =~ /ldap/ }
         @nsswitch[db] = ["files"] if @nsswitch[db] == []
       }
 
