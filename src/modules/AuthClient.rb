@@ -135,7 +135,7 @@ module Yast
 
       #Remove ldap only nss databases
       NSS_DBS.each { |db|
-        @nsswitch[db] = Nsswitch.ReadDb(db).select{ |v| v =~ /ldap/ }
+        @nsswitch[db] = Nsswitch.ReadDb(db).reject{ |v| v =~ /ldap/ }
         @nsswitch[db] = ["files"] if @nsswitch[db] == []
       }
 
@@ -189,7 +189,7 @@ module Yast
       #Now we write the sssd configuration
       @auth["sssd_conf"].each_key { |s|
         if @auth["sssd_conf"][s].has_key?('DeleteSection')
-           SCR.Write(path(".etc.sssd_conf.\"#{s}\""), nil )
+           SCR.Write(path(".etc.sssd_conf.section.\"#{s}\""), nil )
            next
         end
         @auth["sssd_conf"][s].each_key { |k|
