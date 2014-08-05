@@ -27,6 +27,7 @@ Group:          System/YaST
 License:        GPL-2.0
 BuildRequires:	doxygen perl-XML-Writer update-desktop-files yast2 yast2-pam yast2-testsuite yast2-network
 BuildRequires:  yast2-devtools >= 3.0.6
+BuildRequires:  rubygem-rspec
 
 PreReq:         %fillup_prereq
 
