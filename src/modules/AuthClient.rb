@@ -269,7 +269,7 @@ module Yast
             # Read authentication domains
             settings['sssd_conf']['auth_domains'].each { |domain|
               if !domain.has_key?('domain_name')
-                Builtins.y2milestone("Domain has no domain_name: #{domain}")
+                Builtins.y2warning("Domain has no domain_name: #{domain}")
               end
               name = 'domain/' + domain['domain_name']
               domain.each_key { |key|
