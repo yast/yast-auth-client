@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Aug  1 14:38:16 CEST 2014 - schubi@suse.de
+
+- Fixed error while parsing autoyast settings with missing
+  'sssd_conf' entry. (bnc#889758)
+- 3.1.18
+
+-------------------------------------------------------------------
 Mon Jun 23 13:57:30 UTC 2014 - ckornacker@suse.com
 
 - fix deletion of sssd domains

@@ -244,49 +244,51 @@ module Yast
     def Import(settings)
       @auth = Hash.new(&@make_hash)
 
-      #Read the basic settings of auth client
+      # Read the basic settings of auth client
       settings.each_key { |s|
         next if s == "sssd_conf"
         @auth[s] = settings[s]
       }
 
-      #Evaluate if the settings are valid
-      if settings.has_key?('sssd')
-        if settings['sssd'] && !settings.has_key?('sssd_conf') 
+      # Evaluate if the settings are valid
+      if settings['sssd']
+        # using sssd
+        unless settings.has_key?('sssd_conf')
           Builtins.y2milestone("There are no sssd configuration provided but sssd is enabled.")
           return false
+        else
+          # Read sssd basic settings
+          settings['sssd_conf'].each_key { |key|
+            next if key == "auth_domains"
+            @auth['sssd_conf'][key] = settings['sssd_conf'][key]
+          }
+          unless settings['sssd_conf'].has_key?('auth_domains')
+            Builtins.y2milestone("There are no authentication domain defined")
+            return false
+          else
+            # Read authentication domains
+            settings['sssd_conf']['auth_domains'].each { |domain|
+              if !domain.has_key?('domain_name')
+                Builtins.y2warning("Domain has no domain_name: #{domain}")
+              end
+              name = 'domain/' + domain['domain_name']
+              domain.each_key { |key|
+                next if key == 'domain_name'
+                @auth['sssd_conf'][name][key] = domain[key]
+              }
+            }
+          end
         end
       else
+        # not using sssd
         if settings.has_key?('sssd_conf') 
           Builtins.y2milestone("There are sssd configuration provided but sssd is not enabled.")
           return false
         end
         Builtins.y2milestone("Authentication will not made via sssd.")
-         @auth['sssd'] = false
-        return true 
+        @auth['sssd'] = false
       end
 
-      #Read sssd basic settings
-      settings['sssd_conf'].each_key { |s|
-        next if s == "auth_domains"
-        @auth['sssd_conf'][s] = settings['sssd_conf'][s]
-      }
-      if !settings['sssd_conf'].has_key?('auth_domains')
-        Builtins.y2milestone("There are no authentication domain defined")
-        return false
-      end
-
-      #Read authentication domains
-      settings['sssd_conf']['auth_domains'].each { |d|
-        if !d.has_key?('domain_name')
-          Builtins.y2milestone("Domain has no domain_name: %1",d)
-        end
-        name = 'domain/' + d['domain_name'] 
-        d.each_key { |k|
-          next if k == 'domain_name'
-          @auth['sssd_conf'][name][k] = d[k]
-        }
-      }
       true
     end
     # end Import
