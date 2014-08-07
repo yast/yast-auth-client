@@ -1,8 +1,9 @@
 -------------------------------------------------------------------
 Thu Aug  7 08:57:02 UTC 2014 - varkoly@suse.com
 
-- bnc#889762 - yast2-auth-client lacks help
-- Services can have more values
+- bnc#889762 - yast2-auth-client lacks help.
+- Services can have more values.
+- ldap_search_base is not a mandatory parameter.
 - 3.1.19 
 
 -------------------------------------------------------------------
