@@ -18,7 +18,6 @@ module Yast
                         },
                         "services" => {
                             "type" => "string",
-                            "vals" => "nss, pam, sudo, autofs, ssh",
                             "desc" => _("Comma separated list of services that are started when sssd itself starts.")
                         },
                         "reconnection_retries" => {
@@ -498,7 +497,6 @@ module Yast
                         },
                         "ldap_search_base" => {
                             "type" => "string",
-                            "req"  => 1,
                             "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
                             "desc" => _("The default base DN to use for performing LDAP user operations.")
                         },

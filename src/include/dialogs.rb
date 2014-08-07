@@ -550,7 +550,26 @@ module Yast
       Wizard.SetContentsButtons(
         caption,
         contents,
-        _("TODO WRITE HELP"),
+        _("SSSD provides a set of daemons to manage access to remote directories and authentication mechanisms.<br>" +
+          "You have to confiugre at least one authentication domain.<br>" +
+          "The first you have to set for a authentication domain is the identification and auth provider used for the domain.<br>" +
+          "In the next step you have to set some mandatory parameter for the selected providers." +
+          "You can select later all parameters available for the selected identification and auth provider." +
+          "SSSD provides following id_provider:<br>" +
+          "<b>proxy</b>: Support a legacy NSS provider.<br>" +
+          "<b>local</b>: SSSD internal provider for local users.<br>" +
+          "<b>ldap</b>: LDAP provider. See sssd-ldap(5) for more information on configuring LDAP.<br>" +
+          "<b>ipa</b>: FreeIPA and Red Hat Enterprise Identity Management provider.<br>" +
+          "<b>ad</b>: Active Directory provider.<br>" +
+	  "Supported auth providers are:<br>" +
+          "<b>ldap</b> for native LDAP authentication.<br>" +
+          "<b>krb5</b> for Kerberos authentication.<br>" +
+          "<b>ipa</b> FreeIPA and Red Hat Enterprise Identity Management provider.<br>" +
+          "<b>ad</b> Active Directory provider.<br>" +
+          "<b>proxy</b> for relaying authentication to some other PAM target.<br>" +
+          "<b>none</b> disables authentication explicitly.<br>" +
+          "The default auth provider is the id_provider.<br>"
+	),
         Label.CancelButton,
         Label.FinishButton
       )

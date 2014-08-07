@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Aug  7 08:57:02 UTC 2014 - varkoly@suse.com
+
+- bnc#889762 - yast2-auth-client lacks help
+- Services can have more values
+- 3.1.19 
+
+-------------------------------------------------------------------
 Fri Aug  1 14:38:16 CEST 2014 - schubi@suse.de
 
 - Fixed error while parsing autoyast settings with missing
