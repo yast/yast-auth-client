@@ -137,7 +137,7 @@ module Yast
                 _term.params << Left( CheckBox( Id(:value), parameter, false ))
              end   
           when "string"
-             _term.params << Left( TextEntry( Id(:value), parameter, _def))
+             _term.params << Left( InputField( Id(:value), Opt(:hstretch), parameter, _def))
         end
         #No we open the dialog
         UI.OpenDialog(
@@ -355,7 +355,7 @@ module Yast
                 VBox(
                     Frame( _("Add New Domain"),
                         VBox(
-                           TextEntry( Id(:name), _("Name:"),"" ),
+                           InputField( Id(:name), Opt(:hstretch), _("Name:"),"" ),
                            Left( CheckBox( Id(:activate), _("Activate Domain"), true ) ),
                            SelectionBox( Id(:id_provider),
                              _("The identification provider used for the domain"),
