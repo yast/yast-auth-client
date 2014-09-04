@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Sep  4 11:46:38 UTC 2014 - mvidner@suse.com
+
+- Use a more flexible rubygem requirement syntax (bnc#895069)
+- 3.1.20
+
+-------------------------------------------------------------------
 Thu Aug  7 08:57:02 UTC 2014 - varkoly@suse.com
 
 - bnc#889762 - yast2-auth-client lacks help.
