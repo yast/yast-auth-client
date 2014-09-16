@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Sep 16 12:25:58 UTC 2014 - varkoly@suse.com
+
+- Fix frame description.
+- 3.1.21 
+
+-------------------------------------------------------------------
 Thu Sep  4 11:46:38 UTC 2014 - mvidner@suse.com
 
 - Use a more flexible rubygem requirement syntax (bnc#895069)

@@ -509,7 +509,7 @@ module Yast
       end
       # Main dialog contents
       contents = Frame(
-          _("SPAM Prevention"),
+          _("Authentication Client"),
           HBox(
             HWeight(
               7,
