@@ -429,6 +429,7 @@ module Yast
           _term.params << Left(PushButton(Id(:autofs), "&autofs")) if _services.include?("autofs")
           _term.params << Left(PushButton(Id(:ssh),    "&ssh"))    if _services.include?("ssh")
         end
+        _term.params << Left( CheckBox( Id(:mkhomedir), Opt(:notify), _("Create Home Directory on Login"),  AuthClient.auth["mkhomedir"] ))
         _term
     end
 
@@ -581,6 +582,8 @@ module Yast
          ret   = Ops.get(event, "ID")
          Builtins.y2milestone("ret was pussed %1",ret)
          case ret
+           when :mkhomedir
+             AuthClient.auth["mkhomedir"]  = Convert.to_boolean( UI.QueryWidget(Id(:mkhomedir), :CurrentItem) );
            when :sssd
              ConfigureSection("sssd")
              UI.ReplaceWidget(Id(:rep_services), CreateServices() )

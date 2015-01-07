@@ -3,9 +3,10 @@ namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
 namespace config = "http://www.suse.com/1.0/configns"
 auth-client =
   element auth-client {
-     element nssldap { BOOLEAN }? &
-     element sssd    { BOOLEAN }? &
-     element oes     { BOOLEAN }? &
+     element nssldap   { BOOLEAN }? &
+     element sssd      { BOOLEAN }? &
+     element oes       { BOOLEAN }? &
+     element mkhomedir { BOOLEAN }? &
      sssd_conf?
 }
 
