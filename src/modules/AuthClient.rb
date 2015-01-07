@@ -142,6 +142,8 @@ module Yast
       #Enable pam_mkhomedir if required.
       if @auth["mkhomedir"]
          Pam.Add("mkhomedir")
+      else
+         Pam.Remove("mkhomedir")
       end
 
       #Remove ldap only nss databases
