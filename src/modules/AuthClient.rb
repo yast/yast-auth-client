@@ -121,6 +121,9 @@ module Yast
       filter_groups = []
       filter_users  = []
       to_install    = []
+      if !Package.Installed("sssd") && Package.Available("sssd")
+          to_install << "sssd"
+      end
 
       need_sssd = {
          "ldap"  => false,
