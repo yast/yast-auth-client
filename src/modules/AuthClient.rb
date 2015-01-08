@@ -80,6 +80,9 @@ module Yast
       #Check if oes is used in nss
       @auth["oes"]  = CheckOES()
 
+      #Check if pam_mkhomedir is enabled.
+      @auth["mkhomedir"] = Pam.Enabled("mkhomedir")
+
       #Check if ldap is used in nss
       NSS_DBS.each { |db| @nsswitch[db] = Nsswitch.ReadDb(db) }
 
@@ -121,6 +124,9 @@ module Yast
       filter_groups = []
       filter_users  = []
       to_install    = []
+      if !Package.Installed("sssd") && Package.Available("sssd")
+          to_install << "sssd"
+      end
 
       need_sssd = {
          "ldap"  => false,
@@ -132,6 +138,13 @@ module Yast
 
       #Add sss to pam
       Pam.Add("sss")
+
+      #Enable pam_mkhomedir if required.
+      if @auth["mkhomedir"]
+         Pam.Add("mkhomedir")
+      else
+         Pam.Remove("mkhomedir")
+      end
 
       #Remove ldap only nss databases
       NSS_DBS.each { |db|
