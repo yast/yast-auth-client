@@ -1,5 +1,5 @@
 -------------------------------------------------------------------
-Fri Oct 31 11:52:35 UTC 2014 - varkoly@suse.com
+Fri Dec 31 11:52:35 UTC 2014 - varkoly@suse.com
 
 - bnc#893983 - Removed an unnecessary hard dependency on sssd.
 - bnc#907830 - No option to 'Create Home Directory on Login' in Authentication module
