@@ -247,7 +247,7 @@ module Yast
                             "desc" => _("UID and GID limits for the domain. If a domain contains an entry that is outside these limits, it is ignored.")
                         },
                         "enumerate" => {
-                            "type" => "bool",
+                            "type" => "boolean",
                             "def"  => false,
                             "desc" => _("Determines if a domain can be enumerated.")
                         },
