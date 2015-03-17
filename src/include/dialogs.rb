@@ -102,7 +102,7 @@ module Yast
     def ConvertToString(item,parameter)
         _type = GetParameterType(parameter)
         case _type
-            when "bool"
+            when "boolean"
                 if Convert.to_boolean(UI.QueryWidget(Id(item),:Value))
                    return "True"
                 else
@@ -130,7 +130,7 @@ module Yast
         case _type 
           when "int"
              _term.params << Left( IntField( Id(:value), parameter, 0, @MAXINT, _def.to_i ))
-          when "bool"
+          when "boolean"
              if _def =~ /1|true/i
                 _term.params << Left( CheckBox( Id(:value), parameter, true ))
              else   
@@ -280,7 +280,7 @@ module Yast
            case type 
              when "int"
                 _term.params << Left( IntField( Id(k), k, 0, @MAXINT, v.to_i ))
-             when "bool"
+             when "boolean"
                 if v =~ /1|true/i
                    _term.params << Left( CheckBox( Id(k), k, true ))
                 else   
