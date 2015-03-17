@@ -209,12 +209,15 @@ module Yast
         UI.OpenDialog(
                 Opt(:decorated),
                 VBox(
-                        Frame( Builtins.sformat(_("Select new Parameter for section '%1'"), section),
-                           SelectionBox(
-                             Id(:parameter),
-                             _("New Parameter"),
-                             _pars.sort
-                           )
+                        Label(Builtins.sformat(_("Select new Parameter for section '%1'"), section)),
+                        SelectionBox(
+                          Id(:parameter),
+                          _(""),
+                          _pars.sort
+                        ),
+                        HBox(
+                          Label(_("Quick Filter:")),
+                          InputField(Id(:quickfilter), Opt(:hstretch, :notify), ""),
                         ),
                         ButtonBox(
                           PushButton(Id(:cancel), _("Cancel")),
@@ -229,6 +232,25 @@ module Yast
           event = UI.WaitForEvent
           ret = Ops.get(event, "ID")
           case ret
+            when :quickfilter
+              filter_words = UI.QueryWidget(Id(:quickfilter), :Value).split(%r{\W|_})
+              _filterpars = _pars.select do |par_name|
+                par_words = par_name.split(%r{\W|_})
+                # The wording of SSSD parameters is not straight forward
+                # Therefore the quick filter tries to be more helpful by using these filter rules:
+                # - Parameter name shall contain all filter words except the last filter word
+                # - One of the words in the parameter name shall contain the last filter word
+                # The mechanism improves matching quality, e.g.
+                # ldap_service_object_class will show up when filter is "ldap_object"
+                if filter_words.length == 1
+                  par_words.any? { |word| word.include? filter_words[0] }
+                elsif filter_words.length > 1
+                  (filter_words[0..-2] - par_words).empty? and par_words.any? { |word| word.include? filter_words[-1] }
+                else
+                  true
+                end
+              end
+              UI.ChangeWidget(Id(:parameter), :Items, _filterpars.sort)
             when :cancel
                break
             when :help
