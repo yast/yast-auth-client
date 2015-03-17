@@ -18,7 +18,8 @@ module Yast
                         },
                         "services" => {
                             "type" => "string",
-                            "desc" => _("Comma separated list of services that are started when sssd itself starts.")
+                            "desc" => _("Comma separated list of services that are started when sssd itself starts.") +
+                                      _("\nSupported services: nss, pam, sudo, autofs, ssh")
                         },
                         "reconnection_retries" => {
                             "type" => "int",
