@@ -475,7 +475,8 @@ module Yast
 
        # Suggest to enable at least one domain
        if enabled_domains == []
-           if Popup.YesNo(
+           if Popup.YesNoHeadline(
+             "No domain enabled",
              _("No domain has been enabled in [sssd] \"domains\" parameter.\n" +
                "SSSD will not start, and only local authencation will be available.\n" +
                "Do you still wish to proceed?"))
@@ -488,11 +489,11 @@ module Yast
        # Suggest to correct spelling mistake in domain names
        misspelt_names = enabled_domains - available_domains
        if misspelt_names != []
-           Popup.Notify(
+           Popup.Error(
              _("Certain domains mentioned in [sssd] \"domains\" parameter do not have " +
-               "corresponding configuration:\n%s\n" % misspelt_names.join(", ") +
+               "configuration:\n%s\n\n" % misspelt_names.join(", ") +
                "This could be a spelling mistake. SSSD will not start in this configuration.\n" +
-               "Note that domain names are case sensitive. Please correct the parameter value."))
+               "Note that domain names are case sensitive.\nPlease correct the parameter value."))
            return :go_on
        end
 
@@ -500,8 +501,8 @@ module Yast
        disabled_domains = available_domains - enabled_domains
        if disabled_domains != [] && ! Popup.YesNo(
          _("Certain configured domains are not enabled in [sssd] \"domains\" parameter:\n" +
-           "%s\n" % disabled_domains.join(", ") +
-           "Domains will not work unless specifically mentioned in \"domains\" parameter.\n" +
+           "%s\n\n" % disabled_domains.join(", ") +
+           "Domains will not work unless specifically mentioned in the parameter.\n" +
            "Do you still wish to proceed?" % disabled_domains.join(", ")))
            return :go_on
        end
