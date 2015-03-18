@@ -463,43 +463,51 @@ module Yast
     end
 
    def CheckSettings
-       _ret = :next
-       _inactive_domains = [] # List of domain which ar defined but not activated
-       _active_domains = 0    # Count of active domains 
-       _domains = ListDomains()
-
-       if _domains != []
-          if AuthClient.auth["sssd_conf"]["sssd"].has_key?("domains")
-             _acd = []
-             AuthClient.auth["sssd_conf"]["sssd"]["domains"].split(%r{,\s*}).each { |d| 
-                _acd.push("domain/"+d)
-             }
-             _domains.each { |d| 
-               if ! _acd.include?(d)
-                        _inactive_domains.push(d)
-               else
-                     _active_domains = _active_domains + 1
-               end
-             }
-          end
-          if _active_domains == 0
-             if ! Popup.YesNo( _("There are no activated domains in the [sssd] section.\n" +
-                                 "sssd will not be started. Only local authentication will be available.\n" +
-                                 "Do you want to write this configuration?"));
-                 return :go_on
-             end
-          end
-          if _inactive_domains != []
-		# TRANSLATORS: %s stands for list of inactive domains
-             if ! Popup.YesNo( _("There are some domains you have not activated:\n" +
-				   "%s \n" +
-				 "Do you want to write this configuration?") % _inactive_domains.join(", ")
-                               )
-                 return :go_on
-             end
-          end
+       auth_sssd = AuthClient.auth["sssd_conf"]["sssd"]
+       # List of all defined domains
+       available_domains = ListDomains().map { |d| d.sub("domain/", "") }
+       if available_domains == []
+           auth_sssd["domains"] = "" # Clear enabled domains
+           return :next
        end
-       _ret
+       # List of domains enabled in [sssd] section
+       enabled_domains = auth_sssd.fetch("domains", "").split(%r{,\s*})
+
+       # Suggest to enable at least one domain
+       if enabled_domains == []
+           if Popup.YesNoHeadline(
+             "No domain enabled",
+             _("No domain has been enabled in [sssd] \"domains\" parameter.\n" +
+               "SSSD will not start, and only local authencation will be available.\n" +
+               "Do you still wish to proceed?"))
+               return :next
+           else
+               return :go_on
+           end
+       end
+
+       # Suggest to correct spelling mistake in domain names
+       misspelt_names = enabled_domains - available_domains
+       if misspelt_names != []
+           Popup.Error(
+             _("Certain domains mentioned in [sssd] \"domains\" parameter do not have " +
+               "configuration:\n%s\n\n" % misspelt_names.join(", ") +
+               "This could be a spelling mistake. SSSD will not start in this configuration.\n" +
+               "Note that domain names are case sensitive.\nPlease correct the parameter value."))
+           return :go_on
+       end
+
+       # Suggest to enable more domains
+       disabled_domains = available_domains - enabled_domains
+       if disabled_domains != [] && ! Popup.YesNo(
+         _("Certain configured domains are not enabled in [sssd] \"domains\" parameter:\n" +
+           "%s\n\n" % disabled_domains.join(", ") +
+           "Domains will not work unless specifically mentioned in the parameter.\n" +
+           "Do you still wish to proceed?" % disabled_domains.join(", ")))
+           return :go_on
+       end
+
+       return :next
     end
 
     def MainDialog
