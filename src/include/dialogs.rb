@@ -301,7 +301,11 @@ module Yast
            vals = GetParameterValues(k)
            case type 
              when "int"
-                _term.params << Left( IntField( Id(k), k, 0, @MAXINT, v.to_i ))
+                if vals.empty?
+                   _term.params << Left( IntField( Id(k), k, 0, @MAXINT, v.to_i ))
+                else
+                   _term.params << Left( ComboBox(Id(k),k, MakeSelectedList(vals,v)))
+                end
              when "boolean"
                 if v =~ /1|true/i
                    _term.params << Left( CheckBox( Id(k), k, true ))
