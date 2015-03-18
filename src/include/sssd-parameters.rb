@@ -14,7 +14,9 @@ module Yast
                    "sssd" => {
                         "config_file_version" => {
                             "type" => "int",
-                            "desc" => _("Indicates what is the syntax of the config file.")
+                            "desc" => _("Indicates what is the syntax of the config file."),
+                            "def" => 2,
+                            "vals" => "2"
                         },
                         "services" => {
                             "type" => "string",
