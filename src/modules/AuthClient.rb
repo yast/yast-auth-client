@@ -114,10 +114,6 @@ module Yast
     # Writes the clients authentication configuration.
     # @return true or false
     def Write
-      if ! @auth['sssd_conf']['sssd'].has_key?("domains")
-        # Nothing to do
-        return true
-      end
       Builtins.y2milestone("auth: %1",@auth)
       domains  = []
       services = []

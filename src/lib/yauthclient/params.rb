@@ -1,19 +1,63 @@
-# encoding: utf-8
+require "yast"
 
-# File: include/auth-client/sssd-parameters.rb
-# Package:      Configuration of auth-client
-# Summary:      The sssd.conf parameters
-# Authors:      Peter Varkoly <varkoly@suse.de>
-#
-module Yast
-  module AuthClientSssdParametersInclude
-    def initialize_auth_client_sssd_parameters(include_target)
-        textdomain "auth-client"
-        @params = {
+Yast.import "UI"
+
+module YAuthClient
+    # A database of SSSD configuration parameter names, type, default, etc.
+    class Params
+        include Singleton
+        include Yast::UIShortcuts
+        include Yast::I18n
+        include Yast::Logger
+
+        def initialize
+            textdomain "auth-client"
+            @all_params = Hash[]
+            init_params
+        end
+
+        # Return all parameter descriptions, categorised by section type.
+        def all_params
+            return @all_params
+        end
+
+        # Return the parameter description, type, default value and value choices.
+        def get_by_name(name)
+            sect_defi = @all_params.find(ifnone=lambda{ [nil, Hash[]] }) { |sect, defi| defi.has_key? name }[1]
+            defi = sect_defi.fetch(name, Hash[])
+            return Hash[
+                "desc", defi["desc"] && defi["desc"] || "",
+                "type", defi["type"] && defi["type"] || "string",
+                "vals", defi["vals"] && defi["vals"] || [],
+                "def",  defi["def"]  && defi["def"]  || ""
+            ]
+        end
+
+        # Return all parameter details that belong to the specified section.
+        def get_by_section(section_name)
+            defs = @all_params.fetch(section_name, Hash[]).keys.map { |pname| [pname, get_by_name(pname)] }
+            return Hash[[*defs]]
+        end
+
+        # Return the parameter details common to all domains.
+        def get_common_domain_section
+            return get_by_section("domain")
+        end
+
+        # Return the parameter details of SSSD daemon.
+        def get_daemon_section
+            return get_by_section("sssd")
+        end
+
+        private
+        def init_params
+            @all_params = {
                    #Define Global Parameters
                    "sssd" => {
                         "config_file_version" => {
                             "type" => "int",
+                            "def" => 2,
+                            "vals" => "2",
                             "desc" => _("Indicates what is the syntax of the config file.")
                         },
                         "services" => {
@@ -314,8 +358,7 @@ module Yast
                         },
                         "auth_provider" => {
                             "type" => "string",
-                            "vals" => "ldap, krb5, ipa, ad, proxy, none",
-                            "def"  => "id_provider",
+                            "vals" => "ldap, krb5, ipa, ad, proxy, local, none",
                             "desc" => _("The authentication provider used for the domain.")
                         },
                         "access_provider" => {
@@ -327,7 +370,6 @@ module Yast
                         "chpass_provider" => {
                             "type" => "string",
                             "vals" => "ldap, krb5, ipa, ad, proxy, none",
-                            "def"  => "auth_provider",
                             "desc" => _("The provider which should handle change password operations for the domain.")
                         },
                         "sudo_provider" => {
@@ -383,7 +425,6 @@ module Yast
                         },
                         "dns_discovery_domain" => {
                             "type" => "string",
-                            "def"  => _("Use the domain part of machine's hostname."),
                             "desc" => _("If service discovery is used in the back end, specifies the domain part of the service discovery DNS query.")
                         },
                         "override_gid" => {
@@ -970,16 +1011,6 @@ module Yast
                             "def"  => "false",
                             "desc" => _("Allows to retain local users as members of an LDAP group for servers that use the RFC2307 schema.")
                         },
-                        "" => {
-                            "type" => "string",
-                            "def"  => "",
-                            "desc" => ""
-                        },
-#                        "" => {
-#                            "type" => "string",
-#                            "def"  => "",
-#                            "desc" => _("")
-#                        },
                         },
                    #The kerberos domain section
                    "krb5" => {
@@ -1167,10 +1198,10 @@ module Yast
                             "type" => "string",
                             "desc" => _("Choose the interface whose IP address should be used for dynamic DNS updates.")
                         }
-		}
+                }
 
-        }
-    end
-  end
-end
+            }
+        end # init_params
+    end # Params
+end # module
 

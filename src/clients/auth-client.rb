@@ -29,6 +29,8 @@
 #**
 # <h3>Configuration of the authentication client</h3>
 
+require "yauthclient/main_dialog.rb"
+
 module Yast
   class AuthClientCmd < Client
     def main
@@ -36,9 +38,6 @@ module Yast
       Yast.import "AuthClient"
       Yast.import "CommandLine"
       Yast.import "RichText"
-
-      Yast.include self, "auth-client/sssd-parameters.rb"
-      Yast.include self, "auth-client/wizards.rb"
 
       @ret = :auto
 
@@ -116,5 +115,5 @@ sssd_conf =
 
   end
 end
-Yast::AuthClientCmd.new.main
+YAuthClient::MainDialog.new.run
 
