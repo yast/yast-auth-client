@@ -57,10 +57,13 @@ module YAuthClient
                         HBox(
                             # Overview of all config sections
                             HWeight(35, VBox(
-                                Tree(Id(:section_tree), Opt(:immediate), "Sections", []),
-                                CheckBox(Id(:mkhomedir), Opt(:notify),
+                                VSpacing(0.2),
+                                Left(CheckBox(Id(:mkhomedir), Opt(:notify),
                                     _("Create Home Directory on Login"), 
-                                    Yast::AuthClient.auth["mkhomedir"]),
+                                    Yast::AuthClient.auth["mkhomedir"])),
+                                VSpacing(0.2),
+                                Left(Label(Opt(:boldFont), _("Sections"))),
+                                Tree(Id(:section_tree), Opt(:immediate), "", []),
                                 HBox(
                                     PushButton(Id(:new_sec), _("New Section")),
                                     PushButton(Id(:del_sec), _("Delete Section"))
@@ -121,10 +124,7 @@ module YAuthClient
                     Left(Label(Opt(:boldFont), _("More Parameters"))),
                     HBox(
                         VBox(
-                            HBox(
-                                Label(_("Name filter:")),
-                                InputField(Id(:param_filter), Opt(:hstretch, :notify), "")
-                            ),
+                            InputField(Id(:param_filter), Opt(:hstretch, :notify), _("Name filter:"), ""),
                             Table(
                                 Id(:more_param_table),
                                 Header(_("Name"), _("Description")),
