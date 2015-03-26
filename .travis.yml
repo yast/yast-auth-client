@@ -9,8 +9,6 @@ before_install:
 script:
     - rake check:syntax
     - rake check:pot
-    - make -f Makefile.cvs
-    - make
-    - sudo make install
-    - make check
+    - rake check:license
+    - rake test:unit
 
