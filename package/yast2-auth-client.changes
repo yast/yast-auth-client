@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Thu Mar 26 15:19:16 UTC 2015 - hguo@suse.com
+
+- Version 3.2 introduces a re-designed UI, to pack more information on the screen by
+  by utilising a tree overview and two table detail-view; the detail view on the
+  right side shows the configuration details of the chosen Section; more customisable
+  parameters are displayed in table along with a Quick Search filter. Under the scene,
+  UI presentation and logics have been split into separate source files; the use of
+  legacy Yast.include has been replaced by the now recommended ruby-require, and the
+  legacy packaging mechanism Makefile has been replaced by Rake. The program entry,
+  command line parameters, AutoYast, and the module implementation are not changed.
+
+-------------------------------------------------------------------
 Thu Dec  4 09:49:20 UTC 2014 - jreidinger@suse.com
 
 - remove X-KDE-Library from desktop file (bnc#899104)
