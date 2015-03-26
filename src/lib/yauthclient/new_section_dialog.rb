@@ -45,7 +45,7 @@ module YAuthClient
             def render_all
                 Yast::UI.OpenDialog(
                     VBox(
-                        Left(Label(_("Would you like to enable another service or create a domain?"))),
+                        Left(Label(_("Would you like to enable another service or join a domain?"))),
                         RadioButtonGroup(
                             Id(:section_type),
                             VBox(
