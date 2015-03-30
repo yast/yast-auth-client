@@ -43,7 +43,9 @@ module YAuthClient
             if !@sssd_conf
                 return []
             end
-            return @sssd_conf.keys.select { |k| k.start_with? "domain/" }.uniq
+            return @sssd_conf.keys.select { |k|
+                k.start_with?("domain/") && !@sssd_conf[k].fetch("DeleteSection", false)
+            }.uniq
         end
 
         # Return list of enabled domain names (without prefix /).
@@ -67,7 +69,9 @@ module YAuthClient
             if !@sssd_conf
                 return []
             end
-            sections = @sssd_conf.keys.select { |k| !k.start_with?("domain/") && k != "sssd" }
+            sections = @sssd_conf.keys.select { |k|
+                !k.start_with?("domain/") && k != "sssd" && !@sssd_conf[k].fetch("DeleteSection", false)
+            }
             # Pull in more service names from "services" parameter
             sections += @sssd_conf.fetch("sssd", Hash[]).fetch("services", "").split(%r{[\s,]+})
             return sections.uniq

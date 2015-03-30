@@ -218,13 +218,13 @@ module YAuthClient
                         end
                         if sect_name.include? "domain/"
                             # Remove domain - the section name has prefix 'domain/'
-                            UIData.instance.get_conf.delete(sect_name)
+                            UIData.instance.get_conf[sect_name]["DeleteSection"] = true
                             # Domain names in parameter "domains" do not use prefix
                             sect_name = sect_name.sub("domain/", "")
                             UIData.instance.get_conf["sssd"]["domains"] = UIData.instance.get_enabled_domains.delete_if { |d| d == sect_name }.join(",")
                         else
                             # Remove service
-                            UIData.instance.get_conf.delete(sect_name)
+                            UIData.instance.get_conf[sect_name]["DeleteSection"] = true
                             UIData.instance.get_conf["sssd"]["services"] = UIData.instance.get_enabled_services.delete_if { |d| d == sect_name }.join(",")
                         end
                         # Re-render to display section SSSD
