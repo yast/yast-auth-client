@@ -97,7 +97,7 @@ sssd_conf =
 	  sections += s + " =\n  element " + s + " {\n"
           @params[s].each_key { |k|
 	    case @params[s][k]["type"]
-	      when "bool"
+	      when "boolean"
 	        sections += "    element " + k + "{ BOOLEAN }? &\n"
 	      when "int"
 	        sections += "    element " + k + "{ INTEGER }? &\n"
