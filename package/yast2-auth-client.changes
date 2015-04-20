@@ -1,14 +1,26 @@
 -------------------------------------------------------------------
-Fri Oct 31 11:52:35 UTC 2014 - varkoly@suse.com
+Thu Mar 26 15:19:16 UTC 2015 - hguo@suse.com
 
-- bnc#893983 - Removed an unnecessary hard dependency on sssd.
-- bnc#907830 - No option to 'Create Home Directory on Login' in Authentication module
-- 3.1.23 
+- Version 3.2 introduces a re-designed UI, to pack more information on the screen by
+  by utilising a tree overview and two table detail-view; the detail view on the
+  right side shows the configuration details of the chosen Section; more customisable
+  parameters are displayed in table along with a Quick Search filter. Under the scene,
+  UI presentation and logics have been split into separate source files; the use of
+  legacy Yast.include has been replaced by the now recommended ruby-require, and the
+  legacy packaging mechanism Makefile has been replaced by Rake. The program entry,
+  command line parameters, AutoYast, and the module implementation are not changed.
 
 -------------------------------------------------------------------
 Thu Dec  4 09:49:20 UTC 2014 - jreidinger@suse.com
 
 - remove X-KDE-Library from desktop file (bnc#899104)
+
+-------------------------------------------------------------------
+Fri Oct 31 11:52:35 UTC 2014 - varkoly@suse.com
+
+- bnc#893983 - Removed an unnecessary hard dependency on sssd.
+- bnc#907830 - No option to 'Create Home Directory on Login' in Authentication module
+- 3.1.23 
 
 -------------------------------------------------------------------
 Tue Sep 16 12:25:58 UTC 2014 - varkoly@suse.com

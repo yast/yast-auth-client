@@ -1,8 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2006-2012 Novell, Inc. All Rights Reserved.
-#
+# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -13,10 +12,8 @@
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with
-# this program; if not, contact Novell, Inc.
+# this program; if not, contact SUSE Linux GmbH.
 #
-# To contact Novell about this file by physical or electronic mail, you may find
-# current contact information at www.novell.com.
 # ------------------------------------------------------------------------------
 
 # File: modules/AuthClient.ycp
@@ -114,10 +111,6 @@ module Yast
     # Writes the clients authentication configuration.
     # @return true or false
     def Write
-      if ! @auth['sssd_conf']['sssd'].has_key?("domains")
-        # Nothing to do
-        return true
-      end
       Builtins.y2milestone("auth: %1",@auth)
       domains  = []
       services = []
