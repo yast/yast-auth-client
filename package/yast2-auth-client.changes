@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Apr 20 11:30:36 UTC 2015 - hguo@suse.com
+
+- Fix the handling of boolean type parameters when invoked by autoyast.
+
+-------------------------------------------------------------------
 Thu Mar 26 15:19:16 UTC 2015 - hguo@suse.com
 
 - Version 3.2 introduces a re-designed UI, to pack more information on the screen by
