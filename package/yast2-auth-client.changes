@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Apr 21 07:38:07 UTC 2015 - hguo@suse.com
+
+- Fix a typo in parameter name "ipa_server".
+
+-------------------------------------------------------------------
 Mon Apr 20 11:30:36 UTC 2015 - hguo@suse.com
 
 - Fix the handling of boolean type parameters when invoked by autoyast.
