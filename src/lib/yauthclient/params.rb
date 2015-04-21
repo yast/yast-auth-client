@@ -1194,7 +1194,7 @@ module YAuthClient
                             "type" => "string",
                             "desc" => _("Specifies the name of the IPA domain.")
                         },
-                        "ipa_server," => {
+                        "ipa_server" => {
                             "type" => "string",
                             "desc" => _("The comma-separated list of IP addresses or hostnames of the IPA servers to which SSSD should connect in the order of preference.")
                         },
