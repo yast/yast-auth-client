@@ -19,6 +19,7 @@ describe YAuthClient::UIData do
                     "ldap_uri"=>"ldap://ldap.suse.de",
                     "ldap_search_base"=>"dc=suse,dc=de",
                     "ldap_schema"=>"rfc2307bis",
+                    "auth_provider"=>"krb5",
                     "id_provider"=>"ldap"
                     },
                     {"domain_name"=>"dom2",
@@ -39,7 +40,7 @@ describe YAuthClient::UIData do
             expect(Yast::AuthClient.Import(preload_conf)).to eq(true)
             uidata = YAuthClient::UIData.instance
             expect(uidata.get_conf).to eq({
-                "domain/dom1" => {"ldap_uri"=>"ldap://ldap.suse.de", "ldap_search_base"=>"dc=suse,dc=de", "ldap_schema"=>"rfc2307bis", "id_provider"=>"ldap"},
+                "domain/dom1" => {"ldap_uri"=>"ldap://ldap.suse.de", "ldap_search_base"=>"dc=suse,dc=de", "ldap_schema"=>"rfc2307bis", "id_provider"=>"ldap", "auth_provider"=>"krb5"},
                 "domain/dom2" => {"ldap_uri"=>"ldap://ldap.suse.de", "ldap_search_base"=>"dc=suse,dc=de", "id_provider"=>"ldap", "auth_provider"=>"local", "ldap_service_object_class"=>"ipService", "ldap_netgroup_object_class"=>"nisNetgroup", "ldap_search_timeout"=>6, "ldap_tls_reqcert"=>"never"},
                 "sssd" => {"config_file_version"=>2, "services"=>"nss, pam", "domains"=>"dom2"}
             })
@@ -67,17 +68,22 @@ describe YAuthClient::UIData do
                 ["ldap_uri", "ldap://ldap.suse.de", "Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference."],
                 ["ldap_search_base", "dc=suse,dc=de", "The default base DN to use for performing LDAP user operations."],
                 ["ldap_schema", "rfc2307bis", "Specifies the Schema Type in use on the target LDAP server."],
+                ["auth_provider", "krb5", "The authentication provider used for the domain."],
                 ["id_provider", "ldap", "The identification provider used for the domain."]
             ]
             uidata.switch_section("domain/dom1")
             expect(uidata.get_curr_section).to eq("domain/dom1")
             expect(uidata.get_section_conf).to eq(match)
             expect(uidata.get_section_more_params.length).to be > 10
+            expect(uidata.get_current_id_provider).to eq("ldap")
+            expect(uidata.get_current_auth_provider).to eq("krb5")
             uidata.reload_section
             uidata.switch_section("domain/dom1")
             expect(uidata.get_curr_section).to eq("domain/dom1")
             expect(uidata.get_section_conf).to eq(match)
             expect(uidata.get_section_more_params.length).to be > 10
+            expect(uidata.get_current_id_provider).to eq("ldap")
+            expect(uidata.get_current_auth_provider).to eq("krb5")
         end
 
         it "Return the customised value of the current section" do
@@ -85,8 +91,8 @@ describe YAuthClient::UIData do
             uidata.switch_section("domain/dom1")
             expect(uidata.get_param_val("ldap_uri")).to eq "ldap://ldap.suse.de"
             expect(uidata.get_param_val("id_provider")).to eq "ldap"
+            expect(uidata.get_param_val("auth_provider")).to eq "krb5"
             expect(uidata.get_param_val("this_does_not_exist")).to eq nil
-            expect(uidata.get_param_val("auth_provider")).to eq nil
         end
 
         it "Detect enabled services domains" do
@@ -103,7 +109,7 @@ describe YAuthClient::UIData do
             expect(uidata.get_unused_svcs).to eq ["sudo", "autofs", "ssh"].sort
         end
 
-        it "Provider list" do
+        it "Get provider list" do
             uidata = YAuthClient::UIData.instance
             sorted = uidata.get_id_providers.uniq.sort
             expect(uidata.get_id_providers).to eq sorted
