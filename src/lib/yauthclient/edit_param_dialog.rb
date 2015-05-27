@@ -88,6 +88,7 @@ module YAuthClient
                         sect_conf = UIData.instance.get_conf.fetch(UIData.instance.get_curr_section, Hash[])
                         sect_conf[@param_name] = val.to_s
                         UIData.instance.get_conf[UIData.instance.get_curr_section] = sect_conf
+                        UIData.instance.reload_section
                         return :ok
                     when :cancel
                         return :cancel

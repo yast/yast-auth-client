@@ -1,4 +1,19 @@
 -------------------------------------------------------------------
+Wed May 27 08:37:01 UTC 2015 - hguo@suse.com
+
+- The new release introduces new features, several bug fixes, and
+  improved user experience:
+  * Add ability to disable SSSD daemon along with its configuration.
+  * Add ability to remove customisation from an optional parameter.
+  * New diaglog "Initial Customisation" helps with customising important parameters
+    for joining a new domain.
+  * Prompt user when sssd or autofs daemon fail to be started.
+  * Fix several parameter descriptions and value defaults.
+  * Fix configuration of autofs and sudo NSS databases.
+  * Fix relevant parameters not showing up in "More Parameters" list.
+  * Other cosmetic fixes on UI labels and layout.
+
+-------------------------------------------------------------------
 Mon Apr 20 11:30:36 UTC 2015 - hguo@suse.com
 
 - Fix the handling of boolean type parameters when invoked by autoyast.

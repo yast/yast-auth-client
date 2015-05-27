@@ -18,6 +18,7 @@
 
 require "yast"
 require "yauthclient/uidata.rb"
+require "yauthclient/initial_customisation_dialog.rb"
 
 module YAuthClient
     # Create a new section, whether a Service or Domain.
@@ -57,7 +58,7 @@ module YAuthClient
                                 Left(RadioButton(Id(:type_dom), Opt(:notify), _("Domain"))),
                                 VBox(
                                     Id(:section_dom),
-                                    InputField(Id(:dom_name), Opt(:hstretch), _("Name:"),""),
+                                    InputField(Id(:dom_name), Opt(:hstretch), _("Domain name (example.com):"),""),
                                     SelectionBox(
                                         Id(:id_provider),
                                         _("Identification provider:"),
@@ -66,7 +67,7 @@ module YAuthClient
                                     SelectionBox(
                                         Id(:auth_provider),
                                         _("Authentication provider:"),
-                                        ["(default)"] + UIData.instance.get_auth_providers
+                                        ["(same as ID provider)"] + UIData.instance.get_auth_providers
                                     ),
                                     Left(CheckBox(Id(:activate), _("Activate Domain"), true))
                                 )
@@ -83,7 +84,7 @@ module YAuthClient
                 Yast::UI.ChangeWidget(Id(:section_type), :CurrentButton, :type_svc)
             end
 
-            # Return name of the new section if it was created, or :cancel otherwise.
+            # Switch to new section and return :ok if section was created, or :cancel otherwise.
             def ui_event_loop
                 loop do
                     case Yast::UI.UserInput
@@ -106,6 +107,10 @@ module YAuthClient
                             end
                             UIData.instance.get_conf[sect_name] = Hash[]
                             UIData.instance.get_conf["sssd"]["services"] = (UIData.instance.get_enabled_services + [sect_name]).join(",")
+                            # Swtich to this new section
+                            UIData.instance.switch_section(sect_name)
+                            # Instruct user to create initial customisation
+                            InitialCustomisationDialog.new(["services", sect_name]).run
                         else
                             # Create new domain
                             sect_name = Yast::UI.QueryWidget(Id(:dom_name), :Value).to_s.strip
@@ -115,12 +120,14 @@ module YAuthClient
                             if sect_name == ""
                                 Yast::Popup.Error(_("Please enter a name for the new domain."))
                                 redo
+                            elsif UIData.instance.get_all_domains.include?(sect_name)
+                                Yast::Popup.Error(_("The domain name is already in-use."))
+                                redo
                             end
-                            if auth_provider == "(default)"
+                            if auth_provider == "(same as ID provider)"
                                 auth_provider = id_provider
                             end
                             # Activate the new domain in SSSD daemon config
-                            log.info "activate? " + activate_dom.to_s
                             if activate_dom
                                 UIData.instance.get_conf["sssd"]["domains"] = (UIData.instance.get_enabled_domains + [sect_name]).uniq.join(",")
                             end
@@ -132,9 +139,13 @@ module YAuthClient
                             if id_provider == "ldap" && sect_conf["ldap_schema"] == nil
                                 sect_conf["ldap_schema"] = "rfc2307bis"
                             end
+                            # Swtich to this new section
                             UIData.instance.get_conf[sect_name] = sect_conf
+                            UIData.instance.switch_section(sect_name)
+                            # Instruct user to create initial customisation
+                            InitialCustomisationDialog.new(["domain", sect_conf["id_provider"], sect_conf["auth_provider"]]).run
                         end
-                        return sect_name
+                        return :ok
                     when :cancel
                         return :cancel
                     end
