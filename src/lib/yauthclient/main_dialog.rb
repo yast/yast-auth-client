@@ -58,15 +58,23 @@ module YAuthClient
                             # Overview of all config sections
                             HWeight(35, VBox(
                                 VSpacing(0.2),
-                                Left(CheckBox(Id(:mkhomedir), Opt(:notify),
-                                    _("Create Home Directory on Login"), 
-                                    Yast::AuthClient.auth["mkhomedir"])),
+                                Frame(
+                                    _("Global Configuration"),
+                                    VBox(
+                                        Left(CheckBox(Id(:mkhomedir), Opt(:notify),
+                                            _("Create Home Directory on Login"),
+                                            Yast::AuthClient.auth["mkhomedir"])),
+                                        Left(CheckBox(Id(:enable_daemon), Opt(:notify),
+                                            _("Enable SSSD daemon"),
+                                            Yast::AuthClient.auth["sssd"]))
+                                    )
+                                ),
                                 VSpacing(0.2),
                                 Left(Label(Opt(:boldFont), _("Sections"))),
                                 Tree(Id(:section_tree), Opt(:immediate), "", []),
                                 HBox(
-                                    PushButton(Id(:new_sec), _("New Section")),
-                                    PushButton(Id(:del_sec), _("Delete Section"))
+                                    PushButton(Id(:new_sec), _("New Service/Domain")),
+                                    PushButton(Id(:del_sec), _("Delete Service/Domain"))
                                 )
                             )),
                             # Config editor
@@ -110,10 +118,13 @@ module YAuthClient
                                 # Display a brief of parameter description
                                 desc = detail[2].lines[0]
                                 desc = desc && desc.strip || ""
-                                Item(detail[0], detail[1], desc.length > 60 && desc[0..59] + "..." || desc)
+                                Item(detail[0], detail[1], desc)
                             }
                         ),
-                        PushButton(Id(:edit_param), Yast::Label.EditButton),
+                        VBox(
+                            PushButton(Id(:edit_param), Yast::Label.EditButton),
+                            PushButton(Id(:del_param), Yast::Label.DeleteButton)
+                        )
                     )
                 ))
             end
@@ -144,7 +155,7 @@ module YAuthClient
                             # Display a brief of parameter description
                             desc = detail["desc"].lines[0]
                             desc = desc && desc.strip || ""
-                            Item(name, desc.length > 60 && desc[0..59] + "..." || desc)
+                            Item(name, desc)
                     }
                 )
             end
@@ -171,9 +182,6 @@ module YAuthClient
                         return false
                     end
                 end
-                Yast::AuthClient.auth["sssd"]    = true;
-                Yast::AuthClient.auth["nssldap"] = false;
-                Yast::AuthClient.auth["oes"]     = false;
                 if ! Yast::AuthClient.auth.has_key?("sssd_conf")
                     Yast::AuthClient.CreateBasicSSSD
                 end
@@ -201,7 +209,6 @@ module YAuthClient
                         result = NewSectionDialog.new.run
                         if result != :cancel
                             # Re-render to display the new section
-                            UIData.instance.switch_section(result)
                             render_section_tree
                             render_section_conf
                             render_list_more_params
@@ -218,13 +225,13 @@ module YAuthClient
                         end
                         if sect_name.include? "domain/"
                             # Remove domain - the section name has prefix 'domain/'
-                            UIData.instance.get_conf[sect_name]["DeleteSection"] = true
+                            UIData.instance.get_conf[sect_name][Yast::AuthClientClass::DELETED_SECTION] = true
                             # Domain names in parameter "domains" do not use prefix
                             sect_name = sect_name.sub("domain/", "")
                             UIData.instance.get_conf["sssd"]["domains"] = UIData.instance.get_enabled_domains.delete_if { |d| d == sect_name }.join(",")
                         else
                             # Remove service
-                            UIData.instance.get_conf[sect_name]["DeleteSection"] = true
+                            UIData.instance.get_conf[sect_name][Yast::AuthClientClass::DELETED_SECTION] = true
                             UIData.instance.get_conf["sssd"]["services"] = UIData.instance.get_enabled_services.delete_if { |d| d == sect_name }.join(",")
                         end
                         # Re-render to display section SSSD
@@ -236,6 +243,10 @@ module YAuthClient
                     when :mkhomedir
                         # Change the create-home-directory-on-login settings
                         Yast::AuthClient.auth["mkhomedir"] = Yast::UI.QueryWidget(Id(:mkhomedir), :Value)
+
+                    when :enable_daemon
+                        # Enable/disable SSSD daemon
+                        Yast::AuthClient.auth["sssd"] = Yast::UI.QueryWidget(Id(:enable_daemon), :Value)
                         
                     # Right side
                     when :edit_param
@@ -245,9 +256,40 @@ module YAuthClient
                             redo
                         end
                         if EditParamDialog.new(param_name).run == :ok
-                            UIData.instance.reload_section
                             render_section_conf
+                            render_list_more_params
                         end
+
+                    when :del_param
+                        # Delete a parameter customisation
+                        param_name = Yast::UI.QueryWidget(Id(:conf_table), :CurrentItem)
+                        if param_name == nil
+                            redo
+                        end
+                        # Forbid removal of mandatory parameters
+                        is_important = Params.instance.get_by_name(param_name)["important"]
+                        if [
+                            UIData.instance.get_curr_section,
+                            UIData.instance.get_current_id_provider,
+                            UIData.instance.get_current_auth_provider
+                        ].any? { |param_category|
+                            Params.instance.is_required?(param_category, param_name)
+                        }
+                            Yast::Popup.Error(_("This is a mandatory parameter and it may not be deleted."))
+                            redo
+                        end
+                        # Warn against removal of important parameters
+                        if is_important && !Yast::Popup.ContinueCancelHeadline(
+                            _("Confirm parameter removal: ") + param_name,
+                            _("The parameter is important. Removal of the parameter may cause SSSD startup failure.\n" +
+                              "Please consult SSSD manual page before moving on.\n" +
+                              "Do you still wish to continue?"))
+                            redo
+                        end
+                        UIData.instance.get_conf[UIData.instance.get_curr_section][param_name] = Yast::AuthClientClass::DELETED_VALUE
+                        UIData.instance.reload_section
+                        render_section_conf
+                        render_list_more_params
 
                     when :param_filter
                         # Reload parameter table according to the filter
@@ -261,7 +303,6 @@ module YAuthClient
                             redo
                         end
                         if EditParamDialog.new(param_name).run == :ok
-                            UIData.instance.reload_section
                             render_section_conf
                             render_list_more_params
                         end
