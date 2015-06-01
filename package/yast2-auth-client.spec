@@ -1,6 +1,7 @@
 #
 # spec file for package yast2-auth-client
 #
+# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
 # Copyright (c) 2014 SUSE LINUX Products GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
@@ -17,7 +18,7 @@
 
 
 Name:           yast2-auth-client
-Version:        3.1.22
+Version:        3.1.23
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
