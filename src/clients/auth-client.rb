@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2006-2012 Novell, Inc. All Rights Reserved.
+# Copyright (c) 2014-2015 SUSE Linux GmbH.
 #
 #
 # This program is free software; you can redistribute it and/or modify it under
