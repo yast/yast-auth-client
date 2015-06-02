@@ -67,7 +67,7 @@ module YAuthClient
             # Create parameter editor controls (label, input, help text) and return them.
             def make_editor(param_names)
                 if param_names.empty?
-                    return Label(_("None."))
+                    return [Left(Label(_("None.")))]
                 end
                 param_controls = []
                 param_names.sort.each { |name|
