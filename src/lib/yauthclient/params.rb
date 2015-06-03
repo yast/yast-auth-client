@@ -590,7 +590,6 @@ module YAuthClient
                         "ldap_search_base" => {
                             "type" => "string",
                             "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "important" => true,
                             "desc" => _("The default base DN to use for performing LDAP user operations.")
                         },
                         "ldap_schema" => {
