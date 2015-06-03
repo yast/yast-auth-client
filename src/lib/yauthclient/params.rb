@@ -413,7 +413,7 @@ module YAuthClient
                         "auth_provider" => {
                             "type" => "string",
                             "vals" => "ldap, krb5, ipa, ad, proxy, local, none",
-                            "req" => true,
+                            "important" => true,
                             "desc" => _("The authentication provider used for the domain.")
                         },
                         "access_provider" => {
