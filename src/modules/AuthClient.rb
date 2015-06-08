@@ -228,7 +228,7 @@ module Yast
           daemons_to_enable.each { |name|
               if !Service.Enable(name)
                   Report.Error(_("Failed to enable %s service. Please use system journal to diagnose." % name))
-              elsif !(Service.Active("sssd") ? Service.Restart("sssd") : Service.Start("sssd"))
+              elsif !(Service.Active(name) ? Service.Restart(name) : Service.Start(name))
                   Report.Error(_("Failed to start %s service. Please use system journal (journalctl -n -u %s) to diagnose." % [name, name]))
               else
                   successful = true
