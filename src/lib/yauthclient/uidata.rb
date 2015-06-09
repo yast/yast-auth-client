@@ -17,7 +17,6 @@
 # ------------------------------------------------------------------------------
 
 require "yauthclient/params.rb"
-
 Yast.import "AuthClient"
 
 module YAuthClient
@@ -44,7 +43,7 @@ module YAuthClient
                 return []
             end
             return @sssd_conf.keys.select { |k|
-                k.start_with?("domain/") && !@sssd_conf[k].fetch("DeleteSection", false)
+                k.start_with?("domain/") && !@sssd_conf[k].fetch(Yast::AuthClientClass::DELETED_SECTION, false)
             }.uniq
         end
 
@@ -70,7 +69,7 @@ module YAuthClient
                 return []
             end
             sections = @sssd_conf.keys.select { |k|
-                !k.start_with?("domain/") && k != "sssd" && !@sssd_conf[k].fetch("DeleteSection", false)
+                !k.start_with?("domain/") && k != "sssd" && !@sssd_conf[k].fetch(Yast::AuthClientClass::DELETED_SECTION, false)
             }
             # Pull in more service names from "services" parameter
             sections += @sssd_conf.fetch("sssd", Hash[]).fetch("services", "").split(%r{[\s,]+})
@@ -115,6 +114,16 @@ module YAuthClient
             return ["proxy", "local", "ldap", "ipa", "ad"].sort
         end
 
+        # If current section is a domain, return its ID provider. Nil otherwise.
+        def get_current_id_provider
+            return @sssd_conf.fetch(@curr_section, Hash[]).fetch("id_provider", nil)
+        end
+
+        # If current section is a domain, return its authentication provider. Nil otherwise.
+        def get_current_auth_provider
+            return @sssd_conf.fetch(@curr_section, Hash[]).fetch("auth_provider", nil)
+        end
+
         # Get list of supported authentication providers.
         def get_auth_providers
             return ["ldap", "krb5", "ipa", "ad", "proxy", "local", "none"].sort
@@ -149,7 +158,11 @@ module YAuthClient
             # Reload (tuples of) parameter name, value, and description for the current section.
             def reload_section_conf
                 params = @sssd_conf.fetch(@curr_section, Hash[])
-                @curr_section_conf = params.map { |k, v| [k, v.to_s, Params.instance.get_by_name(k)["desc"]] }
+                @curr_section_conf = params.keep_if { |k, v|
+                    v != Yast::AuthClientClass::DELETED_VALUE
+                }.map { |k, v|
+                    [k, v.to_s, Params.instance.get_by_name(k)["desc"]]
+                }
             end
 
             # Reload (hash of) additional parameter name and descriptions for the current section.
@@ -158,19 +171,16 @@ module YAuthClient
                 more_params = Hash[]
                 # Collect relevant parameters depending on the current section
                 if @curr_section =~ /^domain/
+                    more_params.merge!(Params.instance.get_common_domain_params)
                     # Provider-specific parameters
-                    id_provider = current_conf.fetch("id_provider", "")
-                    auth_provider = current_conf.fetch("auth_provider", "")
-                    if id_provider != ""
-                        more_params.merge!(Params.instance.get_by_section(id_provider))
-                    end
-                    if auth_provider != ""
-                        more_params.merge!(Params.instance.get_by_section(auth_provider))
-                    end
-                    # Common domain parameters
-                    more_params.merge!(Params.instance.get_common_domain_section)
+                    more_params.merge!(Params.instance.get_by_provider(get_current_id_provider()))
+                    more_params.merge!(Params.instance.get_by_provider(get_current_auth_provider()))
                 else
-                    more_params = Params.instance.get_by_section(@curr_section)
+                    more_params = Params.instance.get_by_category(@curr_section)
+                    if @curr_section != "sssd"
+                        # Common service parameters
+                        more_params.merge!(Params.instance.get_common_service_params)
+                    end
                 end
                 # Remove customised parameters
                 more_params.delete_if { |name, detail| current_conf.has_key? name }

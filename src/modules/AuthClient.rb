@@ -27,9 +27,12 @@ require "yast"
 
 module Yast
   class AuthClientClass < Module
+    include Yast::Logger
+    DELETED_VALUE = "##DeleteValue##"
+    DELETED_SECTION = "##DeletedSection##"
 
-    NSS_DBS = ["passwd", "group", "passwd_compat", "group_compat", "services", "netgroup", "aliases", "automount" ]
-    SSS_DBS = ["passwd", "group" ]
+    NSS_DBS = ["passwd", "group", "passwd_compat", "group_compat", "services", "netgroup", "aliases", "automount", "sudoers"]
+    SSS_DBS = ["passwd", "group", "sudoers", "automount"]
 
     def main
       textdomain  "auth-client"
@@ -50,7 +53,8 @@ module Yast
         "automount"     => [],
         "services"      => [],
         "netgroup"      => [],
-        "aliases"       => []
+        "aliases"       => [],
+        "sudoers"       => []
       }
 
 
@@ -87,19 +91,18 @@ module Yast
                          ( @nsswitch["passwd"].include?("ldap") && @nsswitch["passwd_compat"].include?("ldap") ) ||
                          ( @auth["oes"] && @nsswitch["passwd"].include?("nam") )
 
-      #Check if sssd is used in nss
-      @auth["sssd"] = @nsswitch["passwd"].include?("sss")
+      #Check if sssd service is enabled
+      @auth["sssd"] = Service.Enabled("sssd")
 
-      if @auth["sssd"]
-         _sections = SCR.Dir(path(".etc.sssd_conf.section"))
-         _sections.each { |s|
-            _values = SCR.Read(path( ".etc.sssd_conf.all.\"#{s}\"" ) )
-            _values["value"].each { |v|
-              next if v["kind"] == "comment"
-              @auth["sssd_conf"][s][v["name"]] = v["value"]
-            }
+      #Load sssd configurations
+      _sections = SCR.Dir(path(".etc.sssd_conf.section"))
+      _sections.each { |s|
+         _values = SCR.Read(path( ".etc.sssd_conf.all.\"#{s}\"" ) )
+         _values["value"].each { |v|
+            next if v["kind"] == "comment"
+            @auth["sssd_conf"][s][v["name"]] = v["value"]
          }
-      end
+      }
       Builtins.y2milestone("auth: %1",@auth)
       true
     end
@@ -117,10 +120,6 @@ module Yast
       filter_groups = []
       filter_users  = []
       to_install    = []
-      if !Package.Installed("sssd") && Package.Available("sssd")
-          to_install << "sssd"
-      end
-
       need_sssd = {
          "ldap"  => false,
          "ipa"   => false,
@@ -129,60 +128,20 @@ module Yast
          "proxy" => false
       }
 
-      #Add sss to pam
-      Pam.Add("sss")
-
-      #Enable pam_mkhomedir if required.
-      if @auth["mkhomedir"]
-         Pam.Add("mkhomedir")
-      else
-         Pam.Remove("mkhomedir")
+      #Gather attributes from the proposed configuration
+      if !Package.Installed("sssd") && Package.Available("sssd")
+          to_install << "sssd"
       end
-
-      #Remove ldap only nss databases
-      NSS_DBS.each { |db|
-        @nsswitch[db] = Nsswitch.ReadDb(db).reject{ |v| v =~ /ldap/ }
-        @nsswitch[db] = ["files"] if @nsswitch[db] == []
-      }
-
-      # Add "sss" to the passwd and group databases in nsswitch.conf
-      SSS_DBS.each { |db| @nsswitch[db].push("sss") if ! @nsswitch[db].include?("sss") }
-
-
-      #Remove kerberos if activated
-      if Pam.Enabled("krb5")
-        Builtins.y2milestone( "configuring 'sss', so 'krb5' will be removed")
-        Pam.Remove("ldap-account_only")
-        Pam.Remove("krb5")
-      end
-      Pam.Remove("ldap")
-
       if @auth["sssd_conf"]["sssd"].has_key?("services")
          services = @auth["sssd_conf"]["sssd"]["services"].split(%r{,\s*})
       end
-
-      #Enable autofs if service is enabled
-      if services.include?("autofs")
-         @nsswitch["automount"].push("sss") if ! @nsswitch["automount"].include?("sss") 
-         Service.Enable("autofs")
-         Service.Start("autofs")
-      end
-
-      # Write the new nss tables
-      NSS_DBS.each { |db| Nsswitch.WriteDb(db, @nsswitch[db]) }
-      Nsswitch.Write
-
       if @auth["sssd_conf"]["sssd"].has_key?("domains")
          domains = @auth["sssd_conf"]["sssd"]["domains"].split(%r{,\s*})
       end
-
-      #Be sure filter_groups and filter_users contains root in nss section
       if @auth["sssd_conf"].has_key?("nss")
         if @auth["sssd_conf"]["nss"].has_key?("filter_users")
           filter_users = @auth["sssd_conf"]["nss"]["filter_users"].split(%r{,\s*})
         end
-      end
-      if @auth["sssd_conf"].has_key?("nss")
         if @auth["sssd_conf"]["nss"].has_key?("filter_groups")
           filter_groups = @auth["sssd_conf"]["nss"]["filter_groups"].split(%r{,\s*})
         end
@@ -192,52 +151,96 @@ module Yast
       @auth["sssd_conf"]["nss"]["filter_users"]  = filter_users.join(", ")
       @auth["sssd_conf"]["nss"]["filter_groups"] = filter_groups.join(", ")
 
-      #Now we write the sssd configuration
+      #Write sssd.conf and gather package installation requirements
       @auth["sssd_conf"].each_key { |s|
-        if @auth["sssd_conf"][s].has_key?('DeleteSection')
+        if @auth["sssd_conf"][s].has_key?(DELETED_SECTION)
            SCR.Write(path(".etc.sssd_conf.section.\"#{s}\""), nil )
            next
         end
         @auth["sssd_conf"][s].each_key { |k|
-	  value = @auth["sssd_conf"][s][k]
-          if value == "##DeleteValue##"
+         value = @auth["sssd_conf"][s][k]
+          if value == DELETED_VALUE
              SCR.Write(path(".etc.sssd_conf.value.\"#{s}\".#{k}"), nil )
           else
              SCR.Write(path(".etc.sssd_conf.value.\"#{s}\".#{k}"),value)
           end
-          if k == "id_provider" or k == "auth_provider" 
+          if k == "id_provider" or k == "auth_provider"
              need_sssd[value] = true;
           end
         }
       }
-      #Add section for each services
       _sections = SCR.Dir(path(".etc.sssd_conf.section"))
       services.each { |s|
         SCR.Write(path(".etc.sssd_conf.section_comment.\"#{s}\""), '') if ! _sections.include?(s)
       }
       SCR.Write(path(".etc.sssd_conf"),nil)
-
       need_sssd.each_pair do |key, needed|
         pkg = "sssd-#{key}"
         if needed && !Package.Installed(pkg) && Package.Available(pkg)
           to_install << pkg
         end
       end
+      #Fix permission of sssd.conf
+      FileUtils.Chmod("600", "/etc/sssd/sssd.conf", false)
 
-      Package.DoInstall(to_install) unless to_install.empty?
-
-
-      #Start sssd only if there are more then one domain defined
-      if !domains.empty?
-        Service.Enable("sssd")
-        Service.Disable("nscd")
-        Service.Stop("nscd")
-        Service.Active("sssd") ? Service.Restart("sssd") : Service.Start("sssd")
+      #Enable pam_mkhomedir if required
+      if @auth["mkhomedir"]
+         Pam.Add("mkhomedir")
       else
-        Service.Disable("sssd")
-        Service.Stop("sssd")
+         Pam.Remove("mkhomedir")
       end
-      return true
+
+      #Configure PAM and NSS for SSSD
+      if @auth["sssd"] && !domains.empty?
+          #Configure PAM
+          Pam.Add("sss")
+          Pam.Remove("krb5")
+          Pam.Remove("ldap")
+          Pam.Remove("ldap-account_only")
+          #Remove ldap and add sss to the NSS databases
+          NSS_DBS.each { |db|
+            @nsswitch[db] = Nsswitch.ReadDb(db).reject{ |v| v =~ /ldap/ }
+            @nsswitch[db] = ["files"] if @nsswitch[db] == []
+          }
+          SSS_DBS.each { |db| @nsswitch[db].push("sss") if ! @nsswitch[db].include?("sss") }
+      else
+          Pam.Remove("sss")
+          #Remove sss from NSS databases
+          SSS_DBS.each { |db| @nsswitch[db].delete("sss") }
+      end
+      NSS_DBS.each { |db| Nsswitch.WriteDb(db, @nsswitch[db]) }
+      Nsswitch.Write
+
+      #Configure daemons
+      if @auth["sssd"] && !domains.empty?
+          #Install necessary packages
+          Package.DoInstall(to_install) unless to_install.empty?
+          #It is strongly recommended against using nscd along with sssd
+          Service.Disable("nscd")
+          Service.Stop("nscd")
+          #Enable and start SSSD and autofs too (if sss is a provider)
+          daemons_to_enable = ["sssd"]
+          if services.include?("autofs")
+              #autofs may only start after sssd is started
+              daemons_to_enable.push("autofs")
+          end
+          successful = false
+          daemons_to_enable.each { |name|
+              if !Service.Enable(name)
+                  Report.Error(_("Failed to enable %s service. Please use system journal to diagnose." % name))
+              elsif !(Service.Active(name) ? Service.Restart(name) : Service.Start(name))
+                  Report.Error(_("Failed to start %s service. Please use system journal (journalctl -n -u %s) to diagnose." % [name, name]))
+              else
+                  successful = true
+              end
+          }
+          return successful
+      else
+          #Disable SSSD if there is not any domains or SSSD daemon is to be disabled
+          Service.Disable("sssd")
+          Service.Stop("sssd")
+          return true
+      end
     end
     # end Write
     #################################################################
