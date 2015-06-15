@@ -12,6 +12,7 @@ Wed May 27 08:37:01 UTC 2015 - hguo@suse.com
   * Fix configuration of autofs and sudo NSS databases.
   * Fix relevant parameters not showing up in "More Parameters" list.
   * Other cosmetic fixes on UI labels and layout.
+  (Implements part of fate#316349)
 
 -------------------------------------------------------------------
 Mon Apr 20 11:30:36 UTC 2015 - hguo@suse.com
