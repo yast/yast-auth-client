@@ -223,19 +223,8 @@ module YAuthClient
                         elsif !Yast::Popup.YesNo(_("Do you really wish to delete section %s?" % sect_name))
                             redo
                         end
-                        if sect_name.include? "domain/"
-                            # Remove domain - the section name has prefix 'domain/'
-                            UIData.instance.get_conf[sect_name][Yast::AuthClientClass::DELETED_SECTION] = true
-                            # Domain names in parameter "domains" do not use prefix
-                            sect_name = sect_name.sub("domain/", "")
-                            UIData.instance.get_conf["sssd"]["domains"] = UIData.instance.get_enabled_domains.delete_if { |d| d == sect_name }.join(",")
-                        else
-                            # Remove service
-                            UIData.instance.get_conf[sect_name][Yast::AuthClientClass::DELETED_SECTION] = true
-                            UIData.instance.get_conf["sssd"]["services"] = UIData.instance.get_enabled_services.delete_if { |d| d == sect_name }.join(",")
-                        end
+                        UIData.instance.del_curr_section
                         # Re-render to display section SSSD
-                        UIData.instance.switch_section("sssd")
                         render_section_tree
                         render_section_conf
                         render_list_more_params
@@ -321,7 +310,7 @@ module YAuthClient
                         misspelt_names = UIData.instance.get_enabled_domains - all_domains
                         if misspelt_names != []
                             Yast::Popup.Error(
-                                "Certain domains mentioned in [sssd] \"domains\" aprameter do not have " + 
+                                "Certain domains mentioned in [sssd] \"domains\" parameter do not have " + 
                                 "configuration:\n%s\n\n" % misspelt_names.join(", ") +
                                 "This could be a spelling mistake. SSSD will not start in this configuration.\n" +
                                 "Note that domain names are case sensitive. Please correct the parameter value.")

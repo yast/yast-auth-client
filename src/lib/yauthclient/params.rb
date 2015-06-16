@@ -58,6 +58,7 @@ module YAuthClient
                 "def",  defi["def"]  && defi["def"]  || "",
                 "req",  defi["req"]  && defi["req"]  || false,
                 "important", defi["important"]  && defi["important"]  || false,
+                "no_init_customisation", defi["no_init_customisation"]  && defi["no_init_customisation"]  || false,
                 "sect", sect_defi[0]
             ]
         end
@@ -209,13 +210,13 @@ module YAuthClient
                             "type" => "string",
                             "def"  =>  "root",
                             "important" => true,
-                            "desc" => _("Exclude certain users from being fetched from the sss NSS database.")
+                            "desc" => _("Exclude certain users from being fetched by SSS backend")
                         },
                         "filter_groups" => {
                             "type" => "string",
                             "def"  =>  "root",
                             "important" => true,
-                            "desc" => _("Exclude certain groups from being fetched from the sss NSS database.")
+                            "desc" => _("Exclude certain groups from being fetched by SSS backend")
                         },
                         "filter_users_in_groups" => {
                             "type" => "boolean",
@@ -346,7 +347,7 @@ module YAuthClient
                             "type" => "boolean",
                             "def"  => false,
                             "important" => true,
-                            "desc" => _("Determines if a domain can be enumerated.")
+                            "desc" => _("Read all entities from backend database (increase server load)")
                         },
                         "force_timeout" => {
                             "type" => "int",
@@ -392,7 +393,7 @@ module YAuthClient
                             "type" => "boolean",
                             "def"  => false,
                             "important" => true,
-                            "desc" => _("Determines if user credentials are also cached in the local LDB cache.")
+                            "desc" => _("Cache credentials for offline use")
                         },
                         "account_cache_expiration" => {
                             "type" => "int",
@@ -403,6 +404,7 @@ module YAuthClient
                             "type" => "string",
                             "vals" => "ldap, local, ipa, ad",
                             "req" => true,
+                            "no_init_customisation" => true,
                             "desc" => _("The identification provider used for the domain.")
                         },
                         "use_fully_qualified_names" => {
@@ -414,7 +416,8 @@ module YAuthClient
                             "type" => "string",
                             "vals" => "ldap, krb5, ipa, ad, proxy, local, none",
                             "important" => true,
-                            "desc" => _("The authentication provider used for the domain.")
+                            "no_init_customisation" => true,
+                            "desc" => _("The authentication provider used for the domain")
                         },
                         "access_provider" => {
                             "type" => "string",
@@ -429,31 +432,31 @@ module YAuthClient
                         },
                         "sudo_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ldap, ipa, none",
                             "desc" => _("The SUDO provider used for the domain.")
                         },
                         "selinux_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ipa, none",
                             "desc" => _("The provider which should handle loading of selinux settings.")
                         },
                         "subdomains_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ipa, none",
                             "desc" => _("The provider which should handle fetching of subdomains.")
                         },
                         "autofs_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ldap, ipa, none",
                             "desc" => _("The autofs provider used for the domain.")
                         },
                         "hostid_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ipa, none",
                             "desc" => _("The provider used for retrieving host identity information.")
                         },
@@ -562,7 +565,7 @@ module YAuthClient
                             "type" => "string",
                             "rule" => /(ldap[s]?:\/\/|^$)/,
                             "important" => true,
-                            "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference.")
+                            "desc" => _("URIs (ldap://) of LDAP servers (comma separated)")
                         },
                         "ldap_sudo_search_base" => {
                             "type" => "string",
@@ -590,14 +593,15 @@ module YAuthClient
                         "ldap_search_base" => {
                             "type" => "string",
                             "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("The default base DN to use for performing LDAP user operations.")
+                            "important" => true,
+                            "desc" => _("Base DN for LDAP search")
                         },
                         "ldap_schema" => {
                             "type" => "string",
                             "vals" => "rfc2307, rfc2307bis, ipa, ad",
                             "def"  => "rfc2307",
                             "important" => true,
-                            "desc" => _("Specifies the Schema Type in use on the target LDAP server.")
+                            "desc" => _("LDAP schema type")
                         },
                         "ldap_default_bind_dn" => {
                             "type" => "string",
@@ -943,7 +947,7 @@ module YAuthClient
                             "vals" => "never, allow, try, demand, hard",
                             "def"  => "hard",
                             "important" => true,
-                            "desc" => _("Specifies what checks to perform on server certificates in a TLS session, if any.")
+                            "desc" => _("Validate server certification in LDAP TLS session")
                         },
                         "ldap_tls_cacert" => {
                             "type" => "string",
@@ -987,7 +991,7 @@ module YAuthClient
                         },
                         "ldap_sasl_realm" => {
                             "type" => "string",
-                            "def"  => "value of krb5_realm.",
+                            "def"  => ".",
                             "desc" => _("Specify the SASL realm to use.")
                         },
                         "ldap_sasl_canonicalize" => {
@@ -997,7 +1001,7 @@ module YAuthClient
                         },
                         "ldap_krb5_keytab" => {
                             "type" => "string",
-                            "def"  => "System keytab",
+                            "def"  => "",
                             "desc" => _("Specify the keytab to use when using SASL/GSSAPI.")
                         },
                         "ldap_krb5_init_creds" => {
@@ -1007,7 +1011,7 @@ module YAuthClient
                         },
                         "ldap_krb5_ticket_lifetime" => {
                             "type" => "int",
-                            "def"  => "86400 (24 hours)",
+                            "def"  => "86400",
                             "desc" => _("Specifies the lifetime in seconds of the TGT if GSSAPI is used.")
                         },
                         "ldap_pwd_policy" => {
@@ -1071,7 +1075,7 @@ module YAuthClient
                         "krb5_server" => {
                             "type" => "string",
                             "important" => true,
-                            "desc" => _("Specifies the comma-separated list of IP addresses or hostnames of the Kerberos servers to which SSSD should connect, in the order of preference.")
+                            "desc" => _("IP address or host names of Kerberos servers (comma separated)")
                         },
                         "krb5_backup_server" => {
                             "type" => "string",
@@ -1080,7 +1084,7 @@ module YAuthClient
                         "krb5_realm" => {
                             "type" => "string",
                             "req" => true,
-                            "desc" => _("The name of the Kerberos realm.")
+                            "desc" => _("Kerberos realm (e.g. EXAMPLE.COM)")
                         },
                         "krb5_kpasswd" => {
                             "type" => "string",
@@ -1162,7 +1166,7 @@ module YAuthClient
                         "ad_server" => {
                             "type" => "string",
                             "important" => true,
-                            "desc" => _("The comma-separated list of IP addresses or hostnames of the AD servers to which SSSD should connect in order of preference.")
+                            "desc" => _("IP addresses or host names of AD servers (comma separated)")
                         },
                         "ad_backup_server" => {
                             "type" => "string",
@@ -1227,7 +1231,7 @@ module YAuthClient
                         "ipa_server" => {
                             "type" => "string",
                             "important" => true,
-                            "desc" => _("The comma-separated list of IP addresses or hostnames of the IPA servers to which SSSD should connect in the order of preference.")
+                            "desc" => _("IP addresses or host names of IPA servers (comma separated)")
                         },
                         "ipa_hostname" => {
                             "type" => "string",

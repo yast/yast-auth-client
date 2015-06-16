@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue Jun 16 09:31:17 UTC 2015 - hguo@suse.com
+
+- Simply the UI of the Initial Customisation dialog.
+  Fix a typo on main screen.
+  Fix a regression in "delete parameter" feature".
+  Fix incorrect value defaults of several provider options.
+  (Implements part of fate#316349)
+
+-------------------------------------------------------------------
 Wed May 27 08:37:01 UTC 2015 - hguo@suse.com
 
 - The new release introduces new features, several bug fixes, and
