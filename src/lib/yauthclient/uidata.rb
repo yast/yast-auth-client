@@ -93,6 +93,23 @@ module YAuthClient
             return @curr_section
         end
 
+        # Delete the currently chosen configuration section.
+        def del_curr_section
+            sect_name = get_curr_section
+            if sect_name == "sssd"
+                return
+            end
+            UIData.instance.get_conf[sect_name][Yast::AuthClientClass::DELETED_SECTION] = true
+            if sect_name.include? "domain/"
+                sect_name = sect_name.sub("domain/", "")
+                @sssd_conf["sssd"]["domains"] = get_enabled_domains.delete_if { |d| d == sect_name }.join(",")
+            else
+                @sssd_conf["sssd"]["services"] = get_enabled_services.delete_if { |d| d == sect_name }.join(",")
+            end
+            # Switch away from the deleted section
+            switch_section("sssd")
+        end
+
         # Return tuples of parameter name, value, and description for the current section.
         def get_section_conf
             return @curr_section_conf
@@ -158,7 +175,7 @@ module YAuthClient
             # Reload (tuples of) parameter name, value, and description for the current section.
             def reload_section_conf
                 params = @sssd_conf.fetch(@curr_section, Hash[])
-                @curr_section_conf = params.keep_if { |k, v|
+                @curr_section_conf = params.select { |k, v|
                     v != Yast::AuthClientClass::DELETED_VALUE
                 }.map { |k, v|
                     [k, v.to_s, Params.instance.get_by_name(k)["desc"]]

@@ -54,7 +54,7 @@ module YAuthClient
         end
 
         def run
-            return if @custom_params.empty?
+            return :ok if @custom_params.empty?
             return if !render_all
             begin
                 return ui_event_loop
@@ -77,21 +77,20 @@ module YAuthClient
                     input_control = nil
                     case defi["type"]
                         when "int"
-                            input_control = IntField(Id("val-" + name), "", 0, 10000000, param_val.to_i)
+                            input_control = IntField(Id("val-" + name), defi["desc"], 0, 10000000, param_val.to_i)
                         when "boolean"
-                            input_control = CheckBox(Id("val-" + name), "", !!/true/i.match(param_val.to_s))
+                            input_control = CheckBox(Id("val-" + name), defi["desc"], !!/true/i.match(param_val.to_s))
                         else
                             if defi["vals"].empty?
-                                input_control = InputField(Id("val-" + name), "", param_val.to_s)
+                                input_control = InputField(Id("val-" + name), defi["desc"], param_val.to_s)
                             else
                                 choices = defi["vals"].split(%r{[\s,]+})
-                                input_control = ComboBox(Id("val-" + name), "", choices.map { |val|
+                                input_control = ComboBox(Id("val-" + name), defi["desc"], choices.map { |val|
                                     Item(val, val == param_val)
                                 })
                             end
                     end
-                    param_controls.push(Left(HSquash(HBox(Label(Opt(:boldFont), name), input_control))))
-                    param_controls.push(Left(Label(defi["desc"])))
+                    param_controls.push(Left(HSquash(input_control)))
                     param_controls.push(VSpacing(0.2))
                 }
                 return param_controls
@@ -104,32 +103,39 @@ module YAuthClient
                         VSpacing(0.5),
                         Frame(
                             _("Mandatory Parameters"),
-                            VBox(*make_editor(@custom_params.select { |name, defi| defi["req"] }.keys))
+                            VBox(*make_editor(@custom_params.select {
+                                |name, defi| defi["req"] && !defi["no_init_customisation"]
+                            }.keys))
                         ),
                         VSpacing(0.5),
                         Frame(
                             _("Optional Parameters"),
-                            VBox(*make_editor(@custom_params.select { |name, defi| defi["important"] }.keys))
+                            VBox(*make_editor(@custom_params.select {
+                                |name, defi| defi["important"] && !defi["no_init_customisation"]
+                            }.keys))
                         ),
                         ButtonBox(
-                            PushButton(Id(:ok), Yast::Label.OKButton)
-                            # It is not possible to cancel the dialog
+                            PushButton(Id(:ok), Yast::Label.OKButton),
+                            PushButton(Id(:cancel), Yast::Label.CancelButton)
                         )
                     )
                 )
             end
 
-            # Make sure all mandatory parameters are set, then return :ok.
+            # Return :ok or :cancel depends user action.
             def ui_event_loop
                 loop do
                     case Yast::UI.UserInput
                     when :ok
                         # Check that all mandatory parameters are set
-                        missing = @custom_params.select { |name, defi| defi["req"] }.keys.select { |name|
+                        missing = @custom_params.select {
+                            |name, defi| defi["req"] && !defi["no_init_customisation"]
+                        }.keys.select { |name|
                             Yast::UI.QueryWidget(Id("val-" + name), :Value).to_s.empty?
                         }
                         if !missing.empty?
-                            Yast::Popup.Error(_("Please complete all of the following mandatory parameters:\n") + missing.sort.join(", "))
+                            descs = missing.map { |pname| @custom_params[pname]["desc"] }
+                            Yast::Popup.Error(_("Please complete all of the following mandatory parameters:\n") + descs.join("\n"))
                             redo
                         end
                         # Save parameter values
@@ -143,6 +149,11 @@ module YAuthClient
                         }
                         UIData.instance.reload_section
                         return :ok
+
+                    when :cancel
+                        # Remove the section and return to main screen
+                        UIData.instance.del_curr_section
+                        return :cancel
                     end
                 end
             end

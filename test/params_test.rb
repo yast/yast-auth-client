@@ -29,7 +29,7 @@ describe YAuthClient::Params do
         it "Get parameter definition by parameter name" do
             params = YAuthClient::Params.instance
             defi = params.get_by_name("filter_users")
-            expect(defi["desc"]).to eq("Exclude certain users from being fetched from the sss NSS database.")
+            expect(defi["desc"]).to eq("Exclude certain users from being fetched by SSS backend")
             expect(defi["sect"]).to eq("nss")
             expect(defi["type"]).to eq("string")
             expect(defi["def"]).to eq("root")

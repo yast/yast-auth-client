@@ -110,7 +110,9 @@ module YAuthClient
                             # Swtich to this new section
                             UIData.instance.switch_section(sect_name)
                             # Instruct user to create initial customisation
-                            InitialCustomisationDialog.new(["services", sect_name]).run
+                            if InitialCustomisationDialog.new(["services", sect_name]).run != :ok
+                                return :cancel
+                            end
                         else
                             # Create new domain
                             sect_name = Yast::UI.QueryWidget(Id(:dom_name), :Value).to_s.strip
@@ -143,7 +145,9 @@ module YAuthClient
                             UIData.instance.get_conf[sect_name] = sect_conf
                             UIData.instance.switch_section(sect_name)
                             # Instruct user to create initial customisation
-                            InitialCustomisationDialog.new(["domain", sect_conf["id_provider"], sect_conf["auth_provider"]]).run
+                            if InitialCustomisationDialog.new(["domain", sect_conf["id_provider"], sect_conf["auth_provider"]]).run != :ok
+                                return :cancel
+                            end
                         end
                         return :ok
                     when :cancel

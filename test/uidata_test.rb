@@ -65,10 +65,10 @@ describe YAuthClient::UIData do
         it "Switch section to look at domain/dom1" do
             uidata = YAuthClient::UIData.instance
             match = [
-                ["ldap_uri", "ldap://ldap.suse.de", "Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference."],
-                ["ldap_search_base", "dc=suse,dc=de", "The default base DN to use for performing LDAP user operations."],
-                ["ldap_schema", "rfc2307bis", "Specifies the Schema Type in use on the target LDAP server."],
-                ["auth_provider", "krb5", "The authentication provider used for the domain."],
+                ["ldap_uri", "ldap://ldap.suse.de", "URIs (ldap://) of LDAP servers (comma separated)"],
+                ["ldap_search_base", "dc=suse,dc=de", "Base DN for LDAP search"],
+                ["ldap_schema", "rfc2307bis", "LDAP schema type"],
+                ["auth_provider", "krb5", "The authentication provider used for the domain"],
                 ["id_provider", "ldap", "The identification provider used for the domain."]
             ]
             uidata.switch_section("domain/dom1")
