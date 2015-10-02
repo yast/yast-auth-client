@@ -159,10 +159,6 @@ auth_domains =
         element case_sensitive{ text }? &
         element proxy_fast_alias{ text }? &
         element subdomain_homedir{ text }? &
-        element subdomain_homedir{ text }? &
-        element subdomain_homedir{ text }? &
-        element subdomain_homedir{ text }? &
-        element subdomain_homedir{ text }? &
         element base_directory{ text }? &
         element create_homedir{ text }? &
         element remove_homedir{ text }? &
@@ -213,7 +209,6 @@ auth_domains =
         element ldap_user_member_of{ text }? &
         element ldap_user_authorized_service{ text }? &
         element ldap_user_authorized_host{ text }? &
-        element pwd_expiration_warning{ INTEGER }? &
         element ldap_group_object_class{ text }? &
         element ldap_group_name{ text }? &
         element ldap_group_gid_number{ text }? &
