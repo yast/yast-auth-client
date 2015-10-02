@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Oct  2 13:15:11 UTC 2015 - mvidner@suse.com
+
+- Fixed "Relax-NG parser error : Some defines for timeout needs the
+  combine attribute" when checking validity of any AutoYaST profile
+  (bsc#948206).
+- 3.1.23.1
+
+-------------------------------------------------------------------
 Mon Jun  1 11:38:08 UTC 2015 - varkoly@suse.com
 
 - bnc#931515 - YaST2 auth-client removes case_sensitive attribute from sssd.conf
