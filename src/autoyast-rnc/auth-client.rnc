@@ -51,7 +51,7 @@ nss =
     debug_level? &
     debug_timestamps? &
     debug_microseconds? &
-    timeout? &
+    element timeout{ INTEGER }? &
     reconnection_retries ? &
     fd_limit? &
     client_idle_timeout? &
@@ -69,7 +69,7 @@ pam =
     debug_level? &
     debug_timestamps? &
     debug_microseconds? &
-    timeout? &
+    element timeout{ INTEGER }? &
     reconnection_retries ? &
     fd_limit? &
     client_idle_timeout? &
@@ -81,7 +81,7 @@ sudo =
     debug_level? &
     debug_timestamps? &
     debug_microseconds? &
-    timeout? &
+    element timeout{ INTEGER }? &
     reconnection_retries ? &
     fd_limit? &
     client_idle_timeout? &
@@ -93,7 +93,7 @@ autofs =
     debug_level? &
     debug_timestamps? &
     debug_microseconds? &
-    timeout? &
+    element timeout{ INTEGER }? &
     reconnection_retries ? &
     fd_limit? &
     client_idle_timeout? &
@@ -106,7 +106,7 @@ ssh =
     debug_level? &
     debug_timestamps? &
     debug_microseconds? &
-    timeout? &
+    element timeout{ INTEGER }? &
     reconnection_retries ? &
     fd_limit? &
     client_idle_timeout? &
@@ -116,7 +116,6 @@ ssh =
 debug_level          = element debug_level{ INTEGER }
 debug_timestamps     = element debug_timestamps{ text }
 debug_microseconds   = element debug_microseconds{ text }
-timeout              = element timeout{ INTEGER }
 reconnection_retries = element reconnection_retries{ INTEGER }
 fd_limit             = element fd_limit{ INTEGER }
 client_idle_timeout  = element client_idle_timeout{ INTEGER }
