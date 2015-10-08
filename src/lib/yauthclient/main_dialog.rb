@@ -109,6 +109,8 @@ module YAuthClient
             # For the currently selection config section, render customised parameters and values in a table.
             def render_section_conf
                 Yast::UI.ReplaceWidget(Id(:section_conf), VBox(
+                    # TRANSLATORS: Label of the area used to customise parameters.
+                    # %s is the name of the section being customised.
                     Left(Label(Opt(:boldFont), _("Customisation - %s") % UIData.instance.get_curr_section)),
                     HBox(
                         Table(
