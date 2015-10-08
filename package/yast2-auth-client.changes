@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Oct  8 13:59:56 UTC 2015 - ancor@suse.com
+
+- Upgrade to version 3.3.2:
+  * Fix untranslated word in main dialog (bsc#948843)
+
+-------------------------------------------------------------------
 Tue Jun 16 09:31:17 UTC 2015 - hguo@suse.com
 
 - Upgrade to version 3.3.1:
