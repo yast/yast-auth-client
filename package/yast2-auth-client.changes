@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Oct  9 12:12:52 UTC 2015 - mvidner@suse.com
+
+- Fixed "Relax-NG parser error : Some defines for timeout needs the
+  combine attribute" when checking validity of any AutoYaST profile
+  (bsc#948206).
+- 3.3.3
+
+-------------------------------------------------------------------
 Thu Oct  8 13:59:56 UTC 2015 - ancor@suse.com
 
 - Upgrade to version 3.3.2:
