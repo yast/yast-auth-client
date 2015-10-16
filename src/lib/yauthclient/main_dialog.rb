@@ -56,7 +56,7 @@ module YAuthClient
                         )),
                         HBox(
                             # Overview of all config sections
-                            HWeight(35, VBox(
+                            HWeight(45, VBox(
                                 VSpacing(0.2),
                                 Frame(
                                     _("Global Configuration"),
@@ -78,7 +78,7 @@ module YAuthClient
                                 )
                             )),
                             # Config editor
-                            HWeight(65, VBox(
+                            HWeight(55, VBox(
                                 ReplacePoint(Id(:section_conf), Empty()),
                                 ReplacePoint(Id(:list_more_params), Empty())
                             ))
