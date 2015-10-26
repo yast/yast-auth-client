@@ -52,7 +52,7 @@ module YAuthClient
                     VBox(
                         Left(HBox(
                             Yast::Icon::Simple("yast-nis"),
-                            Heading(_("Authentication Client Config"))
+                            Heading(_("Authentication Client Configuration"))
                         )),
                         HBox(
                             # Overview of all config sections
