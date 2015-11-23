@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Nov 23 13:59:57 UTC 2015 - hguo@suse.com
+
+- Redo fix for bsc#948432, with even more space for the two big buttons.
+  Version number is now 3.3.6.
+
+-------------------------------------------------------------------
 Mon Oct 26 08:58:58 UTC 2015 - hguo@suse.com
 
 - Fix main dialog's header label. bsc#951586

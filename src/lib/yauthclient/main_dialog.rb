@@ -72,9 +72,9 @@ module YAuthClient
                                 VSpacing(0.2),
                                 Left(Label(Opt(:boldFont), _("Sections"))),
                                 Tree(Id(:section_tree), Opt(:immediate), "", []),
-                                HBox(
-                                    PushButton(Id(:new_sec), _("New Service/Domain")),
-                                    PushButton(Id(:del_sec), _("Delete Service/Domain"))
+                                VBox(
+                                    PushButton(Id(:new_sec), Opt(:hstretch), _("New Service/Domain")),
+                                    PushButton(Id(:del_sec), Opt(:hstretch), _("Delete Service/Domain"))
                                 )
                             )),
                             # Config editor
