@@ -18,7 +18,7 @@
 
 
 Name:           yast2-auth-client
-Version:        3.1.23.1
+Version:        3.1.23.2
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
