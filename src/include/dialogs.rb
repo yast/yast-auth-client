@@ -266,7 +266,7 @@ module Yast
         end
         if AuthClient.auth["sssd_conf"][section].has_key?("auth_provider")
            _auth_provider = AuthClient.auth["sssd_conf"][section]["auth_provider"]
-           @params[_auth_provider].each_key { |k| 
+           @params.fetch(_auth_provider, {}).each_key { |k| 
              if @params[_auth_provider][k].has_key?("req") && ! _params.include?(k)
                AuthClient.auth["sssd_conf"][section][k] = GetParameterDefault(k)
                _params.push(k)
