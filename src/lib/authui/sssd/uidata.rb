@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,64 +16,19 @@
 #
 # ------------------------------------------------------------------------------
 
-require "yauthclient/params.rb"
-Yast.import "AuthClient"
+require "auth/authconf.rb"
+require "authui/sssd/params.rb"
 
-module YAuthClient
+module SSSD
     # UI state information and configuration presentation.
     class UIData
-        include Yast::Logger
+        include Yast
+        include Auth
         include Singleton
 
         def initialize
-            @sssd_conf = Yast::AuthClient.auth["sssd_conf"]
-
             # Initially load section "sssd"
             switch_section("sssd")
-        end
-
-        # Return SSSD configuration backend (all sections)
-        def get_conf
-            return @sssd_conf
-        end
-
-        # Return list of all configured domain names (with prefix /).
-        def get_all_domains
-            if !@sssd_conf
-                return []
-            end
-            return @sssd_conf.keys.select { |k|
-                k.start_with?("domain/") && !@sssd_conf[k].fetch(Yast::AuthClientClass::DELETED_SECTION, false)
-            }.uniq
-        end
-
-        # Return list of enabled domain names (without prefix /).
-        def get_enabled_domains
-            if !@sssd_conf["sssd"]
-                return []
-            end
-            return @sssd_conf["sssd"].fetch("domains", "").split(%r{[\s,]+})
-        end
-
-        # Return list of enabled service names.
-        def get_enabled_services
-            if !@sssd_conf["sssd"]
-                return []
-            end
-            return @sssd_conf["sssd"].fetch("services", "").split(%r{[\s,]+})
-        end
-
-        # Return list of all configured service names.
-        def get_all_services
-            if !@sssd_conf
-                return []
-            end
-            sections = @sssd_conf.keys.select { |k|
-                !k.start_with?("domain/") && k != "sssd" && !@sssd_conf[k].fetch(Yast::AuthClientClass::DELETED_SECTION, false)
-            }
-            # Pull in more service names from "services" parameter
-            sections += @sssd_conf.fetch("sssd", Hash[]).fetch("services", "").split(%r{[\s,]+})
-            return sections.uniq
         end
 
         # Reload configuration data of the current section.
@@ -84,7 +39,11 @@ module YAuthClient
 
         # Switch to a new configuration section and load its current configuration.
         def switch_section(new_section)
-            @curr_section = new_section
+            if new_section == ""
+                @curr_section = "sssd"
+            else
+                @curr_section = new_section
+            end
             reload_section
         end
 
@@ -96,34 +55,26 @@ module YAuthClient
         # Delete the currently chosen configuration section.
         def del_curr_section
             sect_name = get_curr_section
-            if sect_name == "sssd"
-                return
-            end
-            UIData.instance.get_conf[sect_name][Yast::AuthClientClass::DELETED_SECTION] = true
-            if sect_name.include? "domain/"
-                sect_name = sect_name.sub("domain/", "")
-                @sssd_conf["sssd"]["domains"] = get_enabled_domains.delete_if { |d| d == sect_name }.join(",")
-            else
-                @sssd_conf["sssd"]["services"] = get_enabled_services.delete_if { |d| d == sect_name }.join(",")
-            end
+            AuthConfInst.sssd_conf.delete(sect_name)
+            AuthConfInst.sssd_conf['sssd']['domains'].delete_if{|a| a == sect_name}
+            AuthConfInst.sssd_conf['sssd']['services'].delete_if{|a| a == sect_name}
             # Switch away from the deleted section
             switch_section("sssd")
         end
 
         # Return tuples of parameter name, value, and description for the current section.
         def get_section_conf
-            return @curr_section_conf
+            conf = @curr_section_conf
+            if @curr_section == 'sssd'
+                # Hide these parameters from user
+                conf.delete_if { |entry| ['domains', 'services', 'config_file_version'].include?(entry[0]) }
+            end
+            return conf
         end
 
         # Return hash of additional customisable parameters (name, description, etc).
         def get_section_more_params
             return @curr_section_more_params
-        end
-
-        # Return list of service names not yet enabled in configuration.
-        def get_unused_svcs
-            supported = ["nss", "pam", "sudo", "autofs", "ssh"]
-            return (supported - get_enabled_services).sort
         end
 
         # Get list of supported identity providers.
@@ -133,12 +84,12 @@ module YAuthClient
 
         # If current section is a domain, return its ID provider. Nil otherwise.
         def get_current_id_provider
-            return @sssd_conf.fetch(@curr_section, Hash[]).fetch("id_provider", nil)
+            return AuthConfInst.sssd_conf.fetch(@curr_section, Hash[]).fetch("id_provider", nil)
         end
 
         # If current section is a domain, return its authentication provider. Nil otherwise.
         def get_current_auth_provider
-            return @sssd_conf.fetch(@curr_section, Hash[]).fetch("auth_provider", nil)
+            return AuthConfInst.sssd_conf.fetch(@curr_section, Hash[]).fetch("auth_provider", nil)
         end
 
         # Get list of supported authentication providers.
@@ -154,7 +105,7 @@ module YAuthClient
             # - Parameter name shall contain all filter words with the exception of the final word.
             # - One of the words among the parameter name shall contain the final filter word.
             # Thus returning result such as "ldap_service_object_class" when filter is "ldap_object".
-            return @curr_section_more_params.reject { |name, detail|
+            return @curr_section_more_params.reject { |name, _detail|
                 name_words = name.split(%r{[\s_]+})
                 if filter_words.length == 1
                     name_words.none? { |word| word.include? filter_words[0] }
@@ -168,30 +119,35 @@ module YAuthClient
 
         # Return the customised value of the parameter in current section, or nil if no customisation.
         def get_param_val(param_name)
-            return @sssd_conf.fetch(@curr_section, Hash[]).fetch(param_name, nil)
+            return AuthConfInst.sssd_conf.fetch(@curr_section, Hash[]).fetch(param_name, nil)
+        end
+        
+        # Return true only if the currently chosen section involves AD setup.
+        def curr_section_involves_ad?
+            sect_conf = AuthConfInst.sssd_conf.fetch(@curr_section, Hash[])
+            return sect_conf['id_provider'] == 'ad' || sect_conf['auth_provider'] == 'ad'
         end
 
-        private
+    private
+
             # Reload (tuples of) parameter name, value, and description for the current section.
             def reload_section_conf
-                params = @sssd_conf.fetch(@curr_section, Hash[])
-                @curr_section_conf = params.select { |k, v|
-                    v != Yast::AuthClientClass::DELETED_VALUE
-                }.map { |k, v|
+                params = AuthConfInst.sssd_conf.fetch(@curr_section, Hash[])
+                @curr_section_conf = params.map { |k, v|
                     [k, v.to_s, Params.instance.get_by_name(k)["desc"]]
                 }
             end
 
             # Reload (hash of) additional parameter name and descriptions for the current section.
             def reload_section_more_params
-                current_conf = @sssd_conf.fetch(@curr_section, Hash[])
+                current_conf = AuthConfInst.sssd_conf.fetch(@curr_section, Hash[])
                 more_params = Hash[]
                 # Collect relevant parameters depending on the current section
                 if @curr_section =~ /^domain/
                     more_params.merge!(Params.instance.get_common_domain_params)
                     # Provider-specific parameters
-                    more_params.merge!(Params.instance.get_by_provider(get_current_id_provider()))
-                    more_params.merge!(Params.instance.get_by_provider(get_current_auth_provider()))
+                    more_params.merge!(Params.instance.get_by_provider(get_current_id_provider))
+                    more_params.merge!(Params.instance.get_by_provider(get_current_auth_provider))
                 else
                     more_params = Params.instance.get_by_category(@curr_section)
                     if @curr_section != "sssd"
@@ -200,7 +156,7 @@ module YAuthClient
                     end
                 end
                 # Remove customised parameters
-                more_params.delete_if { |name, detail| current_conf.has_key? name }
+                more_params.delete_if { |name, _detail| current_conf.key? name }
                 @curr_section_more_params = more_params
             end
     end

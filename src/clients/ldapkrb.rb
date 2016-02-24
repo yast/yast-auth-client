@@ -16,12 +16,12 @@
 #
 # ------------------------------------------------------------------------------
 
-# Module:       Configure system-wide authentication mechanisms via SSSD
-# Summary:      Invoke main dialog and allow configuring SSSD
+# Module:       Configure system-wide authentication mechanisms via LDAP and Kerberos
+# Summary:      Invoke main dialog and allow configuring LDAP and Kerberos
 # Authors:      Howard Guo <hguo@suse.com>
 
 require 'auth/authconf'
 require 'authui/main_dialog'
 
 Auth::AuthConfInst.read_all
-Auth::MainDialog.new(:sssd).run
+Auth::MainDialog.new(:ldapkrb).run
