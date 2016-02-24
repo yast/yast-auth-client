@@ -17,7 +17,7 @@
 
 
 Name:           yast2-auth-client
-Version:        3.3.6
+Version:        3.3.7
 Release:        0
 Group:          System/YaST
 License:        GPL-2.0
@@ -41,7 +41,6 @@ Obsoletes:      yast2-ldap-client yast2-kerberos-client
 
 %description
 With this YaST2 module you may configure centralised system authentication, on a single or multipe network domains.
-The authentication capabilities are provided by SSSD.
 
 %prep
 %setup -n %{name}-%{version}

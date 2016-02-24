@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -17,15 +17,18 @@
 # ------------------------------------------------------------------------------
 
 require "yast"
-require "yauthclient/uidata.rb"
-require "yauthclient/params.rb"
+require "auth/authconf.rb"
+require "authui/sssd/uidata.rb"
+require "authui/sssd/params.rb"
 
-module YAuthClient
+module SSSD
     # Change a parameter value for the current section.
     class EditParamDialog
-        include Yast::UIShortcuts
-        include Yast::I18n
-        include Yast::Logger
+        include Yast
+        include Auth
+        include UIShortcuts
+        include I18n
+        include Logger
 
         def initialize(param_name)
             textdomain "auth-client"
@@ -44,7 +47,7 @@ module YAuthClient
             begin
                 return ui_event_loop
             ensure
-                Yast::UI.CloseDialog()
+                UI.CloseDialog()
             end
         end
 
@@ -67,13 +70,13 @@ module YAuthClient
                             })
                         end
                 end
-                Yast::UI.OpenDialog(
+                UI.OpenDialog(
                     VBox(
                         Left(Label(@param_def["desc"])),
                         Left(input_control),
                         ButtonBox(
-                            PushButton(Id(:ok), Yast::Label.OKButton),
-                            PushButton(Id(:cancel), Yast::Label.CancelButton)
+                            PushButton(Id(:ok), Label.OKButton),
+                            PushButton(Id(:cancel), Label.CancelButton)
                         )
                     )
                 )
@@ -82,12 +85,10 @@ module YAuthClient
             # Return :ok or :cancel depends on the user action.
             def ui_event_loop
                 loop do
-                    case Yast::UI.UserInput
+                    case UI.UserInput
                     when :ok
-                        val = Yast::UI.QueryWidget(Id(:value), :Value)
-                        sect_conf = UIData.instance.get_conf.fetch(UIData.instance.get_curr_section, Hash[])
-                        sect_conf[@param_name] = val.to_s
-                        UIData.instance.get_conf[UIData.instance.get_curr_section] = sect_conf
+                        val = UI.QueryWidget(Id(:value), :Value)
+                        AuthConfInst.sssd_conf[UIData.instance.get_curr_section][@param_name] = val.to_s
                         UIData.instance.reload_section
                         return :ok
                     when :cancel

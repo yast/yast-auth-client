@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -20,7 +20,7 @@ require "yast"
 
 Yast.import "UI"
 
-module YAuthClient
+module SSSD
     # A database of SSSD configuration parameter names, type, default, etc.
     class Params
         include Singleton
@@ -99,59 +99,50 @@ module YAuthClient
         def init_params
             @all_params = {
                    #Define Global Parameters
+                    # Omit 'services' and 'domains' from section [sssd], because they are never customised directly by the end-user.
                    "sssd" => {
                         "config_file_version" => {
                             "type" => "int",
                             "def" => 2,
                             "vals" => "2",
                             "req" => true,
-                            "desc" => _("Indicates what is the syntax of the config file.")
-                        },
-                        "services" => {
-                            "type" => "string",
-                            "req" => true,
-                            "def" => "nss, pam",
-                            "desc" => _("Comma separated list of services that are started when sssd itself starts.") +
-                                      _("\nSupported services: nss, pam, sudo, autofs, ssh")
+                            "desc" => _("Version of configuration file syntax (1 or 2)")
                         },
                         "reconnection_retries" => {
                             "type" => "int",
                             "def"  => 3,
-                            "desc" => _("Number of times services should attempt to reconnect in the event of a Data Provider crash or restart before they give up" )
-                        },
-                        "domains" => {
-                            "type" => "string",
-                            "req" => true,
-                            "desc" => _("SSSD can use more domains at the same time, but at least one must be configured or SSSD won't start.") +
-                                      _("This parameter contains the list of domains in the order these will be queried.")
+                            "desc" => _("Number of times services should attempt to reconnect in the event of a Data Provider crash or restart before they give up")
                         },
                         "re_expression" => {
                             "type" => "string",
-                            "desc" => _("Default regular expression that describes how to parse the string containing user name and domain into these components")
+                            "desc" => _("The regular expression parses user name and domain name into components")
                         },
                         "full_name_format" => {
                             "type" => "string",
-                            "desc" => _("The default printf(3)-compatible format that describes how to translate a (name, domain) tuple into a fully qualified name.")
+                            "desc" => _("The default printf(3)-compatible format that describes translation of a name/domain tuple into FQDN")
                         },
                         "try_inotify" => {
                             "type" => "boolean",
-                            "desc" => _("SSSD monitors the state of resolv.conf to identify when it needs to update its internal DNS resolver.") +
-                                      _("By default, we will attempt to use inotify for this, and will fall back to polling resolv.conf every five seconds if inotify cannot be used.")
+                            "desc" => _("Whether or not to use inotify mechanism to monitor resolv.conf to update internal DNS resolver")
                         },
                         "krb5_rcache_dir" => {
                             "type" => "string",
-                            "desc" => _("Directory on the filesystem where SSSD should store Kerberos replay cache files.")
+                            "desc" => _("Directory on the filesystem where SSSD should store Kerberos replay cache files")
                         },
                         "default_domain_suffix" => {
                             "type" => "string",
-                            "desc" => _("This string will be used as a default domain name for all names without a domain name component.")
-                        }
+                            "desc" => _("A default domain name for all names without a domian name component")
+                        },
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                    },
                    #Define Global Services Parameters
                    "services" => {
                         "debug_level" => {
-                            "type" => "int",
-                            "desc" => _("Bit mask that indicates which debug levels will be visible. 0x0010 is the default value as well as the lowest allowed value, 0xFFF0 is the most verbose mode.")
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
                         },
                         "debug_timestamps" => {
                             "type" => "boolean",
@@ -166,7 +157,7 @@ module YAuthClient
                         "timeout" => {
                             "type" => "int",
                             "def"  => 10,
-                            "desc" => _("Timeout in seconds between heartbeats for this service.")
+                            "desc" => _("Timeout in seconds between heartbeats for this service")
                         },
                         "reconnection_retries" => {
                             "type" => "int",
@@ -176,21 +167,25 @@ module YAuthClient
                         "fd_limit" => {
                             "type" => "int",
                             "def"  =>  8192,
-                            "desc" => _("This option specifies the maximum number of file descriptors that may be opened at one time by this SSSD process.") 
+                            "desc" => _("Maximum number of file descriptors that may be opened at a time by SSSD service process")
                         },
                         "client_idle_timeout" => {
                             "type" => "int",
                             "def"  =>  60,
-                            "desc" => _("This option specifies the number of seconds that a client of an SSSD process can hold onto a file descriptor without communicating on it.")
+                            "desc" => _("Number of seconds a client of SSSD process can hold onto a file descriptor without any communication")
                         },
                         "force_timeout" => {
                             "type" => "int",
                             "def"  =>  60,
-                            "desc" => _("If a service is not responding to ping checks (see the “timeout” option), it is first sent the SIGTERM signal that instructs it to quit gracefully.")
+                            "desc" => _("The service will receive SIGTERM after this number of seconds of consecutive ping check failure")
                         }
                    },
                    #NSS configuration options
                    "nss" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "enum_cache_timeout" => {
                             "type" => "int",
                             "def"  =>  120,
@@ -265,6 +260,10 @@ module YAuthClient
                    },
                    #PAM configuration options
                    "pam" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "offline_credentials_expiration" => {
                             "type" => "int",
                             "def"  => 0,
@@ -303,6 +302,10 @@ module YAuthClient
                   },
                   #SUDO configuration options
                   "sudo" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "sudo_timed" => {
                             "type" => "boolean",
                             "def"  => false,
@@ -311,6 +314,10 @@ module YAuthClient
                   },
                   #AUTOFS configuration options
                   "autofs" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "autofs_negative_timeout" => {
                             "type" => "int",
                             "def"  => 15,
@@ -319,6 +326,10 @@ module YAuthClient
                   },
                   #SSH configuration options
                   "ssh" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "ssh_hash_known_hosts" => {
                             "type" => "boolean",
                             "def"  => true,
@@ -333,6 +344,10 @@ module YAuthClient
                   #DOMAIN SECTIONS
                   #These configuration options can be present in a domain configuration section, that is, in a section called “[domain/NAME]”
                   "domain" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "min_id" => {
                             "type" => "int",
                             "def"  => 1,
@@ -492,6 +507,7 @@ module YAuthClient
                         "case_sensitive" => {
                             "type" => "boolean",
                             "def"  => true,
+                            "important" => true,
                             "desc" => _("Treat user and group names as case sensitive.")
                         },
                         "proxy_fast_alias" => {
@@ -561,6 +577,12 @@ module YAuthClient
                    },
                    #The ldap domain section
                    "ldap" => {
+                        "ldap_use_tokengroups" => {
+                            "type" => "boolean",
+                            "def" => true,
+                            "important" => true,
+                            "desc" => _('(Active Directory specific) Use token-groups attribute if available'),
+                        },
                         "ldap_uri" => {
                             "type" => "string",
                             "rule" => /(ldap[s]?:\/\/|^$)/,
@@ -1174,7 +1196,8 @@ module YAuthClient
                         },
                         "ad_hostname" => {
                             "type" => "string",
-                            "desc" => _("Optional. May be set on machines where the hostname(5) does not reflect the fully qualified name used in the Active Directory domain to identify this host.")
+                            "important" => true,
+                            "desc" => _("AD hostname (optional) - may be set if hostname(5) does not reflect the FQDN used by AD to identify this host.")
                         },
                         "override_homedir" => {
                             "type" => "string",
@@ -1235,7 +1258,8 @@ module YAuthClient
                         },
                         "ipa_hostname" => {
                             "type" => "string",
-                            "desc" => _("May be set on machines where the hostname(5) does not reflect the fully qualified name.")
+                            "important" => true,
+                            "desc" => _("IPA hostname (optional) - may be set if hostname(5) does not reflect the FQDN used by IPA to identify this host.")
                         },
                         "ipa_automount_location" => {
                             "type" => "string",
