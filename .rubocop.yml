@@ -39,6 +39,9 @@ Lint/UnusedBlockArgument:
 Lint/UselessAssignment:
   Enabled: false
 
+Lint/StringConversionInInterpolation:
+  Enabled: false
+
 # Offense count: 26
 Metrics/AbcSize:
   Max: 279
@@ -118,13 +121,12 @@ Style/BracesAroundHashParameters:
 Style/CaseIndentation:
   Enabled: false
 
+Style/ClassCheck:
+  Enabled: false
+
 # Offense count: 5
 # Cop supports --auto-correct.
 Style/CommentIndentation:
-  Enabled: false
-
-# Offense count: 2
-Style/ConstantName:
   Enabled: false
 
 # Offense count: 2
@@ -143,11 +145,6 @@ Style/DoubleNegation:
 # Offense count: 2
 # Cop supports --auto-correct.
 Style/EmptyLines:
-  Enabled: false
-
-# Offense count: 6
-# Cop supports --auto-correct.
-Style/EmptyLinesAroundAccessModifier:
   Enabled: false
 
 # Offense count: 72
@@ -196,11 +193,6 @@ Style/IndentationWidth:
 # Offense count: 1
 # Cop supports --auto-correct.
 Style/Lambda:
-  Enabled: false
-
-# Offense count: 15
-# Cop supports --auto-correct.
-Style/LeadingCommentSpace:
   Enabled: false
 
 # Offense count: 21
