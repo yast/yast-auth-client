@@ -54,11 +54,10 @@ rake install DESTDIR="%{buildroot}"
 
 %files
 %defattr(-,root,root)
-%{yast_desktopdir}/auth-client.desktop
-%{yast_moduledir}/AuthClient.rb
-%{yast_clientdir}/auth-client*.rb
-%{yast_schemadir}/autoyast/rnc/auth-client.rnc
-%dir %{yast_libdir}/yauthclient
-%{yast_libdir}/yauthclient/*
+%{yast_desktopdir}/
+%{yast_moduledir}/
+%{yast_clientdir}/
+%dir %{yast_libdir}/
+%{yast_libdir}/
 %doc %{yast_docdir}
 

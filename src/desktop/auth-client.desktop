@@ -4,7 +4,7 @@ Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
 
 X-KDE-ModuleType=Library
 X-KDE-HasReadOnlyMode=true
-X-SuSE-YaST-Call=authclient
+X-SuSE-YaST-Call=auth-client
 
 X-SuSE-YaST-Group=Net_advanced
 X-SuSE-YaST-RootOnly=true
@@ -14,7 +14,7 @@ X-SuSE-YaST-AutoInstClonable=true
 X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,kerberos,krb,krb5,ad
 
 Icon=yast-kerberos
-Exec=xdg-su -c "/sbin/yast2 authclient"
+Exec=xdg-su -c "/sbin/yast2 auth-client"
 
 Name=Authentication Client
 GenericName=System Authentication Configuration

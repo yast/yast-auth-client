@@ -16,7 +16,6 @@
 #
 # ------------------------------------------------------------------------------
 
-# File: clients/authclient.rb
 # Module:       Configure system-wide authentication mechanisms
 # Summary:      Invoke main dialog.
 # Authors:      Howard Guo <hguo@suse.com>
