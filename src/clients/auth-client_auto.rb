@@ -21,6 +21,5 @@
 require 'auth/authconf'
 require 'authui/autoclient'
 
-include Auth
-AuthConfInst.autoyast_editor_mode = true
-AutoClient.new.run
+Auth::AuthConfInst.autoyast_editor_mode = true
+Auth::AutoClient.new.run

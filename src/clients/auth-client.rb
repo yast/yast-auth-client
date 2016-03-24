@@ -23,9 +23,8 @@
 require 'auth/authconf'
 require 'authui/main_dialog'
 
-include Auth
-AuthConfInst.sssd_read
-AuthConfInst.ldap_read
-AuthConfInst.krb_read
-AuthConfInst.aux_read
-MainDialog.new.run
+Auth::AuthConfInst.sssd_read
+Auth::AuthConfInst.ldap_read
+Auth::AuthConfInst.krb_read
+Auth::AuthConfInst.aux_read
+Auth::MainDialog.new.run
