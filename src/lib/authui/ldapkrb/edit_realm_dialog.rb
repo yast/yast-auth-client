@@ -18,12 +18,12 @@
 
 require 'yast'
 require 'auth/authconf'
-require 'authui/moreauthcomps/generic_input_dialog'
+require 'authui/ldapkrb/generic_input_dialog'
 Yast.import 'UI'
 Yast.import 'Icon'
 Yast.import 'Label'
 
-module SSSD
+module LdapKrb
     # Edit Kerberos realm configuration
     class EditRealmDialog < UI::Dialog
         include Yast
@@ -94,7 +94,7 @@ module SSSD
         def kdc_remove_handler
             UI.ChangeWidget(Id(:kdc), :Items, UI.QueryWidget(Id(:kdc), :Items).map{|item|item[1]} - [UI.QueryWidget(Id(:kdc), :CurrentItem)])
         end
-        
+
         # Add an auth_to_local
         def a2l_add_handler
             new_a2l = GenericInputDialog.new(_('Please type in the auth_to_local rule:'), '').run
@@ -102,12 +102,12 @@ module SSSD
                 UI.ChangeWidget(Id(:auth_to_local), :Items, UI.QueryWidget(Id(:auth_to_local), :Items) + [new_a2l])
             end
         end
-        
+
         # Remove an auth_to_local
         def a2l_remove_handler
             UI.ChangeWidget(Id(:auth_to_local), :Items, UI.QueryWidget(Id(:auth_to_local), :Items).map{|item|item[1]} - [UI.QueryWidget(Id(:auth_to_local), :CurrentItem)])
         end
-        
+
         # Add an auth_to_local_names
         def a2ln_add_handler
             new_a2ln = GenericInputDialog.new(_('Please type in the principal name and user name in the format of "princ_name = user_name":'), '').run
@@ -118,7 +118,7 @@ module SSSD
                 end
             end
         end
-        
+
         # Remove an auth_to_local_names
         def a2ln_remove_handler
             current_key = UI.QueryWidget(Id(:auth_to_local_names), :CurrentItem)

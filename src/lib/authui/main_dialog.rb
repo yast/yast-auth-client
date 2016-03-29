@@ -22,7 +22,7 @@ require 'yast'
 require 'ui/dialog'
 require 'auth/authconf'
 require 'authui/sssd/main_dialog'
-require 'authui/moreauthcomps/main_dialog'
+require 'authui/ldapkrb/main_dialog'
 Yast.import 'UI'
 Yast.import 'Icon'
 Yast.import 'Label'
@@ -107,7 +107,7 @@ module Auth
         def refresh_config_status
             net_facts = AuthConf.get_net_facts
             UI.ChangeWidget(Id(:computer_name), :Value, net_facts['computer_name'])
-            UI.ChangeWidget(Id(:full_computer_name), :Value, net_facts['full_computer_name'] ? _('(Name is not resolvable)') : net_facts['network_domain'])
+            UI.ChangeWidget(Id(:full_computer_name), :Value, net_facts['full_computer_name'] == '' ? _('(Name is not resolvable)') : net_facts['full_computer_name'])
             UI.ChangeWidget(Id(:network_domain), :Value, net_facts['network_domain'] == '' ? _('(Name is not resolvable)') : net_facts['network_domain'])
             UI.ChangeWidget(Id(:ip_addresses), :Value, net_facts['ip_addresses'].join(', '))
             UI.ChangeWidget(Id(:auth_domains), :Value, AuthConfInst.summary_text)
@@ -121,7 +121,7 @@ module Auth
 
         # Enter LDAP/Kerberos/Aux daemon configuration dialog.
         def manage_ldap_krb_handler
-            MoreAuthComps::MainDialog.new.run
+            LdapKrb::MainDialog.new.run
         end
 
         # Close the dialog

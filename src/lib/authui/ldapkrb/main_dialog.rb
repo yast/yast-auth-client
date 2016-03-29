@@ -18,11 +18,11 @@
 
 require 'yast'
 require 'auth/authconf.rb'
-require 'authui/moreauthcomps/edit_realm_dialog'
+require 'authui/ldapkrb/edit_realm_dialog'
 Yast.import 'UI'
 Yast.import 'Label'
 
-module MoreAuthComps
+module LdapKrb
     # Main dialog shows three tabs, one for Kerberos, one for LDAP, and one for auxiliary daemons.
     class MainDialog
         include Yast
@@ -331,16 +331,8 @@ module MoreAuthComps
                 HBox(
                     Top(VBox(
                         Left(CheckBox(Id(:ldap_pam), Opt(:notify), _('Allow LDAP users to authenticate on this system (pam_ldap)'), AuthConfInst.ldap_pam)),
-                        Left(HBox(
-                            CheckBox(Id(:nscd_enable), Opt(:notify), _('Cache LDAP entries for faster response (nscd)'), AuthConfInst.nscd_enabled),
-                            Label(_('Current status:')),
-                            Label(Id(:nscd_status), Service.Active('nscd') ? _('Running') : _('Not running')),
-                        )),
-                        Left(HBox(
-                            CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam),
-                            Label(_('Current status:')),
-                            Label(Id(:mkhomedir_status), AuthConfInst.mkhomedir_pam ? _('Enabled') : _('Disabled')),
-                        )),
+                        Left(CheckBox(Id(:nscd_enable), Opt(:notify), _('Cache LDAP entries for faster response (nscd)'), AuthConfInst.nscd_enabled)),
+                        Left(CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam)),
                         Left(Label(_('Read the following items from LDAP data source:'))),
                         Left(CheckBox(Id(:ldap_nss_passwd), Opt(:notify), _("Users"), AuthConfInst.ldap_nss.include?('passwd'))),
                         Left(CheckBox(Id(:ldap_nss_group), Opt(:notify), _("Groups"), AuthConfInst.ldap_nss.include?('group'))),
@@ -413,11 +405,7 @@ module MoreAuthComps
                     Top(VBox(
                         Left(CheckBox(Id(:krb_pam), _('Allow Kerberos users to authenticate on this system (pam_krb5)'),
                             AuthConfInst.krb_pam)),
-                        Left(HBox(
-                            CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam),
-                            Label(_('Current status:')),
-                            Label(Id(:mkhomedir_status), AuthConfInst.mkhomedir_pam ? _('Enabled') : _('Disabled')),
-                        )),
+                        Left(HBox(CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam))),
                         Left(ComboBox(Id(:krb_default_realm), _('If a user attempts login without specifying a realm, the default will be:'),
                             [_('(not specified)')] + AuthConfInst.krb_conf['realms'].keys.sort)),
                         Left(SelectionBox(Id(:krb_realms), _('All authentication realms'),

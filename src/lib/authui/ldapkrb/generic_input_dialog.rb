@@ -22,7 +22,7 @@ Yast.import 'UI'
 Yast.import 'Icon'
 Yast.import 'Label'
 
-module SSSD
+module LdapKrb
     # A generic text input dialog.
     class GenericInputDialog
         include Yast
