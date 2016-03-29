@@ -25,13 +25,61 @@ require 'socket'
 require 'tempfile'
 require 'fileutils'
 require 'date'
+require 'auth/krbparse'
 
 module Auth
     class AuthConf
-        include Yast
-        include I18n
-        include Logger
-        include UIShortcuts
+        include Yast::I18n
+        include Yast::Logger
+        include Yast::UIShortcuts
+
+        attr_accessor(:krb_conf, :krb_pam, :ldap_conf, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
+        attr_accessor(:autofs_enabled, :nscd_enabled, :mkhomedir_pam)
+        attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :autoyast_editor_mode, :autoyast_modified)
+
+        # Clear all configuration objects.
+        def clear
+            # Kerberos configuration
+            @krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realms' => {}, 'logging' => {}}
+            @krb_pam = false
+            # LDAP configuration (/etc/ldap.conf)
+            @ldap_conf = {}
+            @ldap_pam = false
+            @ldap_nss = []
+            # SSSD configuration (/etc/sssd/sssd.conf)
+            @sssd_conf = {}
+            @sssd_pam = false
+            @sssd_nss = []
+            @sssd_enabled = false
+            # Make the basic SSSD configuration structure
+            sssd_lint_conf
+            # Auxialiry daemons and mkhomedir
+            # If you call aux_apply, autofs will be enabled if any of the following condition is met:
+            # - autofs_enabled == true
+            # - SSSD is providing automount
+            # - LDAP is providing automount
+            @autofs_enabled = false
+            @nscd_enabled = false
+            @mkhomedir_pam = false
+            # AD enrollment details
+            @ad_domain = ''
+            @ad_user = ''
+            @ad_ou = ''
+            @ad_pass = ''
+            @ad_overwrite_smb_conf = false
+        end
+
+        def initialize
+            Yast.import "Nsswitch"
+            Yast.import "Pam"
+            Yast.import "Service"
+            Yast.import "Package"
+            clear
+            # AutoYast editor mode prevents changes from being applied
+            @autoyast_editor_mode = false
+            # Hold 'modified' flag for autoyast
+            @autoyast_modified = false
+        end
 
         # Return network host name and environment facts.
         def self.get_net_facts
@@ -39,17 +87,15 @@ module Auth
             begin
                 resolvable_name = Socket.gethostbyname(Socket.gethostname)
                 resolvable_name = resolvable_name.fetch(0, '')
-            rescue
+            rescue SocketError
                 # Intentionally ignored
             end
             ip_addresses = []
             begin
                 resolvable_ip = Socket.getaddrinfo(Socket.gethostname, nil)
                 resolvable_ip = resolvable_ip.fetch(0, []).fetch(3, '')
-                if resolvable_ip != ''
-                    ip_addresses = [resolvable_ip]
-                end
-            rescue
+                ip_addresses = [resolvable_ip] unless resolvable_ip.empty?
+            rescue SocketError
                 # Just get interface IPs
                 ip_addresses = Socket.getifaddrs.select{|iface| iface.addr.ip?}.map{|iface| iface.addr.ip_address}.select{|addr| !addr.start_with?('127.')}
             end
@@ -58,13 +104,12 @@ module Auth
                 domain_name = ''
             end
             domain_name.strip!
-            facts = {
+            return {
                 'computer_name' => Socket.gethostname,
                 'full_computer_name' => resolvable_name,
                 'network_domain' => domain_name.chomp,
                 'ip_addresses' => ip_addresses,
             }
-            return facts
         end
 
         SSSDCapableNSSDatabases = ["passwd", "group", "sudoers", "automount"]
@@ -72,35 +117,33 @@ module Auth
 
         # Enable the specified NSS database.
         def nss_enable_module(db_name, module_name)
-            names = Nsswitch.ReadDb(db_name)
-            if !names.include?(module_name)
-                Nsswitch.WriteDb(db_name, names + [module_name])
-                Nsswitch.Write
-            end
+            names = Yast::Nsswitch.ReadDb(db_name)
+            return if names.include?(module_name)
+            Yast::Nsswitch.WriteDb(db_name, names + [module_name])
+            Yast::Nsswitch.Write
         end
 
         # Disable the specified NSS database.
         def nss_disable_module(db_name, module_name)
-            names = Nsswitch.ReadDb(db_name)
-            if names.include?(module_name)
-                Nsswitch.WriteDb(db_name, names.select { |name| name != module_name })
-                Nsswitch.Write
-            end
+            names = Yast::Nsswitch.ReadDb(db_name)
+            names.delete(module_name)
+            Yast::Nsswitch.WriteDb(db_name, names)
+            Yast::Nsswitch.Write
         end
 
         # Enable and start the service.
         def service_enable_start(name)
-            Service.Enable(name)
-            if !(Service.Active(name) ? Service.Restart(name) : Service.Start(name))
-                Report.Error(_('Failed to start service %s. Please use system journal (journalctl -n -u %s) to diagnose.') % [name, name])
+            Yast::Service.Enable(name)
+            if !(Yast::Service.Active(name) ? Yast::Service.Restart(name) : Yast::Service.Start(name))
+                Yast::Report.Error(_('Failed to start service %s. Please use system journal (journalctl -n -u %s) to diagnose.') % [name, name])
             end
         end
 
         # Disable and stop the service.
         def service_disable_stop(name)
-            Service.Disable(name)
-            if Service.Active(name) && !Service.Stop(name)
-                Report.Error(_('Failed to stop service %s. Please use system journal (journalctl -n -u %s) to diagnose.') % [name, name])
+            Yast::Service.Disable(name)
+            if Yast::Service.Active(name) && !Yast::Service.Stop(name)
+                Yast::Report.Error(_('Failed to stop service %s. Please use system journal (journalctl -n -u %s) to diagnose.') % [name, name])
             end
         end
 
@@ -158,56 +201,12 @@ module Auth
             account.close
         end
 
-        # Clear all configuration objects.
-        def clear
-            # Kerberos configuration
-            @krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realms' => {}, 'logging' => {}}
-            @krb_pam = false
-            # LDAP configuration (/etc/ldap.conf)
-            @ldap_conf = {}
-            @ldap_pam = false
-            @ldap_nss = []
-            # SSSD configuration (/etc/sssd/sssd.conf)
-            @sssd_conf = {}
-            @sssd_pam = false
-            @sssd_nss = []
-            @sssd_enabled = false
-            # Make the basic SSSD configuration structure
-            sssd_lint_conf
-            # Auxialiry daemons and mkhomedir
-            # If you call aux_apply, autofs will be enabled if any of the following condition is met:
-            # - autofs_enabled == true
-            # - SSSD is providing automount
-            # - LDAP is providing automount
-            @autofs_enabled = false
-            @nscd_enabled = false
-            @mkhomedir_pam = false
-            # AD enrollment details
-            @ad_domain = ''
-            @ad_user = ''
-            @ad_ou = ''
-            @ad_pass = ''
-            @ad_overwrite_smb_conf = false
-        end
-
-        def initialize
-            Yast.import "Nsswitch"
-            Yast.import "Pam"
-            Yast.import "Service"
-            Yast.import "Package"
-            clear
-            # AutoYast editor mode prevents changes from being applied
-            @autoyast_editor_mode = false
-            # Hold 'modified' flag for autoyast
-            @autoyast_modified = false
-        end
-
         # Load SSSD configuration.
         def sssd_read
             @sssd_conf = {}
             # Destruct sssd.conf file
-            SCR.UnmountAgent(path('.etc.sssd_conf'))
-            SCR.Read(path('.etc.sssd_conf.all')).fetch('value', []).each { |sect|
+            Yast::SCR.UnmountAgent(Yast::Path.new('.etc.sssd_conf'))
+            Yast::SCR.Read(Yast::Path.new('.etc.sssd_conf.all')).fetch('value', []).each { |sect|
                 if sect['kind'] == 'section'
                     sect_name = sect['name'].strip
                     sect_elems = sect['value']
@@ -217,18 +216,18 @@ module Auth
                 end
             }
             # Read PAM/NSS/daemon status
-            @sssd_pam = Pam.Enabled('sss')
+            @sssd_pam = Yast::Pam.Enabled('sss')
             @sssd_nss = []
             SSSDCapableNSSDatabases.each { |name|
-                if Nsswitch.ReadDb(name).any? { |db| db == 'sss' }
+                if Yast::Nsswitch.ReadDb(name).any? { |db| db == 'sss' }
                     @sssd_nss += [name]
                 end
             }
-            @sssd_enabled = Service.Enabled('sssd')
+            @sssd_enabled = Yast::Service.Enabled('sssd')
             sssd_lint_conf
         end
 
-        
+
         # Enable an SSSD service, if it has not yet been enabled.
         def sssd_enable_svc(svc_name)
             @sssd_conf['sssd']['services'] += [svc_name] if !@sssd_conf['sssd']['services'].include?(svc_name)
@@ -326,13 +325,13 @@ module Auth
         # Remove all cached data by removing all files from /var/lib/sss/db
         def sssd_clear_cache
             was_active = false
-            if Service.Active('sssd')
+            if Yast::Service.Active('sssd')
                 was_active = true
-                Service.Stop('sssd')
+                Yast::Service.Stop('sssd')
             end
             Dir.glob('/var/lib/sss/db/*').each{ |f| File.unlink(f)}
             if was_active
-                Service.Start('sssd')
+                Yast::Service.Start('sssd')
             end
         end
 
@@ -359,10 +358,10 @@ module Auth
                     end
                 }
             end
-            pkgs.delete_if { |name| Package.Installed(name) }
+            pkgs.delete_if { |name| Yast::Package.Installed(name) }
             if pkgs.any?
-                if !Package.DoInstall(pkgs)
-                    Report.Error(_('Failed to install software packages required for running SSSD.'))
+                if !Yast::Package.DoInstall(pkgs)
+                    Yast::Report.Error(_('Failed to install software packages required for running SSSD.'))
                 end
             end
             # Write SSSD config file and correct its permission and ownerships
@@ -373,9 +372,9 @@ module Auth
             sssd_conf.close
             # Save PAM/NSS/daemon status
             if @sssd_pam
-                Pam.Add('sss')
+                Yast::Pam.Add('sss')
             else
-                Pam.Remove('sss')
+                Yast::Pam.Remove('sss')
             end
             fix_pam
             SSSDCapableNSSDatabases.each { |db| nss_disable_module(db, 'sss') }
@@ -396,8 +395,8 @@ module Auth
         def ldap_read
             @ldap_conf = {}
             # Destruct ldap.conf file
-            SCR.UnmountAgent(path('.etc.ldap_conf'))
-            SCR.Read(path('.etc.ldap_conf.all')).fetch('value', []).each { |entry|
+            Yast::SCR.UnmountAgent(Yast::Path.new('.etc.ldap_conf'))
+            Yast::SCR.Read(Yast::Path.new('.etc.ldap_conf.all')).fetch('value', []).each { |entry|
                 if entry['kind'] == 'value'
                     entry_name = entry['name'].strip
                     entry_value = entry['value'].strip
@@ -413,10 +412,10 @@ module Auth
                 end
             }
             # Read PAM/NSS
-            @ldap_pam = Pam.Enabled('ldap')
+            @ldap_pam = Yast::Pam.Enabled('ldap')
             @ldap_nss = []
             LDAPCapableNSSDatabases.each { |name|
-                if Nsswitch.ReadDb(name).any? { |db| db == 'ldap' }
+                if Yast::Nsswitch.ReadDb(name).any? { |db| db == 'ldap' }
                     @ldap_nss += [name]
                 end
             }
@@ -468,10 +467,10 @@ module Auth
                     pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
                 end
             end
-            pkgs.delete_if { |name| Package.Installed(name) }
+            pkgs.delete_if { |name| Yast::Package.Installed(name) }
             if pkgs.any?
-                if !Package.DoInstall(pkgs)
-                    Report.Error(_('Failed to install software packages required for LDAP.'))
+                if !Yast::Package.DoInstall(pkgs)
+                    Yast::Report.Error(_('Failed to install software packages required for LDAP.'))
                 end
             end
             # Write LDAP config file and correct its permission and ownerships
@@ -490,9 +489,9 @@ module Auth
             end
             # Save PAM/NSS/daemon status
             if @ldap_pam
-                Pam.Add('ldap')
+                Yast::Pam.Add('ldap')
             else
-                Pam.Remove('ldap')
+                Yast::Pam.Remove('ldap')
             end
             fix_pam
             LDAPCapableNSSDatabases.each { |db| nss_disable_module(db, 'ldap') }
@@ -504,8 +503,8 @@ module Auth
         # Run ldapsearch to test the parameters. Return empty string if test is successful, otherwise return ldapsearch error output.
         def ldap_test_bind(uri, start_tls, dn, password, base_dn)
             # Make sure openldap client is installed
-            if !Package.Installed('openldap2-client')
-                if !Package.DoInstall(['openldap2-client'])
+            if !Yast::Package.Installed('openldap2-client')
+                if !Yast::Package.DoInstall(['openldap2-client'])
                     return 'Failed to install openldap2-client package'
                 end
             end
@@ -539,145 +538,18 @@ module Auth
             return "#{_('ERROR: ')} #{out}\n#{errout}"
         end
 
-        # Load Kerberos configuration sections from the input text.
-        def krb_parse(krb_conf_text)
-            long_attr1 = ''
-            long_attr2 = ''
-            sect = ''
-            new_krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realms' => {}, 'logging' => {}}
-            # Break down sections and key-value pairs
-            krb_conf_text.split(/\n/).each{ |line|
-                # Throw away comment
-                comment_match = /^\s*[#;].*$/.match(line)
-                if comment_match
-                    next
-                end
-                # Remember include/includedir directives
-                include_match = /^(includedir|include|module)\s+(.+)$/.match(line)
-                if include_match
-                    new_krb_conf['include'] += ["#{include_match[1]} #{include_match[2]}"]
-                    next
-                end
-                # Remember section name
-                sect_match = /^\[([.a-zA-Z0-9_-]+)\]\s*$/.match(line)
-                if sect_match
-                    # remember current section
-                    sect = sect_match[1]
-                    next
-                end
-                # Remember expanded attribute
-                long_attr_match = /^\s*([.a-zA-Z0-9_-]+)\s*=\s*{\s*$/.match(line)
-                if long_attr_match
-                    if long_attr1 == ''
-                        long_attr1 = long_attr_match[1]
-                    elsif long_attr2 == ''
-                        long_attr2 = long_attr_match[1]
-                    end
-                    next
-                end
-                # Closing an expanded attribute
-                close_long_attr_match = /^\s*}\s*$/.match(line)
-                if close_long_attr_match
-                    if !new_krb_conf[sect]
-                        new_krb_conf[sect] = {}
-                    end
-                    sect_conf = new_krb_conf[sect]
-                    if long_attr1 != ''
-                        if !sect_conf[long_attr1]
-                            sect_conf[long_attr1] = {}
-                        end
-                        sect_conf = sect_conf[long_attr1]
-                    end
-                    if long_attr2 != ''
-                        long_attr2 = ''
-                    elsif long_attr1 != ''
-                        long_attr1 = ''
-                    end
-                    next
-                end
-                # Note down key-value pairs in the current section
-                kv_match = /^\s*([.a-zA-Z0-9_-]+)\s*=\s*([^{}]+)\s*$/.match(line)
-                if kv_match
-                    if !new_krb_conf[sect]
-                        new_krb_conf[sect] = {}
-                    end
-                    sect_conf = new_krb_conf[sect]
-                    if long_attr1 != ''
-                        if !sect_conf[long_attr1]
-                            sect_conf[long_attr1] = {}
-                        end
-                        sect_conf = sect_conf[long_attr1]
-                    end
-                    if long_attr2 != ''
-                        if !sect_conf[long_attr2]
-                            sect_conf[long_attr2] = {}
-                        end
-                        sect_conf = sect_conf[long_attr2]
-                    end
-                    key = kv_match[1]
-                    val = kv_match[2]
-                    # A key can hold an array of values
-                    existing_value = sect_conf[key]
-                    if existing_value && existing_value.kind_of?(::String)
-                        sect_conf[key] = [existing_value, val]
-                    elsif existing_value && existing_value.kind_of?(::Array)
-                        sect_conf[key] = existing_value + [val]
-                    else
-                        sect_conf[key] = val
-                    end
-                    next
-                end
-                # Note down single value
-                key = ''
-                v_match = /^\s*([^{}\n\r]+)\s*$/.match(line)
-                if v_match && long_attr1 != nil
-                    if !new_krb_conf[sect]
-                        new_krb_conf[sect] = {}
-                    end
-                    sect_conf = new_krb_conf[sect]
-                    if long_attr1 != ''
-                        key = long_attr1
-                    end
-                    if long_attr2 != ''
-                        # long_attr2 is a key under long_attr1
-                        if !sect_conf[long_attr1]
-                            sect_conf[long_attr1] = {}
-                        end
-                        sect_conf = sect_conf[long_attr1]
-                        key = long_attr2
-                    end
-                    val = v_match[1]
-                    # A key can hold an array of values
-                    existing_value = sect_conf[key]
-                    if existing_value && existing_value.kind_of?(::String)
-                        sect_conf[key] = [existing_value, val]
-                    elsif existing_value && existing_value.kind_of?(::Array)
-                        sect_conf[key] = existing_value + [val]
-                    else
-                        sect_conf[key] = val
-                    end
-                    next
-                end
-            }
-            # These two realm attributes must be placed inside an array
-            new_krb_conf['realms'].each {|_, conf|
-                ['kdc', 'auth_to_local'].each { |attr|
-                    if conf[attr].kind_of?(::String)
-                        conf[attr] = [conf[attr]]
-                    end
-                }
-            }
-            @krb_conf = new_krb_conf
+        # Parse and set Kerberos configuration
+        def krb_parse_set(content)
+            @krb_conf = KrbParse.parse(content)
         end
 
         # Load Kerberos PAM status, and configuration sections from /etc/krb5.conf.
         def krb_read
-            # Parse krb5.conf file
             begin
                 conf_file = File.new('/etc/krb5.conf')
                 content = conf_file.read
-            rescue
-                # Intentionally ignore error
+            rescue Errno::ENOENT
+                # Intentionally ignore if file is not found
             ensure
                 if conf_file != nil
                     conf_file.close
@@ -686,10 +558,8 @@ module Auth
                     content = ''
                 end
             end
-            krb_parse(content)
-
-            # Read PAM
-            @krb_pam = Pam.Enabled('krb5')
+            krb_parse_set(content)
+            @krb_pam = Yast::Pam.Enabled('krb5')
         end
 
         # Follow the specified path that leads to a key in the configuration structure,
@@ -819,10 +689,10 @@ module Auth
             if @krb_pam
                 pkgs += ['pam_krb5', 'krb5', 'krb5-client']
             end
-            pkgs.delete_if { |name| Package.Installed(name) }
+            pkgs.delete_if { |name| Yast::Package.Installed(name) }
             if pkgs.any?
-                if !Package.DoInstall(pkgs)
-                    Report.Error(_('Failed to install software packages required for Kerberos.'))
+                if !Yast::Package.DoInstall(pkgs)
+                    Yast::Report.Error(_('Failed to install software packages required for Kerberos.'))
                 end
             end
             # Write LDAP config file and correct its permission and ownerships
@@ -833,9 +703,9 @@ module Auth
             krb_conf.close
             # Save PAM/NSS/daemon status
             if @krb_pam
-                Pam.Add('krb5')
+                Yast::Pam.Add('krb5')
             else
-                Pam.Remove('krb5')
+                Yast::Pam.Remove('krb5')
             end
             fix_pam
         end
@@ -860,9 +730,9 @@ module Auth
 
         # Load auxiliary daemon/PAM configuration.
         def aux_read
-            @autofs_enabled = Service.Enabled('autofs')
-            @nscd_enabled = Service.Enabled('nscd')
-            @mkhomedir_pam = Pam.Enabled('mkhomedir')
+            @autofs_enabled = Yast::Service.Enabled('autofs')
+            @nscd_enabled = Yast::Service.Enabled('nscd')
+            @mkhomedir_pam = Yast::Pam.Enabled('mkhomedir')
         end
 
         # Return auxiliary daemon configuration.
@@ -890,17 +760,17 @@ module Auth
             if @nscd_enabled
                 pkgs += ['nscd']
             end
-            pkgs.delete_if { |name| Package.Installed(name) }
+            pkgs.delete_if { |name| Yast::Package.Installed(name) }
             if pkgs.any?
-                if !Package.DoInstall(pkgs)
-                    Report.Error(_('Failed to install software packages required by autofs/nscd daemons.'))
+                if !Yast::Package.DoInstall(pkgs)
+                    Yast::Report.Error(_('Failed to install software packages required by autofs/nscd daemons.'))
                 end
             end
             # Enable/disable mkhomedir
             if @mkhomedir_pam
-                Pam.Add('mkhomedir')
+                Yast::Pam.Add('mkhomedir')
             else
-                Pam.Remove('mkhomedir')
+                Yast::Pam.Remove('mkhomedir')
             end
             fix_pam
             # Start/stop daemons
@@ -916,7 +786,8 @@ module Auth
             end
         end
         
-        # Create a temporary file holding smb.conf for the specified AD domain. Return absolute path to the temporary file.
+        # Create a temporary file holding smb.conf for the specified AD domain.
+        # @return [File] a closed file, caller should #unlink after it is no longer used.
         def ad_create_tmp_smb_conf(ad_domain_name, workgroup_name)
             out = Tempfile.new("tempfile")
             out.write("
@@ -935,10 +806,10 @@ module Auth
 
         # Call package installer to install Samba if it has not yet been installed.
         def ad_install_samba
-            if Package.Installed('samba') || Package.DoInstall(['samba'])
+            if Yast::Package.Installed('samba') || Yast::Package.DoInstall(['samba'])
                 return true
             end
-            Report.Error(_('Failed to install Samba, required by Active Directory operations.'))
+            Yast::Report.Error(_('Failed to install Samba, required by Active Directory operations.'))
             return false
         end
 
@@ -980,7 +851,7 @@ module Auth
 
         # Memorise AD enrollment parameters.
         def ad_set_enrollment_params(domain_name, username, slash_delimited_orgunit, password)
-            @ad_domain = ad_domain_name
+            @ad_domain = domain_name
             @ad_user = username
             @ad_ou = slash_delimited_orgunit
             @ad_pass = password
@@ -1053,6 +924,7 @@ module Auth
             rescue Resolv::ResolvError
                 return ''
             end
+            return ''
         end
 
         # Return the KDC host name of the given AD domain via DNS lookup. If it cannot be found, return an empty string.
@@ -1062,6 +934,15 @@ module Auth
             rescue Resolv::ResolvError
                 return ''
             end
+            return ''
+        end
+
+        # Read all authentication configuration items: kerberos, LDAP, pam and auxiliary daemons, and SSSD.
+        def read_all
+            krb_read
+            ldap_read
+            aux_read
+            sssd_read
         end
 
         # Return list of package names that should be installed to satisfy all configuration requirements.
@@ -1112,7 +993,7 @@ module Auth
                 auth_doms_caption = _('Only use local authentication')
             elsif @sssd_enabled && (@sssd_pam || @sssd_nss.any?)
                 # SSSD is configured
-                if Service.Active('sssd')
+                if Yast::Service.Active('sssd')
                     auth_doms_caption = @sssd_conf['sssd']['domains'].join(', ')
                 else
                     auth_doms_caption = _('Configured but not activated')
@@ -1123,7 +1004,7 @@ module Auth
                     if @ldap_conf['base'].to_s == ''
                         auth_doms_caption = _('LDAP is enabled but the setup is incomplete')
                     else
-                        auth_doms_caption = _('via LDAP on ') + @ldap_conf['base']
+                        auth_doms_caption = _('via LDAP on %s') % [@ldap_conf['base']]
                     end
                 end
                 if @krb_pam
@@ -1135,16 +1016,13 @@ module Auth
                     if realms.length == 0
                         auth_doms_caption += _('via Kerberos')
                     else
-                        auth_doms_caption += _('via Kerberos on ') + realms.keys.join(', ')
+                        auth_doms_caption += _('via Kerberos on %s') % [realms.keys.join(', ')]
                     end
                 end
             end
             return auth_doms_caption
         end
 
-        attr_accessor(:krb_conf, :krb_pam, :ldap_conf, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
-        attr_accessor(:autofs_enabled, :nscd_enabled, :mkhomedir_pam)
-        attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :autoyast_editor_mode, :autoyast_modified)
     end
     AuthConfInst = AuthConf.new
 end

@@ -91,19 +91,16 @@ module Auth
             success, output = AuthConfInst.ad_join_domain
             if !success
                 AuthConfInst.autoyast_editor_mode = true
-                log.error 'AD domain enrollment failed! Output is: ' + output.to_s
+                Yast::Report.Error 'AD domain enrollment failed! Output is: ' + output.to_s
             end
             AuthConfInst.sssd_apply
             AuthConfInst.autoyast_editor_mode = true
             return true
         end
 
-        # Load IPSec configuration from this system.
+        # Load authentication configuration from the current running system.
         def read
-            AuthConfInst.sssd_read
-            AuthConfInst.ldap_read
-            AuthConfInst.krb_read
-            AuthConfInst.aux_read
+            AuthConfInst.read_all
             # Reset AD enrollment parameters
             AuthConfInst.ad_domain = ''
             AuthConfInst.ad_user = ''
