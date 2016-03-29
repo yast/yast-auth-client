@@ -58,7 +58,7 @@ describe AuthConf do
                 'enabled'=>false})
         end
         it 'Create SSSD configuration file' do
-            expect(authconf.sssd_make_conf).to eq('''[sssd]
+            expect(authconf.sssd_make_conf).to eq('[sssd]
 config_file_version = 2
 services = pam,nss
 domains = abc
@@ -78,7 +78,7 @@ krb5_realm = ABC.ZZZ
 
 [pam]
 
-''')
+')
         end
         it 'Import and recreate the same configuration' do
             conf =  {'conf'=>
@@ -133,7 +133,7 @@ krb5_realm = ABC.ZZZ
                 'nss'=>[]})
         end
         it 'Create LDAP configuration file' do
-            expect(authconf.ldap_make_conf).to eq('''host 127.0.0.1
+            expect(authconf.ldap_make_conf).to eq('host 127.0.0.1
 base dc=example,dc=com
 bind_policy soft
 pam_lookup_policy yes
@@ -142,7 +142,7 @@ nss_initgroups_ignoreusers root,ldap
 nss_schema rfc2307bis
 nss_map_attribute uniqueMember member
 ssl start_tls
-''')
+')
         end
         it 'Import and recreate the same configuration' do
             conf = {'conf'=>{
@@ -165,7 +165,7 @@ ssl start_tls
     describe 'Kerberos' do
         it 'Read, lint, and export Kerberos configuration' do
             # The first example is very simple
-            authconf.krb_parse('''
+            authconf.krb_parse_set('
 [libdefaults]
     default_realm = ABC.ZZZ
 
@@ -175,7 +175,7 @@ ssl start_tls
             admin_server = howie.suse.de
             auth_to_local = RULE:[2:$1](johndoe)s/^.*$/guest/
         }
-''')
+')
             expect(authconf.krb_export).to eq({"conf"=>{
                     "include"=>[],
                     "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
@@ -189,7 +189,7 @@ ssl start_tls
                     "domain_realms"=>{}, "logging"=>{}
                 }, "pam"=>false})
             # The second example is very comprehensive
-            authconf.krb_parse('''include a/b/c.d
+            authconf.krb_parse_set('include a/b/c.d
 includedir e/f/g.h
 module i/j/k.l:RESIDUAL
 
@@ -249,7 +249,7 @@ suse.de = ABC.ZZZ
                 ldap_servers = ldaps://ldap01.example.com ldaps://ldap02.example.com
                 ldap_conns_per_server = 5
         }
-''')
+')
             expect(authconf.krb_export).to eq({"conf"=>{
                 "include"=>["include a/b/c.d", "includedir e/f/g.h", "module i/j/k.l:RESIDUAL"],
                     "libdefaults"=>{"default_realm"=>"ABC.ZZZ", "forwardable"=>"true"},
@@ -282,7 +282,7 @@ suse.de = ABC.ZZZ
             expect(authconf.krb_conf_get(['realms', 'doesntexist', 'kdc'], [])).to eq([])
         end
         it 'Create Kerberos configuration file' do
-            expect(authconf.krb_make_conf).to eq('''include a/b/c.d
+            expect(authconf.krb_make_conf).to eq('include a/b/c.d
 includedir e/f/g.h
 module i/j/k.l:RESIDUAL
 
@@ -331,7 +331,7 @@ module i/j/k.l:RESIDUAL
     }
     EMPTY.NET = {
     }
-''')
+')
         end
         it 'Import and recreate the same configuration' do
             conf = {"conf"=>

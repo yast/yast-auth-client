@@ -72,11 +72,7 @@ module SSSD
                                     VBox(
                                         Left(HBox(Label(_("Daemon status: ")), Label(Service.Active("sssd") ? _("Running") : _("Stopped")))),
                                         Left(CheckBox(Id(:enable_daemon_pam), Opt(:notify), _("Allow domain users to authenticate on this computer"), AuthConfInst.sssd_enabled && AuthConfInst.sssd_pam)),
-                                         Left(HBox(
-                                            CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam),
-                                            Label(_('Current status:')),
-                                            Label(Id(:mkhomedir_status), AuthConfInst.mkhomedir_pam ? _('Enabled') : _('Disabled')),
-                                        )),
+                                        Left(CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam)),
                                         VSpacing(0.2),
                                         Left(Label(_("Read the following items from domain data source:"))),
                                         Left(CheckBox(Id(:nss_passwd), Opt(:notify), _("Users"), AuthConfInst.sssd_nss.include?('passwd'))),
