@@ -53,44 +53,44 @@ module Auth
 
         def dialog_content
             Left(VBox(
-                Left(Heading(_('System authentication and domain configuration'))),
-                VSpacing(1),
-                Left(HBox(
-                    HWeight(10, Empty()),
-                    HWeight(80, VBox(
-                        Left(Frame(_('Computer name and domain settings'),
-                            VBox(
-                                Left(HBox(
-                                    Label(Opt(:hstretch), _('Computer name:')),
-                                    Label(Id(:computer_name), ''),
-                                )),
-                                Left(HBox(
-                                    Label(Opt(:hstretch), _('Network domain:')),
-                                    Label(Id(:network_domain), ''),
-                                )),
-                                Left(HBox(
-                                    Label(Opt(:hstretch), _('Full computer name:')),
-                                    Label(Id(:full_computer_name), ''),
-                                )),
-                                Left(HBox(
-                                    Label(Opt(:hstretch), _('IP address:')),
-                                    Label(Id(:ip_addresses), ''),
-                                )),
-                                Left(HBox(
-                                    Label(Opt(:hstretch), _('Authentication and user identity domain(s):')),
-                                    Label(Id(:auth_domains), ''),
-                                )),
-                                VSpacing(2.0),
-                                HBox(
+                   Left(Heading(_('System authentication and domain configuration'))),
+              VSpacing(1),
+              Left(HBox(
+                     HWeight(10, Empty()),
+                HWeight(80, VBox(
+                              Left(Frame(_('Computer name and domain settings'),
+                                VBox(
+                                  Left(HBox(
+                                         Label(Opt(:hstretch), _('Computer name:')),
+                                    Label(Id(:computer_name), '')
+                                    )),
+                                  Left(HBox(
+                                         Label(Opt(:hstretch), _('Network domain:')),
+                                    Label(Id(:network_domain), '')
+                                    )),
+                                  Left(HBox(
+                                         Label(Opt(:hstretch), _('Full computer name:')),
+                                    Label(Id(:full_computer_name), '')
+                                    )),
+                                  Left(HBox(
+                                         Label(Opt(:hstretch), _('IP address:')),
+                                    Label(Id(:ip_addresses), '')
+                                    )),
+                                  Left(HBox(
+                                         Label(Opt(:hstretch), _('Authentication and user identity domain(s):')),
+                                    Label(Id(:auth_domains), '')
+                                    )),
+                                  VSpacing(2.0),
+                                  HBox(
                                     PushButton(Id(:manage_sssd), _('Manage authentication domains')),
                                     PushButton(Id(:manage_ldap_krb), _('Manage Kerberos and legacy LDAP options')),
-                                    PushButton(Id(:finish), Label.FinishButton),
-                                ),
-                            ),
-                        )),
-                    )),
-                    HWeight(10, Empty()),
-                )),
+                                    PushButton(Id(:finish), Label.FinishButton)
+                                    )
+                                  )
+                              ))
+                  )),
+                HWeight(10, Empty())
+              ))
             ))
         end
 

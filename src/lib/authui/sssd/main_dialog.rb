@@ -54,7 +54,8 @@ module SSSD
             end
         end
 
-        private
+    private
+
             # Render overview and edit buttons on left side, config editor on right side.
             def render_all
                 UI.OpenDialog(
@@ -133,18 +134,18 @@ module SSSD
             # Render overview of all config sections in tree.
             def render_section_tree
                 tree = [
-                    Item(@sect_name_caption["sssd"]),
-                    Item(_("Service options"), true, (AuthConfInst.sssd_conf['sssd']['services']).map {|svc| @sect_name_caption[svc]}),
-                    Item(_("Domain options"), true, AuthConfInst.sssd_get_domains)
+                  Item(@sect_name_caption["sssd"]),
+                  Item(_("Service options"), true, (AuthConfInst.sssd_conf['sssd']['services']).map {|svc| @sect_name_caption[svc]}),
+                  Item(_("Domain options"), true, AuthConfInst.sssd_get_domains)
                 ]
                 UI.ChangeWidget(Id(:section_tree), :Items, tree)
-                set_config_sect_name()
+                set_config_sect_name
             end
 
             # For the currently selection config section, render customised parameters and values in a table.
             def render_section_conf
                 content = nil
-                sect_name = get_config_sect_name()
+                sect_name = get_config_sect_name
                 case sect_name
                     when _("Service options"), _("Domain options")
                         content = VBox(Label(Opt(:boldFont), _("Select Global Options, a service, or a domain to customise.")))
@@ -191,7 +192,7 @@ module SSSD
             # For the currently selected config section, render list of additional parameters for customisation.
             def render_list_more_params
                 content = nil
-                sect_name = get_config_sect_name()
+                sect_name = get_config_sect_name
                 case sect_name
                     when _("Service options"), _("Domain options")
                         content = Empty()
@@ -237,7 +238,7 @@ module SSSD
                     # Left side
                     when :section_tree
                         # Choose a new section to configure
-                        sect_name = get_config_sect_name()
+                        sect_name = get_config_sect_name
                         UIData.instance.switch_section(sect_name)
                         # Re-render the customisation screen on the right side
                         render_section_conf
@@ -255,7 +256,7 @@ module SSSD
 
                     when :del_domain
                         # Delete the chosen domain
-                        sect_name = get_config_sect_name()
+                        sect_name = get_config_sect_name
                         if !/^domain\//.match(sect_name)
                             Popup.Error(_("Please select a domain among the list."))
                             redo
@@ -274,7 +275,7 @@ module SSSD
                     when :enable_domain
                         # Enable/disable domain
                         enabled = UI.QueryWidget(Id(:enable_domain), :Value)
-                        domain_name = get_config_sect_name().sub(/^domain\//, '')
+                        domain_name = get_config_sect_name.sub(/^domain\//, '')
                         all_domains = AuthConfInst.sssd_conf['sssd']['domains']
                         if enabled
                             AuthConfInst.sssd_conf['sssd']['domains']  = all_domains + [domain_name] if !all_domains.include?(domain_name)
@@ -428,7 +429,7 @@ module SSSD
                     when :edit_param
                         # Edit the value of chosen parameter
                         param_name = UI.QueryWidget(Id(:conf_table), :CurrentItem)
-                        if param_name == nil
+                        if param_name.nil?
                             redo
                         end
                         if EditParamDialog.new(param_name).run == :ok
@@ -439,15 +440,15 @@ module SSSD
                     when :del_param
                         # Delete a parameter customisation
                         param_name = UI.QueryWidget(Id(:conf_table), :CurrentItem)
-                        if param_name == nil
+                        if param_name.nil?
                             redo
                         end
                         # Forbid removal of mandatory parameters
                         is_important = Params.instance.get_by_name(param_name)["important"]
                         if [
-                            UIData.instance.get_curr_section,
-                            UIData.instance.get_current_id_provider,
-                            UIData.instance.get_current_auth_provider
+                          UIData.instance.get_curr_section,
+                          UIData.instance.get_current_id_provider,
+                          UIData.instance.get_current_auth_provider
                         ].any? { |param_category|
                             Params.instance.is_required?(param_category, param_name)
                         }
@@ -462,7 +463,7 @@ module SSSD
                               "Do you still wish to continue?"))
                             redo
                         end
-                        AuthConfInst.sssd_conf[get_config_sect_name()].delete(param_name)
+                        AuthConfInst.sssd_conf[get_config_sect_name].delete(param_name)
                         UIData.instance.reload_section
                         render_section_conf
                         render_list_more_params
@@ -475,7 +476,7 @@ module SSSD
                     when :add_param
                         # Customise value of the parameter
                         param_name = UI.QueryWidget(Id(:more_param_table), :CurrentItem)
-                        if param_name == nil
+                        if param_name.nil?
                             redo
                         end
                         if EditParamDialog.new(param_name).run == :ok

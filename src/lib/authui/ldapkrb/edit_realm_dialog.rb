@@ -53,9 +53,9 @@ module LdapKrb
                     Top(VBox(
                         InputField(Id(:realm_name), Opt(:hstretch), _('Realm name'), @realm_name.to_s),
                         CheckBox(Id(:map_domain), Opt(:hstretch), _('Map domain name to the realm (such as example.com -> EXAMPLE.COM)'),
-                            @realm_name != nil && AuthConfInst.krb_conf_get(['domain_realms', @realm_name.downcase], nil) != nil),
+                            !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realms', @realm_name.downcase], nil).nil?),
                         CheckBox(Id(:map_wildcard_domain), Opt(:hstretch), _('Map wild card domain name to the realm (such as *.example.com -> EXAMPLE.COM)'),
-                            @realm_name != nil && AuthConfInst.krb_conf_get(['domain_realms', ".#{@realm_name.downcase}"], nil) != nil),
+                            !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realms', ".#{@realm_name.downcase}"], nil).nil?),
                         InputField(Id(:admin_server), Opt(:hstretch), _('Host name of Administration Server (optional)'),
                             AuthConfInst.krb_conf_get(['realms', @realm_name, 'admin_server'], '')),
                         InputField(Id(:master_kdc), Opt(:hstretch), _('Host name of Master Key Distribution Server (optional)'),
@@ -85,33 +85,33 @@ module LdapKrb
         # Add a KDC
         def kdc_add_handler
             new_kdc = GenericInputDialog.new(_('Please type in the host name of Key Distribution Centre:'), '').run
-            if new_kdc != nil
+            if !new_kdc.nil?
                 UI.ChangeWidget(Id(:kdc), :Items, UI.QueryWidget(Id(:kdc), :Items) + [new_kdc])
             end
         end
 
         # Remove a KDC
         def kdc_remove_handler
-            UI.ChangeWidget(Id(:kdc), :Items, UI.QueryWidget(Id(:kdc), :Items).map{|item|item[1]} - [UI.QueryWidget(Id(:kdc), :CurrentItem)])
+            UI.ChangeWidget(Id(:kdc), :Items, UI.QueryWidget(Id(:kdc), :Items).map{|item| item[1]} - [UI.QueryWidget(Id(:kdc), :CurrentItem)])
         end
 
         # Add an auth_to_local
         def a2l_add_handler
             new_a2l = GenericInputDialog.new(_('Please type in the auth_to_local rule:'), '').run
-            if new_a2l != nil
+            if !new_a2l.nil?
                 UI.ChangeWidget(Id(:auth_to_local), :Items, UI.QueryWidget(Id(:auth_to_local), :Items) + [new_a2l])
             end
         end
 
         # Remove an auth_to_local
         def a2l_remove_handler
-            UI.ChangeWidget(Id(:auth_to_local), :Items, UI.QueryWidget(Id(:auth_to_local), :Items).map{|item|item[1]} - [UI.QueryWidget(Id(:auth_to_local), :CurrentItem)])
+            UI.ChangeWidget(Id(:auth_to_local), :Items, UI.QueryWidget(Id(:auth_to_local), :Items).map{|item| item[1]} - [UI.QueryWidget(Id(:auth_to_local), :CurrentItem)])
         end
 
         # Add an auth_to_local_names
         def a2ln_add_handler
             new_a2ln = GenericInputDialog.new(_('Please type in the principal name and user name in the format of "princ_name = user_name":'), '').run
-            if new_a2ln != nil
+            if !new_a2ln.nil?
                 new_a2ln = new_a2ln.split(/\s*=\s*/)
                 if new_a2ln.length == 2
                     UI.ChangeWidget(Id(:auth_to_local_names), :Items, UI.QueryWidget(Id(:auth_to_local_names), :Items) + [Item(new_a2ln[0], new_a2ln[1])])
@@ -134,7 +134,7 @@ module LdapKrb
                 return
             end
             # Move configuration from one realm to another
-            if @realm_name != nil && @realm_name != input_realm_name
+            if !@realm_name.nil? && @realm_name != input_realm_name
                 AuthConfInst.krb_conf['realms'][input_realm_name] = AuthConfInst.krb_conf['realms'][@realm_name]
                 AuthConfInst.krb_conf['realms'].delete(@realm_name)
                 if AuthConfInst.krb_conf['libdefaults']['default_realm'] == @realm_name
@@ -152,7 +152,7 @@ module LdapKrb
             realm_conf = AuthConfInst.krb_conf['realms'][input_realm_name]
             realm_conf['admin_server'] = UI.QueryWidget(Id(:admin_server), :Value)
             realm_conf['master_kdc'] = UI.QueryWidget(Id(:master_kdc), :Value)
-            realm_conf['kdc'] = UI.QueryWidget(Id(:kdc), :Items).map{|item|item[1]}
+            realm_conf['kdc'] = UI.QueryWidget(Id(:kdc), :Items).map{|item| item[1]}
             if UI.QueryWidget(Id(:map_domain), :Value)
                 AuthConfInst.krb_conf['domain_realms'][input_realm_name.downcase] = input_realm_name
             else
@@ -163,7 +163,7 @@ module LdapKrb
             else
                 AuthConfInst.krb_conf['domain_realms'].delete(".#{input_realm_name.downcase}")
             end
-            realm_conf['auth_to_local'] = UI.QueryWidget(Id(:auth_to_local), :Items).map{|item|item[1]}
+            realm_conf['auth_to_local'] = UI.QueryWidget(Id(:auth_to_local), :Items).map{|item| item[1]}
             realm_conf['auth_to_local_names'] = Hash[*UI.QueryWidget(Id(:auth_to_local_names), :Items).map{|item| [item[1], item[2]]}.flatten]
             finish_dialog(:finish)
         end

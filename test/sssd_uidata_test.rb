@@ -12,7 +12,7 @@ describe SSSD::UIData do
     describe "UI state changes and calculation" do
         preload_conf = {'conf'=>
             {'sssd'=>
-                {'config_file_version'=>'2', 'services'=>['pam','nss'], 'domains'=>['abc']},
+                {'config_file_version'=>'2', 'services'=>['pam', 'nss'], 'domains'=>['abc']},
                 'nss'=>{'filter_users'=>'root', 'filter_groups'=>'root'},
                 'domain/abc'=>
                     {'id_provider'=>'ldap',
@@ -43,13 +43,13 @@ describe SSSD::UIData do
 
         it "Switch section to look at domain/abc" do
              match = [
-                 ["id_provider", "ldap", "The identification provider used for the domain."],
-                 ["auth_provider", "krb5", "The authentication provider used for the domain"],
-                 ["ldap_schema", "rfc2307bis", "LDAP schema type"],
-                 ["enumerate", "true", "Read all entities from backend database (increase server load)"],
-                 ["cache_credentials", "true", "Cache credentials for offline use"],
-                 ["ldap_tls_reqcert", "hard", "Validate server certification in LDAP TLS session"],
-                 ["krb5_realm", "ABC.ZZZ", "Kerberos realm (e.g. EXAMPLE.COM)"]
+               ["id_provider", "ldap", "The identification provider used for the domain."],
+               ["auth_provider", "krb5", "The authentication provider used for the domain"],
+               ["ldap_schema", "rfc2307bis", "LDAP schema type"],
+               ["enumerate", "true", "Read all entities from backend database (increase server load)"],
+               ["cache_credentials", "true", "Cache credentials for offline use"],
+               ["ldap_tls_reqcert", "hard", "Validate server certification in LDAP TLS session"],
+               ["krb5_realm", "ABC.ZZZ", "Kerberos realm (e.g. EXAMPLE.COM)"]
              ]
             uidata.switch_section("domain/abc")
             expect(uidata.get_curr_section).to eq("domain/abc")

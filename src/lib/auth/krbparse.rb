@@ -19,6 +19,7 @@
 # Author: Howard Guo <hguo@suse.com>
 
 module Auth
+    # Implement parser of Kerberos configuration file.
     class KrbParse
         # Parse krb5.conf text into a hash structure representation.
         def self.parse(krb_conf_text)
@@ -111,7 +112,7 @@ module Auth
                 # Note down single value
                 key = ''
                 v_match = /^\s*([^{}\n\r]+)\s*$/.match(line)
-                if v_match && long_attr1 != nil
+                if v_match && !long_attr1.nil?
                     if !new_krb_conf[sect]
                         new_krb_conf[sect] = {}
                     end

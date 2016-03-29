@@ -67,7 +67,6 @@ module LdapKrb
                         render_krb
                         @tab = :krb
 
-
                     # LDAP tab events
                     when :ldap_pam
                         if UI.QueryWidget(Id(:ldap_pam), :Value)
@@ -164,7 +163,6 @@ module LdapKrb
                             end
                         end
 
-
                     # Kerberos tab events
                     when :krb_realm_new
                         SSSD::EditRealmDialog.new(nil).run
@@ -174,7 +172,7 @@ module LdapKrb
                         UI.ChangeWidget(Id(:krb_realms), :Items, AuthConfInst.krb_conf['realms'].keys.sort)
                     when :krb_realm_edit
                         realm = UI.QueryWidget(Id(:krb_realms), :CurrentItem)
-                        if realm == nil
+                        if realm.nil?
                             redo
                         end
                         SSSD::EditRealmDialog.new(realm).run
@@ -184,11 +182,11 @@ module LdapKrb
                         UI.ChangeWidget(Id(:krb_realms), :Items, AuthConfInst.krb_conf['realms'].keys.sort)
                     when :krb_realm_del
                         realm_name = UI.QueryWidget(Id(:krb_realms), :CurrentItem)
-                        if realm_name == nil
+                        if realm_name.nil?
                             redo
                         end
                         if Popup.YesNo(_('Are you sure to delete realm %s?') % [realm_name])
-                            AuthConfInst.krb_conf['domain_realms'].delete_if{ |_, realm| realm == realm_name}
+                            AuthConfInst.krb_conf['domain_realms'].delete_if{ |_, domain_realm| domain_realm == realm_name}
                             if UI.QueryWidget(Id(:krb_default_realm), :Value) == realm_name
                                 UI.ChangeWidget(Id(:krb_default_realm), :Value, _('(not specified)'))
                             end

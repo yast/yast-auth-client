@@ -39,7 +39,7 @@ module SSSD
             @custom_params = Hash[]
             param_categories.each { |cat_name|
                 @custom_params.merge!(
-                    Params.instance.get_by_category(cat_name).keep_if { |name, defi|
+                    Params.instance.get_by_category(cat_name).keep_if { |_name, defi|
                         defi["req"] || defi["important"]
                     }
                 )
@@ -48,7 +48,7 @@ module SSSD
             # The already-customised or default value of the custom_params
             @custom_params.each { |name, defi|
                 val = UIData.instance.get_param_val(name)
-                if val == nil
+                if val.nil?
                     @custom_param_vals[name] = defi["def"] # default value
                 else
                     @custom_param_vals[name] = val # already-set value
@@ -66,7 +66,8 @@ module SSSD
             end
         end
 
-        private
+    private
+
             # Create parameter editor controls (label, input, help text) and return them.
             def make_editor(param_names)
                 if param_names.empty?
@@ -106,15 +107,15 @@ module SSSD
                         VSpacing(0.5),
                         Frame(
                             _("Mandatory Parameters"),
-                            VBox(*make_editor(@custom_params.select {
-                                |name, defi| defi["req"] && !defi["no_init_customisation"]
+                            VBox(*make_editor(@custom_params.select { |_name, defi|
+                                                defi["req"] && !defi["no_init_customisation"]
                             }.keys))
                         ),
                         VSpacing(0.5),
                         Frame(
                             _("Optional Parameters"),
-                            VBox(*make_editor(@custom_params.select {
-                                |name, defi| defi["important"] && !defi["no_init_customisation"]
+                            VBox(*make_editor(@custom_params.select { |_name, defi|
+                                                defi["important"] && !defi["no_init_customisation"]
                             }.keys))
                         ),
                         ButtonBox(
@@ -131,8 +132,8 @@ module SSSD
                     case UI.UserInput
                     when :ok
                         # Check that all mandatory parameters are set
-                        missing = @custom_params.select {
-                            |name, defi| defi["req"] && !defi["no_init_customisation"]
+                        missing = @custom_params.select { |_name, defi|
+                                    defi["req"] && !defi["no_init_customisation"]
                         }.keys.select { |name|
                             UI.QueryWidget(Id("val-" + name), :Value).to_s.empty?
                         }
@@ -142,7 +143,7 @@ module SSSD
                             redo
                         end
                         # Save parameter values
-                        @custom_params.each { |name, defi|
+                        @custom_params.each { |name, _defi|
                             val = UI.QueryWidget(Id("val-" + name), :Value).to_s
                             if !val.empty?
                                 sect_conf = AuthConfInst.sssd_conf.fetch(UIData.instance.get_curr_section, Hash[])

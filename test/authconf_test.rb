@@ -40,9 +40,9 @@ describe AuthConf do
     describe 'SSSD' do
         it 'Read, lint, and export SSSD configuration' do
             authconf.sssd_read
-            expect(authconf.sssd_export).to eq({'conf'=>
+            expect(authconf.sssd_export).to eq('conf'=>
                 {'sssd'=>
-                    {'config_file_version'=>'2', 'services'=>['pam','nss'], 'domains'=>['abc']},
+                    {'config_file_version'=>'2', 'services'=>['pam', 'nss'], 'domains'=>['abc']},
                     'nss'=>{'filter_users'=>'root', 'filter_groups'=>'root'},
                     'domain/abc'=>
                         {'id_provider'=>'ldap',
@@ -55,7 +55,7 @@ describe AuthConf do
                 'pam'=>{}},
                 'pam'=>false,
                 'nss'=>[],
-                'enabled'=>false})
+                'enabled'=>false)
         end
         it 'Create SSSD configuration file' do
             expect(authconf.sssd_make_conf).to eq('[sssd]
@@ -83,7 +83,7 @@ krb5_realm = ABC.ZZZ
         it 'Import and recreate the same configuration' do
             conf =  {'conf'=>
                         {'sssd'=>
-                            {'config_file_version'=>'2', 'services'=>['pam','nss'], 'domains'=>['abc']},
+                            {'config_file_version'=>'2', 'services'=>['pam', 'nss'], 'domains'=>['abc']},
                             'nss'=>{'filter_users'=>'root', 'filter_groups'=>'root'},
                             'domain/abc'=>
                                 {'id_provider'=>'ldap',
@@ -119,7 +119,7 @@ krb5_realm = ABC.ZZZ
         it 'Read, lint, and export LDAP configuration' do
             authconf.ldap_read
             expect(authconf.ldap_export).to eq(
-                {'conf'=>{
+                'conf'=>{
                     'host'=>'127.0.0.1',
                     'base'=>'dc=example,dc=com',
                     'bind_policy'=>'soft',
@@ -130,7 +130,7 @@ krb5_realm = ABC.ZZZ
                     'nss_map_attribute'=>'uniqueMember member',
                     'ssl'=>'start_tls'},
                 'pam'=>false,
-                'nss'=>[]})
+                'nss'=>[])
         end
         it 'Create LDAP configuration file' do
             expect(authconf.ldap_make_conf).to eq('host 127.0.0.1
@@ -176,7 +176,7 @@ ssl start_tls
             auth_to_local = RULE:[2:$1](johndoe)s/^.*$/guest/
         }
 ')
-            expect(authconf.krb_export).to eq({"conf"=>{
+            expect(authconf.krb_export).to eq("conf"=>{
                     "include"=>[],
                     "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
                     "realms"=>{
@@ -187,7 +187,7 @@ ssl start_tls
                         },
                     },
                     "domain_realms"=>{}, "logging"=>{}
-                }, "pam"=>false})
+                }, "pam"=>false)
             # The second example is very comprehensive
             authconf.krb_parse_set('include a/b/c.d
 includedir e/f/g.h
@@ -250,7 +250,7 @@ suse.de = ABC.ZZZ
                 ldap_conns_per_server = 5
         }
 ')
-            expect(authconf.krb_export).to eq({"conf"=>{
+            expect(authconf.krb_export).to eq("conf"=>{
                 "include"=>["include a/b/c.d", "includedir e/f/g.h", "module i/j/k.l:RESIDUAL"],
                     "libdefaults"=>{"default_realm"=>"ABC.ZZZ", "forwardable"=>"true"},
                     "realms"=>{
@@ -277,7 +277,7 @@ suse.de = ABC.ZZZ
                             "ldap_conns_per_server"=>"5"
                         }
                     }
-                }, "pam"=>false})
+                }, "pam"=>false)
             expect(authconf.krb_conf_get(['realms', 'ABC.ZZZ', 'kdc'], [])).to eq(["howie.suse.de", "backup.howie.suse.de"])
             expect(authconf.krb_conf_get(['realms', 'doesntexist', 'kdc'], [])).to eq([])
         end
@@ -360,7 +360,7 @@ module i/j/k.l:RESIDUAL
              "pam"=>true}
             authconf.krb_import(conf)
             authconf.krb_add_update_realm('abc.zzz', 'howie.suse.de', 'howie2.suse.de', true, true)
-            expect(authconf.krb_export).to eq({"conf"=>
+            expect(authconf.krb_export).to eq("conf"=>
               {"realms"=>
                 {"ABC.ZZZ"=>{"kdc"=>"howie.suse.de", "admin_server"=>"howie2.suse.de"}},
                "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
@@ -369,9 +369,9 @@ module i/j/k.l:RESIDUAL
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
                  "default"=>"SYSLOG:NOTICE:DAEMON"}},
-             "pam"=>true})
+             "pam"=>true)
             authconf.krb_add_update_realm('abc.zzz', '3.suse.de', '4.suse.de', false, false)
-            expect(authconf.krb_export).to eq({"conf"=>
+            expect(authconf.krb_export).to eq("conf"=>
               {"realms"=>
                 {"ABC.ZZZ"=>{"kdc"=>"3.suse.de", "admin_server"=>"4.suse.de"}},
                "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
@@ -380,14 +380,14 @@ module i/j/k.l:RESIDUAL
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
                  "default"=>"SYSLOG:NOTICE:DAEMON"}},
-             "pam"=>true})
+             "pam"=>true)
         end
     end
 
     describe 'Auxiliary daemons/PAM' do
         it 'Read, lint, and export auxiliary configuration' do
             authconf.aux_read
-            expect(authconf.aux_export).to eq({'autofs' => false, 'nscd' => false, 'mkhomedir' => false})
+            expect(authconf.aux_export).to eq('autofs' => false, 'nscd' => false, 'mkhomedir' => false)
         end
         it 'Import and recreate the same configuration' do
             conf = {'autofs' => true, 'nscd' => true, 'mkhomedir' => true}
@@ -400,9 +400,9 @@ module i/j/k.l:RESIDUAL
         it 'Read host name and network facts' do
             facts = AuthConf.get_net_facts
             # No value can be nil
-            expect(facts.any?{ |k, v| v == nil }).to eq(false)
+            expect(facts.any?{ |_k, v| v.nil? }).to eq(false)
             # There has to be at least one value that is present
-            expect(facts.any?{ |k, v| v != '' }).to eq(true)
+            expect(facts.any?{ |_k, v| v != '' }).to eq(true)
         end
     end
 end

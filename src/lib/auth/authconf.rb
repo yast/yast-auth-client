@@ -28,6 +28,7 @@ require 'date'
 require 'auth/krbparse'
 
 module Auth
+    # Manage system-wide authentication configuration from Kerberos, LDAP, Samba, and SSSD's perspectives.
     class AuthConf
         include Yast::I18n
         include Yast::Logger
@@ -88,7 +89,7 @@ module Auth
                 resolvable_name = Socket.gethostbyname(Socket.gethostname)
                 resolvable_name = resolvable_name.fetch(0, '')
             rescue SocketError
-                # Intentionally ignored
+              # Intentionally ignored
             end
             ip_addresses = []
             begin
@@ -112,8 +113,8 @@ module Auth
             }
         end
 
-        SSSDCapableNSSDatabases = ["passwd", "group", "sudoers", "automount"]
-        LDAPCapableNSSDatabases = ["passwd", "group", "sudoers", "automount"]
+        SSSD_CAPABLE_NSS_DBSs = ["passwd", "group", "sudoers", "automount"]
+        LDAP_CAPABLE_NSS_DBS = ["passwd", "group", "sudoers", "automount"]
 
         # Enable the specified NSS database.
         def nss_enable_module(db_name, module_name)
@@ -207,18 +208,19 @@ module Auth
             # Destruct sssd.conf file
             Yast::SCR.UnmountAgent(Yast::Path.new('.etc.sssd_conf'))
             Yast::SCR.Read(Yast::Path.new('.etc.sssd_conf.all')).fetch('value', []).each { |sect|
-                if sect['kind'] == 'section'
-                    sect_name = sect['name'].strip
-                    sect_elems = sect['value']
-                    sect_vals_array = sect_elems.select { |elem| elem['kind'] == 'value' }.map { |elem| [elem['name'].strip, elem['value'].strip] }
-                    sect_vals = Hash[*(sect_vals_array.flatten)]
-                    @sssd_conf[sect_name] = sect_vals
+                if sect['kind'] != 'section'
+                    next
                 end
+                sect_name = sect['name'].strip
+                sect_elems = sect['value']
+                sect_vals_array = sect_elems.select { |elem| elem['kind'] == 'value' }.map { |elem| [elem['name'].strip, elem['value'].strip] }
+                sect_vals = Hash[*(sect_vals_array.flatten)]
+                @sssd_conf[sect_name] = sect_vals
             }
             # Read PAM/NSS/daemon status
             @sssd_pam = Yast::Pam.Enabled('sss')
             @sssd_nss = []
-            SSSDCapableNSSDatabases.each { |name|
+            SSSD_CAPABLE_NSS_DBSs.each { |name|
                 if Yast::Nsswitch.ReadDb(name).any? { |db| db == 'sss' }
                     @sssd_nss += [name]
                 end
@@ -226,7 +228,6 @@ module Auth
             @sssd_enabled = Yast::Service.Enabled('sssd')
             sssd_lint_conf
         end
-
 
         # Enable an SSSD service, if it has not yet been enabled.
         def sssd_enable_svc(svc_name)
@@ -285,18 +286,20 @@ module Auth
             content = ''
             @sssd_conf.each { |sect_name, conf|
                 content += "[#{sect_name}]\n"
-                if conf
-                    conf.each { |key, value|
-                        str_value = value.to_s
-                        if str_value != ''
-                            # Join arrays
-                            if value.kind_of?(Array)
-                                str_value = value.join(',')
-                            end
-                            content += "#{key} = #{str_value}\n"
-                        end
-                    }
+                if !conf
+                    next
                 end
+                conf.each { |key, value|
+                    str_value = value.to_s
+                    if str_value == ''
+                        next
+                    end
+                    # Join arrays
+                    if value.kind_of?(Array)
+                        str_value = value.join(',')
+                    end
+                    content += "#{key} = #{str_value}\n"
+                }
                 content += "\n"
             }
             return content
@@ -347,14 +350,14 @@ module Auth
                 pkgs += ['sssd']
                 # Only install the required provider packages. By convention, they are named 'sssd-*'.
                 domain_providers = ['ad', 'ldap', 'ipa', 'proxy', 'krb5']
-                @sssd_conf.each { |sect_name, conf|
+                @sssd_conf.each { |_sect_name, conf|
                     id_provider = conf['id_provider']
                     auth_provider = conf['auth_provider']
                     if domain_providers.include?(id_provider)
                         pkgs += ['sssd-' + id_provider]
                     end
-                    if domain_providers.include?(id_provider)
-                        pkgs += ['sssd-' + id_provider]
+                    if domain_providers.include?(auth_provider)
+                        pkgs += ['sssd-' + auth_provider]
                     end
                 }
             end
@@ -377,7 +380,7 @@ module Auth
                 Yast::Pam.Remove('sss')
             end
             fix_pam
-            SSSDCapableNSSDatabases.each { |db| nss_disable_module(db, 'sss') }
+            SSSD_CAPABLE_NSS_DBSs.each { |db| nss_disable_module(db, 'sss') }
             if @sssd_nss.any?
                 @sssd_nss.each { |db|
                     nss_enable_module(db, 'sss')
@@ -397,24 +400,25 @@ module Auth
             # Destruct ldap.conf file
             Yast::SCR.UnmountAgent(Yast::Path.new('.etc.ldap_conf'))
             Yast::SCR.Read(Yast::Path.new('.etc.ldap_conf.all')).fetch('value', []).each { |entry|
-                if entry['kind'] == 'value'
-                    entry_name = entry['name'].strip
-                    entry_value = entry['value'].strip
-                    # Store values from duplicate keys in the original order
-                    existing_value = @ldap_conf[entry_name]
-                    if existing_value && existing_value.kind_of?(::String)
-                        @ldap_conf[entry_name] = [existing_value, entry_value]
-                    elsif existing_value && existing_value.kind_of?(::Array)
-                        @ldap_conf[entry_name] = existing_value + [entry_value]
-                    else
-                        @ldap_conf[entry_name] = entry_value
-                    end
+                if entry['kind'] != 'value'
+                    skip
+                end
+                entry_name = entry['name'].strip
+                entry_value = entry['value'].strip
+                # Store values from duplicate keys in the original order
+                existing_value = @ldap_conf[entry_name]
+                if existing_value && existing_value.kind_of?(::String)
+                    @ldap_conf[entry_name] = [existing_value, entry_value]
+                elsif existing_value && existing_value.kind_of?(::Array)
+                    @ldap_conf[entry_name] = existing_value + [entry_value]
+                else
+                    @ldap_conf[entry_name] = entry_value
                 end
             }
             # Read PAM/NSS
             @ldap_pam = Yast::Pam.Enabled('ldap')
             @ldap_nss = []
-            LDAPCapableNSSDatabases.each { |name|
+            LDAP_CAPABLE_NSS_DBS.each { |name|
                 if Yast::Nsswitch.ReadDb(name).any? { |db| db == 'ldap' }
                     @ldap_nss += [name]
                 end
@@ -440,15 +444,14 @@ module Auth
                 if value.kind_of?(Array)
                     value.each { |v|
                         if v.to_s != ''
-                            content += "#{key} #{v.to_s}\n"
+                            content += "#{key} #{v}\n"
                         end
                     }
                 elsif value.to_s != ''
-                    content += "#{key} #{value.to_s}\n"
+                    content += "#{key} #{value}\n"
                 end
             }
             return content
-            return @ldap_conf.map{ |tuple2| "#{tuple2[0]} #{}" }.join("\n")
         end
 
         # Immediately apply LDAP configuration, including PAM/NSS configuration.
@@ -494,7 +497,7 @@ module Auth
                 Yast::Pam.Remove('ldap')
             end
             fix_pam
-            LDAPCapableNSSDatabases.each { |db| nss_disable_module(db, 'ldap') }
+            LDAP_CAPABLE_NSS_DBS.each { |db| nss_disable_module(db, 'ldap') }
             if @ldap_nss.any?
                 @ldap_nss.each { |db| nss_enable_module(db, 'ldap') }
             end
@@ -549,12 +552,12 @@ module Auth
                 conf_file = File.new('/etc/krb5.conf')
                 content = conf_file.read
             rescue Errno::ENOENT
-                # Intentionally ignore if file is not found
+            # Intentionally ignore if file is not found
             ensure
-                if conf_file != nil
+                if !conf_file.nil?
                     conf_file.close
                 end
-                if content == nil
+                if content.nil?
                     content = ''
                 end
             end
@@ -567,15 +570,14 @@ module Auth
         # Otherwise, the value is returned.
         def krb_conf_get(keys, default)
             copy_keys = keys
-            key = ''
             val = @krb_conf
             copy_keys.each { |key|
-                if val == nil
+                if val.nil?
                     break
                 end
                 val = val[key]
             }
-            if val == nil
+            if val.nil?
                 return default
             else
                 return val
@@ -587,7 +589,7 @@ module Auth
         # If the key does not exist, the default value is returned.
         def krb_conf_get_bool(keys, default)
             val = krb_conf_get(keys, nil)
-            if val == nil
+            if val.nil?
                 return default
             elsif val == true || val == false
                 return val
@@ -618,13 +620,13 @@ module Auth
                         if key == 'auth_to_local'
                             if value.length == 1
                                 # A single auth_to_local value must not be in an array
-                                content += "#{' ' * num_indent}#{key} = #{value[0].to_s}\n"
+                                content += "#{' ' * num_indent}#{key} = #{value[0]}\n"
                             else
                                 # Expand auth_to_local array into {}
                                 content += "#{' ' * num_indent}#{key} = {\n"
                                 value.each { |val|
                                     if val.to_s != ''
-                                        content += "#{' ' * num_indent}    #{val.to_s}\n"
+                                        content += "#{' ' * num_indent}    #{val}\n"
                                     end
                                 }
                                 content += "#{' ' * num_indent}}\n"
@@ -633,7 +635,7 @@ module Auth
                             # Expand array into multiple key-value pairs
                             value.each { |val|
                                 if val.to_s != ''
-                                    content += "#{' ' * num_indent}#{key} = #{val.to_s}\n"
+                                    content += "#{' ' * num_indent}#{key} = #{val}\n"
                                 end
                             }
                         end
@@ -642,15 +644,15 @@ module Auth
                     if value.length > 0
                         # Expand hash into {}
                         content += "#{' ' * num_indent}#{key} = {\n"
-                        value.each { |key, val|
-                            if val.to_s != ''
-                                content += "#{' ' * num_indent}    #{key} = #{val.to_s}\n"
+                        value.each { |k, v|
+                            if k.to_s != ''
+                                content += "#{' ' * num_indent}    #{k} = #{v}\n"
                             end
                         }
                         content += "#{' ' * num_indent}}\n"
                     end
                 elsif value.to_s != ''
-                    content += "#{' ' * num_indent}#{key} = #{value.to_s}\n"
+                    content += "#{' ' * num_indent}#{key} = #{value}\n"
                 end
             }
             return content
@@ -661,13 +663,14 @@ module Auth
             content = @krb_conf['include'].join("\n") + "\n\n"
             # In the first pass do not make text content for [realms]
             @krb_conf.each { |sect_name, sect_conf|
-                if sect_name != 'realms' && sect_name != 'include'
-                    content += "[#{sect_name}]\n"
-                    if sect_conf
-                        content += krb_make_sect_conf(sect_conf, 4)
-                    end
-                    content += "\n"
+                if sect_name == 'realms' || sect_name == 'include'
+                    next
                 end
+                content += "[#{sect_name}]\n"
+                if sect_conf
+                    content += krb_make_sect_conf(sect_conf, 4)
+                end
+                content += "\n"
             }
             # Make text content for [realms]
             content += "[realms]\n"
@@ -716,9 +719,9 @@ module Auth
             if !@krb_conf['realms'][realm_name]
                 @krb_conf['realms'][realm_name] = {}
             end
-            @krb_conf['realms'][realm_name].merge!({"kdc" => kdc_addr, "admin_server" => admin_addr})
+            @krb_conf['realms'][realm_name].merge!("kdc" => kdc_addr, "admin_server" => admin_addr)
             if make_domain_realms
-                @krb_conf['domain_realms'].merge!({".#{realm_name.downcase}" => realm_name, "#{realm_name.downcase}" => realm_name})
+                @krb_conf['domain_realms'].merge!(".#{realm_name.downcase}" => realm_name, "#{realm_name.downcase}" => realm_name)
             else
                 @krb_conf['domain_realms'].delete(".#{realm_name.downcase}")
                 @krb_conf['domain_realms'].delete("#{realm_name.downcase}")
@@ -908,7 +911,7 @@ module Auth
             # Optionally back up and save new samba configuration
             if @ad_save_smb_conf
                 path_original_smb_conf = '/etc/samba/smb.conf'
-                if File.exists?(path_original_smb_conf)
+                if File.exist?(path_original_smb_conf)
                     ::FileUtils.copy_file(path_original_smb_conf, "#{path_original_smb_conf}.bak.#{Time.now.strftime('%Y%m%d%I%M%S')}", true, false)
                 end
                 ::FileUtils.copy_file(smb_conf.path, path_original_smb_conf, true, false)
@@ -952,7 +955,7 @@ module Auth
                 pkgs += ['sssd']
                 # Only install the required provider packages. By convention, they are named 'sssd-*'.
                 domain_providers = ['ad', 'ldap', 'ipa', 'proxy', 'krb5']
-                @sssd_conf.each { |sect_name, conf|
+                @sssd_conf.each { |_sect_name, conf|
                     id_provider = conf['id_provider']
                     auth_provider = conf['auth_provider']
                     if domain_providers.include?(id_provider)
@@ -1022,7 +1025,6 @@ module Auth
             end
             return auth_doms_caption
         end
-
     end
     AuthConfInst = AuthConf.new
 end

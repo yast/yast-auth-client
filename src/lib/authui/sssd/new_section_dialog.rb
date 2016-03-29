@@ -64,14 +64,15 @@ module SSSD
             end
         end
 
-        private
+    private
+
             # Render input box and dropdowns for service/domain creation
             def render_all
                 UI.OpenDialog(
                     VBox(
-                    # New domain and provider types
+                        # New domain and provider types
                         Id(:section_dom),
-                        InputField(Id(:dom_name), Opt(:hstretch), _("Domain name (such as example.com):"),""),
+                        InputField(Id(:dom_name), Opt(:hstretch), _("Domain name (such as example.com):"), ""),
                         SelectionBox(
                             Id(:id_provider),
                             _("Which service provides identity data, such as user names and group memberships?"),
@@ -119,7 +120,7 @@ module SSSD
                         sect_conf = AuthConfInst.sssd_conf.fetch(sect_name, {})
                         sect_conf["id_provider"] = id_provider
                         sect_conf["auth_provider"] = auth_provider
-                        if id_provider == "ldap" && sect_conf["ldap_schema"] == nil
+                        if id_provider == "ldap" && sect_conf["ldap_schema"].nil?
                             sect_conf["ldap_schema"] = "rfc2307bis"
                         end
                         # Swtich to this new section

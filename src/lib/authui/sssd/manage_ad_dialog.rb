@@ -92,8 +92,11 @@ module SSSD
             end
             status_widget = Empty()
             if !AuthConfInst.autoyast_editor_mode
-                status_widget = Left(Label(Id(:enroll_status), @ad_server != '' && ad_enrolled && kerberos_ready ?
-                                   _('The host has successfully enrolled at AD.') : _('The host is not enrolled at AD yet.')))
+                if @ad_server != '' && ad_enrolled && kerberos_ready
+                    status_widget = Left(Label(Id(:enroll_status), _('The host has successfully enrolled at AD.')))
+                else
+                    status_widget = Left(Label(Id(:enroll_status), _('The host is not enrolled at AD yet.')))
+                end
             end
             UI.ReplaceWidget(Id(:status),
                 VBox(

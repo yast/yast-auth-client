@@ -36,7 +36,7 @@ module SSSD
             @param_def = Params.instance.get_by_name(param_name)
             # Customised value of the parameter, or default if no customisation.
             @param_val = UIData.instance.get_param_val(param_name)
-            if @param_val == nil
+            if @param_val.nil?
                 @param_val = @param_def["def"]
             end
         end
@@ -51,7 +51,8 @@ module SSSD
             end
         end
 
-        private
+    private
+
             # Render controls for editing parameter value according to the parameter data type.
             def render_all
                 input_control = nil

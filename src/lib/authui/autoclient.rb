@@ -52,13 +52,11 @@ module Auth
 
         # Return configuration parameters serialised in JSON, to be Imported and applied later.
         def export
-            return {'json' => JSON.generate({
-                'sssd' => AuthConfInst.sssd_export,
+            return {'json' => JSON.generate('sssd' => AuthConfInst.sssd_export,
                 'ldap' => AuthConfInst.ldap_export,
                 'krb' => AuthConfInst.krb_export,
                 'aux' => AuthConfInst.aux_export,
-                'ad' => AuthConfInst.ad_export,
-            })}
+                'ad' => AuthConfInst.ad_export,)}
         end
 
         def modified?

@@ -105,7 +105,7 @@ module SSSD
             # - Parameter name shall contain all filter words with the exception of the final word.
             # - One of the words among the parameter name shall contain the final filter word.
             # Thus returning result such as "ldap_service_object_class" when filter is "ldap_object".
-            return @curr_section_more_params.reject { |name, detail|
+            return @curr_section_more_params.reject { |name, _detail|
                 name_words = name.split(%r{[\s_]+})
                 if filter_words.length == 1
                     name_words.none? { |word| word.include? filter_words[0] }
@@ -128,7 +128,8 @@ module SSSD
             return sect_conf['id_provider'] == 'ad' || sect_conf['auth_provider'] == 'ad'
         end
 
-        private
+    private
+
             # Reload (tuples of) parameter name, value, and description for the current section.
             def reload_section_conf
                 params = AuthConfInst.sssd_conf.fetch(@curr_section, Hash[])
@@ -145,8 +146,8 @@ module SSSD
                 if @curr_section =~ /^domain/
                     more_params.merge!(Params.instance.get_common_domain_params)
                     # Provider-specific parameters
-                    more_params.merge!(Params.instance.get_by_provider(get_current_id_provider()))
-                    more_params.merge!(Params.instance.get_by_provider(get_current_auth_provider()))
+                    more_params.merge!(Params.instance.get_by_provider(get_current_id_provider))
+                    more_params.merge!(Params.instance.get_by_provider(get_current_auth_provider))
                 else
                     more_params = Params.instance.get_by_category(@curr_section)
                     if @curr_section != "sssd"
@@ -155,7 +156,7 @@ module SSSD
                     end
                 end
                 # Remove customised parameters
-                more_params.delete_if { |name, detail| current_conf.has_key? name }
+                more_params.delete_if { |name, _detail| current_conf.key? name }
                 @curr_section_more_params = more_params
             end
     end

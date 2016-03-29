@@ -41,7 +41,7 @@ module SSSD
 
         # Return the parameter description, type, default value, is_required, is_important, section name, and value choices.
         def get_by_name(name)
-            sect_defi = @all_params.find(ifnone=lambda{ [nil, Hash[]] }) { |sect, defi| defi.has_key? name }
+            sect_defi = @all_params.find(ifnone=->{ [nil, Hash[]] }) { |_sect, defi| defi.key? name }
             defi = sect_defi[1].fetch(name, Hash[])
             # Parameter attributes:
             # desc - Help text for the parameter.
@@ -95,11 +95,12 @@ module SSSD
             return defs
         end
 
-        private
+    private
+
         def init_params
             @all_params = {
-                   #Define Global Parameters
-                    # Omit 'services' and 'domains' from section [sssd], because they are never customised directly by the end-user.
+                   # Define Global Parameters
+                   # Omit 'services' and 'domains' from section [sssd], because they are never customised directly by the end-user.
                    "sssd" => {
                         "config_file_version" => {
                             "type" => "int",
@@ -138,7 +139,7 @@ module SSSD
                             "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
                         },
                    },
-                   #Define Global Services Parameters
+                   # Define Global Services Parameters
                    "services" => {
                         "debug_level" => {
                             "type" => "string",
@@ -180,7 +181,7 @@ module SSSD
                             "desc" => _("The service will receive SIGTERM after this number of seconds of consecutive ping check failure")
                         }
                    },
-                   #NSS configuration options
+                   # NSS configuration options
                    "nss" => {
                         "debug_level" => {
                             "type" => "string",
@@ -258,7 +259,7 @@ module SSSD
                             "desc" => _("Specifies time in seconds for which records in the in-memory cache will be valid.")
                         }
                    },
-                   #PAM configuration options
+                   # PAM configuration options
                    "pam" => {
                         "debug_level" => {
                             "type" => "string",
@@ -300,7 +301,7 @@ module SSSD
                             "desc" => _("Specifies time in seconds for which the list of subdomains will be considered valid.")
                         }
                   },
-                  #SUDO configuration options
+                  # SUDO configuration options
                   "sudo" => {
                         "debug_level" => {
                             "type" => "string",
@@ -312,7 +313,7 @@ module SSSD
                             "desc" => _("Whether or not to evaluate the sudoNotBefore and sudoNotAfter attributes that implement time-dependent sudoers entries.")
                         }
                   },
-                  #AUTOFS configuration options
+                  # AUTOFS configuration options
                   "autofs" => {
                         "debug_level" => {
                             "type" => "string",
@@ -324,7 +325,7 @@ module SSSD
                             "desc" => _("Specifies for how many seconds the autofs responder should cache negative hits before asking the back end again.")
                         }
                   },
-                  #SSH configuration options
+                  # SSH configuration options
                   "ssh" => {
                         "debug_level" => {
                             "type" => "string",
@@ -341,8 +342,8 @@ module SSSD
                             "desc" => _("How many seconds to keep a host in the managed known_hosts file after its host keys were requested.")
                         }
                   },
-                  #DOMAIN SECTIONS
-                  #These configuration options can be present in a domain configuration section, that is, in a section called “[domain/NAME]”
+                  # DOMAIN SECTIONS
+                  # These configuration options can be present in a domain configuration section, that is, in a section called “[domain/NAME]”
                   "domain" => {
                         "debug_level" => {
                             "type" => "string",
@@ -537,8 +538,8 @@ module SSSD
                             "desc" => _("Comma separated list of groups that are explicitly denied access. This applies only to groups within this SSSD domain.")
                         }
                    },
-                   #The local domain section
-                   #This section contains settings for domain that stores users and groups in SSSD native database, that is, a domain that uses id_provider=local.
+                   # The local domain section
+                   # This section contains settings for domain that stores users and groups in SSSD native database, that is, a domain that uses id_provider=local.
                    "local" => {
                         "base_directory" => {
                             "type" => "string",
@@ -575,7 +576,7 @@ module SSSD
                             "desc" => _("The command that is run after a user is removed.")
                         }
                    },
-                   #The ldap domain section
+                   # The ldap domain section
                    "ldap" => {
                         "ldap_use_tokengroups" => {
                             "type" => "boolean",
@@ -772,7 +773,7 @@ module SSSD
                             "type" => "boolean",
                             "def"  => false,
                             "desc" => _("Some directory servers, for example Active Directory, might deliver the realm part of the UPN in lower case, which might cause the authentication to fail.") +
-                                      _("Set this option to true if you want to use an upper-case realm.")
+                              _("Set this option to true if you want to use an upper-case realm.")
                         },
                         "ldap_enumeration_refresh_timeout" => {
                             "type" => "int",
@@ -1087,7 +1088,7 @@ module SSSD
                             "desc" => _("Allows to retain local users as members of an LDAP group for servers that use the RFC2307 schema.")
                         },
                         },
-                   #The kerberos domain section
+                   # The kerberos domain section
                    "krb5" => {
                         "pwd_expiration_warning" => {
                             "type" => "int",
@@ -1173,13 +1174,13 @@ module SSSD
                             "def"  => "false",
                             "desc" => _("Specifies if the host and user principal should be canonicalized.")
                         },
-#                        "" => {
-#                            "type" => "string",
-#                            "def"  => "",
-#                            "desc" => _("")
-#                        },
+                    #                        "" => {
+                    #                            "type" => "string",
+                    #                            "def"  => "",
+                    #                            "desc" => _("")
+                    #                        },
                   },
-                #The Active Directory domain section
+                # The Active Directory domain section
                 "ad" => {
                         "ad_domain" => {
                             "type" => "string",
@@ -1239,13 +1240,13 @@ module SSSD
                             "def"  => "False",
                             "desc" => _("Changes the behavior of the ID-mapping algorithm to behave more similarly to winbind's “idmap_autorid” algorithm.")
                         }
-#                        "" => {
-#                            "type" => "string",
-#                            "def"  => "",
-#                            "desc" => _("")
-#                        }
+                    #                        "" => {
+                    #                            "type" => "string",
+                    #                            "def"  => "",
+                    #                            "desc" => _("")
+                    #                        }
                   },
-                #The Active Directory domain section
+                # The Active Directory domain section
                 "ipa" => {
                         "ipa_domain" => {
                             "type" => "string",
@@ -1286,4 +1287,3 @@ module SSSD
         end # init_params
     end # Params
 end # module
-
