@@ -2,7 +2,7 @@
 Tue Mar 22 09:55:56 UTC 2016 - hguo@suse.com
 
 - Introduce many new features:
-* Simlify SSSD management interface.
+* Simplify SSSD management interface.
 * Enroll to AD directly from SSSD management interface.
 * Edit settings for NSS/PAM LDAP.
 * Edit settings for Kerberos.
