@@ -40,23 +40,36 @@ module Auth
 
         # Import configuration parameters saved by Export operation.
         def import(exported)
-            record = JSON.parse(exported['json'])
-            AuthConfInst.sssd_import(record['sssd'])
-            AuthConfInst.ldap_import(record['ldap'])
-            AuthConfInst.krb_import(record['krb'])
-            AuthConfInst.aux_import(record['aux'])
-            AuthConfInst.ad_import(record['ad'])
+            sssd_conf = exported['sssd']
+            conf_struct = sssd_conf['conf']
+            # Revert work-around of slash character in element names
+            conf_struct.keys.select{ |key| /domain-/.match(key) }.each{ |key|
+                conf_struct['domain/' + key.gsub(/domain-/, '')] = conf_struct[key]
+                conf_struct.delete(key)
+            }
+            AuthConfInst.sssd_import(sssd_conf)
+            AuthConfInst.ldap_import(exported['ldap'])
+            AuthConfInst.krb_import(exported['krb'])
+            AuthConfInst.aux_import(exported['aux'])
+            AuthConfInst.ad_import(exported['ad'])
             AuthConfInst.autoyast_modified = true
             return true
         end
 
         # Return configuration parameters serialised in JSON, to be Imported and applied later.
         def export
-            return {'json' => JSON.generate('sssd' => AuthConfInst.sssd_export,
+            sssd_conf = AuthConfInst.sssd_export
+            conf_struct = sssd_conf['conf']
+            # Work-around slash character in element name
+            conf_struct.keys.select{ |key| /domain\//.match(key) }.each { |key|
+                conf_struct['domain-' + key.gsub(/domain\//, '')] = conf_struct[key]
+                conf_struct.delete(key)
+            }
+            return {'sssd' => sssd_conf,
                 'ldap' => AuthConfInst.ldap_export,
                 'krb' => AuthConfInst.krb_export,
                 'aux' => AuthConfInst.aux_export,
-                'ad' => AuthConfInst.ad_export,)}
+                'ad' => AuthConfInst.ad_export, }
         end
 
         def modified?

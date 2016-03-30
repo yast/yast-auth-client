@@ -245,6 +245,7 @@ module Auth
 
         # Make sure that at least the SSSD skeleton configuration is present, and fix PAM/NSS sections if they are missing.
         def sssd_lint_conf
+            @sssd_conf = {} if @sssd_conf.nil?
             # Fix [sssd]
             if !@sssd_conf['sssd']
                 @sssd_conf['sssd'] = {}
@@ -275,9 +276,13 @@ module Auth
         # Set configuration for SSSD from exported objects.
         def sssd_import(exported_conf)
             @sssd_conf = exported_conf['conf']
+            sssd_lint_conf
             @sssd_pam = exported_conf['pam']
+            @sssd_pam = false if @sssd_pam.nil?
             @sssd_nss = exported_conf['nss']
+            @sssd_nss = [] if @sssd_nss.nil?
             @sssd_enabled = exported_conf['enabled']
+            @sssd_enabled = false if @sssd_enabled.nil?
         end
 
         # Generate sssd.conf content from the current configuration.
@@ -433,8 +438,11 @@ module Auth
         # Set configuration for LDAP from exported objects.
         def ldap_import(exported_conf)
             @ldap_conf = exported_conf['conf']
+            @ldap_conf = {} if @ldap_conf.nil?
             @ldap_pam = exported_conf['pam']
+            @ldap_pam = false if @ldap_pam.nil?
             @ldap_nss = exported_conf['nss']
+            @ldap_nss = [] if @ldap_nss.nil?
         end
 
         # Generate ldap.conf content from the current configuration.
@@ -606,7 +614,17 @@ module Auth
         # Set configuration for Kerberos from exported objects.
         def krb_import(exported_conf)
             @krb_conf = exported_conf['conf']
+            krb_lint_conf
             @krb_pam = exported_conf['pam']
+            @krb_pam = false if @krb_pam.nil?
+        end
+
+        # Make sure the Kerberos configuration has all the necessary keys.
+        def krb_lint_conf
+            ['libdefaults', 'realms', 'domain_realms', 'logging'].each { |key|
+                @krb_conf[key] = {} if @krb_conf[key].nil?
+            }
+            @krb_conf['include'] = [] if @krb_conf['include'].nil?
         end
 
         def krb_make_sect_conf(sect_conf, num_indent)
@@ -657,8 +675,10 @@ module Auth
             }
             return content
         end
+
         # Generate krb5.conf content from the current configuration.
         def krb_make_conf
+            krb_lint_conf
             # Write down includes first
             content = @krb_conf['include'].join("\n") + "\n\n"
             # In the first pass do not make text content for [realms]
@@ -746,8 +766,11 @@ module Auth
         # Set configuration for auxiliary daemons/PAM from exported objects.
         def aux_import(exported_conf)
             @autofs_enabled = exported_conf['autofs']
+            @autofs_enabled = false if @autofs_enabled.nil?
             @nscd_enabled = exported_conf['nscd']
+            @nscd_enabled = false if @nscd_enabled.nil?
             @mkhomedir_pam = exported_conf['mkhomedir']
+            @mkhomedir_pam = false if @mkhomedir_pam.nil?
         end
 
         # Immediately enable(start)/disable(stop) the auxiliary daemons.
@@ -897,7 +920,7 @@ module Auth
             smb_conf = ad_create_tmp_smb_conf(@ad_domain, ad_get_workgroup_name(@ad_domain))
             output = ''
             exitstatus = 0
-            ou_param = @ad_ou == '' ? '' : "createcomputer=#{@ad_ou}"
+            ou_param = @ad_ou.to_s == '' ? '' : "createcomputer=#{@ad_ou}"
 
             Open3.popen2("net -s #{smb_conf.path} ads join #{ou_param} -U #{@ad_user}"){ |stdin, stdout, control|
                 stdin.print(@ad_pass + "\n")

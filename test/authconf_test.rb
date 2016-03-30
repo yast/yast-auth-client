@@ -368,7 +368,7 @@ module i/j/k.l:RESIDUAL
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
-                 "default"=>"SYSLOG:NOTICE:DAEMON"}},
+                 "default"=>"SYSLOG:NOTICE:DAEMON"}, "include" => []},
              "pam"=>true)
             authconf.krb_add_update_realm('abc.zzz', '3.suse.de', '4.suse.de', false, false)
             expect(authconf.krb_export).to eq("conf"=>
@@ -379,7 +379,7 @@ module i/j/k.l:RESIDUAL
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
-                 "default"=>"SYSLOG:NOTICE:DAEMON"}},
+                 "default"=>"SYSLOG:NOTICE:DAEMON"}, "include" => []},
              "pam"=>true)
         end
     end
