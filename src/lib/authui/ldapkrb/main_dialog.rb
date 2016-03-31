@@ -39,7 +39,7 @@ module LdapKrb
         def run
             return if !UI.OpenDialog(Opt(:decorated, :defaultsize),
                 VBox(Opt(:hstretch),
-                    DumbTab([_('Use a directory as identity provider (LDAP)'), _('Authentication via Kerberos')],
+                    DumbTab([_('Use a Directory as Identity Provider (LDAP)'), _('Authentication via Kerberos')],
                             ReplacePoint(Id(:tab), Empty())),
                     ButtonBox(
                         PushButton(Id(:ok), Label.OKButton),
@@ -58,7 +58,7 @@ module LdapKrb
         def ui_event_loop
             loop do
                 case UI.UserInput
-                    when _('Use a directory as identity provider (LDAP)')
+                    when _('Use a Directory as Identity Provider (LDAP)')
                         save_tab
                         render_ldap
                         @tab = :ldap
@@ -165,7 +165,7 @@ module LdapKrb
 
                     # Kerberos tab events
                     when :krb_realm_new
-                        SSSD::EditRealmDialog.new(nil).run
+                        LdapKrb::EditRealmDialog.new(nil).run
                         curr_def = UI.QueryWidget(Id(:krb_default_realm), :Value)
                         UI.ChangeWidget(Id(:krb_default_realm), :Items, [_('(not specified)')] + AuthConfInst.krb_conf['realms'].keys.sort)
                         UI.ChangeWidget(Id(:krb_default_realm), :Value, curr_def)
@@ -175,7 +175,7 @@ module LdapKrb
                         if realm.nil?
                             redo
                         end
-                        SSSD::EditRealmDialog.new(realm).run
+                        LdapKrb::EditRealmDialog.new(realm).run
                         curr_def = UI.QueryWidget(Id(:krb_default_realm), :Value)
                         UI.ChangeWidget(Id(:krb_default_realm), :Items, [_('(not specified)')] + AuthConfInst.krb_conf['realms'].keys.sort)
                         UI.ChangeWidget(Id(:krb_default_realm), :Value, curr_def)
@@ -328,47 +328,47 @@ module LdapKrb
             UI.ReplaceWidget(Id(:tab), VBox(
                 HBox(
                     Top(VBox(
-                        Left(CheckBox(Id(:ldap_pam), Opt(:notify), _('Allow LDAP users to authenticate on this system (pam_ldap)'), AuthConfInst.ldap_pam)),
-                        Left(CheckBox(Id(:nscd_enable), Opt(:notify), _('Cache LDAP entries for faster response (nscd)'), AuthConfInst.nscd_enabled)),
-                        Left(CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam)),
+                        Left(CheckBox(Id(:ldap_pam), Opt(:notify), _('Allow LDAP Users To Authenticate On This System (pam_ldap)'), AuthConfInst.ldap_pam)),
+                        Left(CheckBox(Id(:nscd_enable), Opt(:notify), _('Cache LDAP Entries For Faster Response (nscd)'), AuthConfInst.nscd_enabled)),
+                        Left(CheckBox(Id(:mkhomedir_enable), _('Automatically Create Home Directory'), AuthConfInst.mkhomedir_pam)),
                         Left(Label(_('Read the following items from LDAP data source:'))),
                         Left(CheckBox(Id(:ldap_nss_passwd), Opt(:notify), _("Users"), AuthConfInst.ldap_nss.include?('passwd'))),
                         Left(CheckBox(Id(:ldap_nss_group), Opt(:notify), _("Groups"), AuthConfInst.ldap_nss.include?('group'))),
-                        Left(CheckBox(Id(:ldap_nss_sudoers), Opt(:notify), _("Super-user commands (sudo)"), AuthConfInst.ldap_nss.include?('sudoers'))),
-                        Left(CheckBox(Id(:ldap_nss_automount), Opt(:notify), _("Network locations (automount)"), AuthConfInst.ldap_nss.include?('automount'))),
+                        Left(CheckBox(Id(:ldap_nss_sudoers), Opt(:notify), _("Super-User Commands (sudo)"), AuthConfInst.ldap_nss.include?('sudoers'))),
+                        Left(CheckBox(Id(:ldap_nss_automount), Opt(:notify), _("Network Disk Locations (automount)"), AuthConfInst.ldap_nss.include?('automount'))),
                         VSpacing(1.0),
                         Left(Label(_('Enter LDAP server location(s), separated by space, in either of the two formats:'))),
                         Left(Label(_('- Server host name or IP and port number in the format of "ip:port"'))),
                         Left(Label(_('- URI such as ldap://server:port, ldaps://server:port'))),
                         InputField(Id(:ldap_host_or_uri), Opt(:hstretch), ''),
-                        InputField(Id(:ldap_base), Opt(:hstretch), _('DN of search base (e.g. dc=example,dc=com)'),
+                        InputField(Id(:ldap_base), Opt(:hstretch), _('DN of Search Base (e.g. dc=example,dc=com)'),
                                    AuthConfInst.ldap_conf['base'].to_s),
                     )),
                     Top(VBox(
-                        IntField(Id(:ldap_bind_timelimit), Opt(:hstretch), _('Timeout for bind operations in seconds'), 1, 600,
+                        IntField(Id(:ldap_bind_timelimit), Opt(:hstretch), _('Timeout for Bind Operations in Seconds'), 1, 600,
                                    (AuthConfInst.ldap_conf['bind_timelimit'].to_s == '' ? '30' : AuthConfInst.ldap_conf['bind_timelimit']).to_i),
-                        IntField(Id(:ldap_timelimit), Opt(:hstretch), _('Timeout for search operations in seconds'), 1, 600,
+                        IntField(Id(:ldap_timelimit), Opt(:hstretch), _('Timeout for Search Operations in Seconds'), 1, 600,
                                    (AuthConfInst.ldap_conf['timelimit'].to_s == '' ? '30' : AuthConfInst.ldap_conf['timelimit']).to_i),
-                        InputField(Id(:ldap_binddn), Opt(:hstretch), _('DN of bind user (leave empty for anonymous bind)'),
+                        InputField(Id(:ldap_binddn), Opt(:hstretch), _('DN of Bind User (Leave Empty for Anonymous Bind)'),
                                    AuthConfInst.ldap_conf['binddn'].to_s),
-                        InputField(Id(:ldap_bindpw), Opt(:hstretch), _('Password of the bind user (leave empty for anonymous bind)'),
+                        InputField(Id(:ldap_bindpw), Opt(:hstretch), _('Password of the Bind User (Leave Empty for Anonymous Bind)'),
                                    AuthConfInst.ldap_conf['bindpw'].to_s),
-                        CheckBox(Id(:ldap_rfc2307bis), Opt(:hstretch), _('Identify group members by their DNs (RFC2307bis)'),
+                        CheckBox(Id(:ldap_rfc2307bis), Opt(:hstretch), _('Identify Group Members by Their DNs (RFC2307bis)'),
                                  AuthConfInst.ldap_conf['nss_schema'] == 'rfc2307bis'),
-                        CheckBox(Id(:ldap_persist), Opt(:hstretch), _('Leave LDAP connections open for consecutive requests'),
+                        CheckBox(Id(:ldap_persist), Opt(:hstretch), _('Leave LDAP Connections Open for Consecutive Requests'),
                                  AuthConfInst.ldap_conf['nss_connect_policy'] != 'oneshot'),
                         Frame(_('Secure LDAP communication'), RadioButtonGroup(Id(:ldap_tls_method), VBox(
-                            Left(RadioButton(Id(:ldap_tls_method_no), _('Do not secure the communication'))),
-                            Left(RadioButton(Id(:ldap_tls_method_yes), _('Secure the communication via TLS'))),
-                            Left(RadioButton(Id(:ldap_tls_method_starttls), _('Secure the communication via StartTLS'))),
+                            Left(RadioButton(Id(:ldap_tls_method_no), _('Do Not Use Security'))),
+                            Left(RadioButton(Id(:ldap_tls_method_yes), _('Secure Communication via TLS'))),
+                            Left(RadioButton(Id(:ldap_tls_method_starttls), _('Secure Communication via StartTLS'))),
                         ))),
-                        Frame(_('What to do in case of a connection outage?'), RadioButtonGroup(Id(:ldap_bind_policy), VBox(
-                            Left(RadioButton(Id(:ldap_bind_policy_hard), _('Retry endlessly'))),
-                            Left(RadioButton(Id(:ldap_bind_policy_soft), _('Do not retry and fail the operation'))),
+                        Frame(_('In Case Of Connection Outage:'), RadioButtonGroup(Id(:ldap_bind_policy), VBox(
+                            Left(RadioButton(Id(:ldap_bind_policy_hard), _('Retry The Operation Endlessly'))),
+                            Left(RadioButton(Id(:ldap_bind_policy_soft), _('Do Not Retry And Fail The Operation'))),
                         ))),
                     )),
                 ),
-                PushButton(Id(:ldap_test), _('Test connection settings')),
+                PushButton(Id(:ldap_test), _('Test Connection Settings')),
             ))
             # Combine host/port/uri into one
             default_port_str = AuthConfInst.ldap_conf['port'] ? AuthConfInst.ldap_conf['port'] : '389'
@@ -401,39 +401,39 @@ module LdapKrb
             UI.ReplaceWidget(Id(:tab), VBox(
                 HBox(
                     Top(VBox(
-                        Left(CheckBox(Id(:krb_pam), _('Allow Kerberos users to authenticate on this system (pam_krb5)'),
+                        Left(CheckBox(Id(:krb_pam), _('Allow Kerberos Users To Authenticate On This System (pam_krb5)'),
                             AuthConfInst.krb_pam)),
-                        Left(HBox(CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam))),
-                        Left(ComboBox(Id(:krb_default_realm), _('If a user attempts login without specifying a realm, the default will be:'),
+                        Left(HBox(CheckBox(Id(:mkhomedir_enable), _('Automatically Create Home Directory'), AuthConfInst.mkhomedir_pam))),
+                        Left(ComboBox(Id(:krb_default_realm), _('Deafult Realm For User Login:'),
                             [_('(not specified)')] + AuthConfInst.krb_conf['realms'].keys.sort)),
-                        Left(SelectionBox(Id(:krb_realms), _('All authentication realms'),
+                        Left(SelectionBox(Id(:krb_realms), _('All Authentication Realms'),
                             AuthConfInst.krb_conf['realms'].keys.sort)),
-                        HBox(PushButton(Id(:krb_realm_new), _('New realm')), PushButton(Id(:krb_realm_edit), _('Edit realm')), PushButton(Id(:krb_realm_del), _('Delete realm'))),
-                        Left(CheckBox(Id(:krb_forwardable), _('Allow KDC on other networks to issue authentication tickets.'),
+                        HBox(PushButton(Id(:krb_realm_new), _('Add Realm')), PushButton(Id(:krb_realm_edit), _('Edit Realm')), PushButton(Id(:krb_realm_del), _('Delete Realm'))),
+                        Left(CheckBox(Id(:krb_forwardable), _('Allow KDC on Other Networks to Issue Authentication Tickets'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'forwardable'], false))),
-                        Left(CheckBox(Id(:krb_proxiable), _('Allow Kerberos-enabled services to take on the identity of a user.'),
+                        Left(CheckBox(Id(:krb_proxiable), _('Allow Kerberos-Enabled Services to Take on The Identity Of a User'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'proxiable'], false))),
-                        Left(CheckBox(Id(:krb_noaddress), _('Issue address-less tickets for computers behind NAT.'),
+                        Left(CheckBox(Id(:krb_noaddress), _('Issue Address-Less Tickets for Computers Behind NAT'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'noaddress'], false))),
                     )),
                     Top(VBox(
-                        Frame(_('Leave field empty for default'), VBox(
-                            InputField(Id(:krb_default_keytab_name), Opt(:hstretch), _('Default location of keytab file'),
+                        Frame(_('Leave Field Empty for Default'), VBox(
+                            InputField(Id(:krb_default_keytab_name), Opt(:hstretch), _('Default Location of Keytab File'),
                                 AuthConfInst.krb_conf_get(['libdefaults', 'default_keytab_name'], '/etc/krb5.keytab')),
-                            InputField(Id(:krb_default_tgs_enctypes), Opt(:hstretch), _('Encryption types for TGS (separated by space)'),
+                            InputField(Id(:krb_default_tgs_enctypes), Opt(:hstretch), _('Encryption Types for TGS (Separated by Space)'),
                                 AuthConfInst.krb_conf_get(['libdefaults', 'default_tgs_enctypes'], '')),
-                            InputField(Id(:krb_default_tkt_enctypes), Opt(:hstretch), _('Encryption types for ticket (separated by space)'),
+                            InputField(Id(:krb_default_tkt_enctypes), Opt(:hstretch), _('Encryption Types for Ticket (Separated by Space)'),
                                 AuthConfInst.krb_conf_get(['libdefaults', 'default_tkt_enctypes'], '')),
-                            InputField(Id(:krb_permitted_enctypes), Opt(:hstretch), _('Encryption types for sessions (separated by space)'),
+                            InputField(Id(:krb_permitted_enctypes), Opt(:hstretch), _('Encryption Types for Sessions (Separated by Space)'),
                                 AuthConfInst.krb_conf_get(['libdefaults', 'permitted_enctypes'], '')),
-                            InputField(Id(:krb_extra_addresses), Opt(:hstretch), _('Additional addresses to be put in ticket (separated by comma)'),
+                            InputField(Id(:krb_extra_addresses), Opt(:hstretch), _('Additional Addresses to be put in Ticket (Separated by Comma)'),
                                 AuthConfInst.krb_conf_get(['libdefaults', 'extra_addresses'], '')),
                         )),
-                        Left(CheckBox(Id(:krb_dns_lookup_realm), _('Use DNS TXT record to discover realms.'),
+                        Left(CheckBox(Id(:krb_dns_lookup_realm), _('Use DNS TXT Record to Discover Realms'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'dns_lookup_realm'], false))),
-                        Left(CheckBox(Id(:krb_dns_lookup_kdc), _('Use DNS SVC record to discover KDC servers.'),
+                        Left(CheckBox(Id(:krb_dns_lookup_kdc), _('Use DNS SVC record to discover KDC servers'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'dns_lookup_kdc'], false))),
-                        Left(CheckBox(Id(:krb_allow_weak_crypto), _('Allow insecure encryption (Windows 2000).'),
+                        Left(CheckBox(Id(:krb_allow_weak_crypto), _('Allow Insecure Encryption (Windows 2000)'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'allow_weak_crypto'], false))),
                     )),
                 ),

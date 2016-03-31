@@ -36,10 +36,10 @@ module SSSD
             textdomain "auth-client"
             # SSSD section name to UI caption mapping
             @sect_name_caption = {
-                "sssd" => _("Global option"), "nss" => _("Name switch"),
+                "sssd" => _("Global Options"), "nss" => _("Name switch"),
                 "pam" => _("Authentication"), "sudo" => _("Sudo"),
-                "autofs" => _("Auto-mount"), "ssh" => _("SSH public keys"),
-                "pac" => _("Privilege account certificate extension (MS-PAC)"),
+                "autofs" => _("Auto-Mount"), "ssh" => _("SSH Public Keys"),
+                "pac" => _("Privilege Account Certificate (MS-PAC)"),
             }
             # The reverse caption mapping
             @sect_caption_name = Hash[*@sect_name_caption.map { |name, caption| [caption, name] }.flatten]
@@ -63,7 +63,7 @@ module SSSD
                     VBox(
                         Left(HBox(
                             Icon::Simple("yast-nis"),
-                            Heading(_("Manage authentication domains via SSSD"))
+                            Heading(_("Manage Authentication Domains via SSSD"))
                         )),
                         HBox(
                             # Overview of all config sections
@@ -71,24 +71,24 @@ module SSSD
                                 Frame(
                                     _(""),
                                     VBox(
-                                        Left(HBox(Label(_("Daemon status: ")), Label(Service.Active("sssd") ? _("Running") : _("Stopped")))),
-                                        Left(CheckBox(Id(:enable_daemon_pam), Opt(:notify), _("Allow domain users to authenticate on this computer"), AuthConfInst.sssd_enabled && AuthConfInst.sssd_pam)),
-                                        Left(CheckBox(Id(:mkhomedir_enable), _('Automatically create home directory'), AuthConfInst.mkhomedir_pam)),
+                                        Left(HBox(Label(_("Daemon Status: ")), Label(Service.Active("sssd") ? _("Running") : _("Stopped")))),
+                                        Left(CheckBox(Id(:enable_daemon_pam), Opt(:notify), _("Allow Domain Users To Authenticate On This Computer"), AuthConfInst.sssd_enabled && AuthConfInst.sssd_pam)),
+                                        Left(CheckBox(Id(:mkhomedir_enable), _('Automatically Create Home Directory'), AuthConfInst.mkhomedir_pam)),
                                         VSpacing(0.2),
                                         Left(Label(_("Read the following items from domain data source:"))),
                                         Left(CheckBox(Id(:nss_passwd), Opt(:notify), _("Users"), AuthConfInst.sssd_nss.include?('passwd'))),
                                         Left(CheckBox(Id(:nss_group), Opt(:notify), _("Groups"), AuthConfInst.sssd_nss.include?('group'))),
-                                        Left(CheckBox(Id(:nss_sudoers), Opt(:notify), _("Super-user commands (sudo)"), AuthConfInst.sssd_nss.include?('sudoers'))),
-                                        Left(CheckBox(Id(:nss_automount), Opt(:notify), _("Network locations (automount)"), AuthConfInst.sssd_nss.include?('automount'))),
-                                        Left(CheckBox(Id(:svc_ssh), Opt(:notify), _("SSH public keys"), AuthConfInst.sssd_conf['sssd']['services'].include?('ssh'))),
-                                        Left(CheckBox(Id(:svc_pac), Opt(:notify), _("Privilege account certificate (MS-PAC)"), AuthConfInst.sssd_conf['sssd']['services'].include?('pac'))),
+                                        Left(CheckBox(Id(:nss_sudoers), Opt(:notify), _("Super-User Commands (sudo)"), AuthConfInst.sssd_nss.include?('sudoers'))),
+                                        Left(CheckBox(Id(:nss_automount), Opt(:notify), _("Network Disk Locations (automount)"), AuthConfInst.sssd_nss.include?('automount'))),
+                                        Left(CheckBox(Id(:svc_ssh), Opt(:notify), _("SSH Public Keys"), AuthConfInst.sssd_conf['sssd']['services'].include?('ssh'))),
+                                        Left(CheckBox(Id(:svc_pac), Opt(:notify), _("Privilege Account Certificate (MS-PAC)"), AuthConfInst.sssd_conf['sssd']['services'].include?('pac'))),
                                     )
                                 ),
                                 VSpacing(0.2),
                                 Tree(Id(:section_tree), Opt(:immediate), "", []),
                                 VBox(
-                                    PushButton(Id(:new_domain), Opt(:hstretch), _("Join a domain")),
-                                    PushButton(Id(:del_domain), Opt(:hstretch), _("Leave the domain"))
+                                    PushButton(Id(:new_domain), Opt(:hstretch), _("Join A Domain")),
+                                    PushButton(Id(:del_domain), Opt(:hstretch), _("Leave The Domain"))
                                 ),
                             )),
                             # Config editor
@@ -101,7 +101,7 @@ module SSSD
                         ButtonBox(
                             PushButton(Id(:ok), Label.OKButton),
                             PushButton(Id(:cancel), Label.CancelButton),
-                            PushButton(Id(:clear_cache), _("Clear domain data cache"))
+                            PushButton(Id(:clear_cache), _("Clear Domain Data Cache"))
                         )
                     )
                 )
@@ -135,8 +135,8 @@ module SSSD
             def render_section_tree
                 tree = [
                   Item(@sect_name_caption["sssd"]),
-                  Item(_("Service options"), true, (AuthConfInst.sssd_conf['sssd']['services']).map {|svc| @sect_name_caption[svc]}),
-                  Item(_("Domain options"), true, AuthConfInst.sssd_get_domains)
+                  Item(_("Service Options"), true, (AuthConfInst.sssd_conf['sssd']['services']).map {|svc| @sect_name_caption[svc]}),
+                  Item(_("Domain Options"), true, AuthConfInst.sssd_get_domains)
                 ]
                 UI.ChangeWidget(Id(:section_tree), :Items, tree)
                 set_config_sect_name
@@ -147,7 +147,7 @@ module SSSD
                 content = nil
                 sect_name = get_config_sect_name
                 case sect_name
-                    when _("Service options"), _("Domain options")
+                    when _("Service Options"), _("Domain Options")
                         content = VBox(Label(Opt(:boldFont), _("Select Global Options, a service, or a domain to customise.")))
                     else
                         # Additional widgets for a domain
@@ -194,7 +194,7 @@ module SSSD
                 content = nil
                 sect_name = get_config_sect_name
                 case sect_name
-                    when _("Service options"), _("Domain options")
+                    when _("Service Options"), _("Domain Options")
                         content = Empty()
                     else
                         content = VBox(

@@ -41,7 +41,7 @@ module SSSD
                 "ldap"=> _("Generic directory service (LDAP)"),
             }
             @id_caption_provider = Hash[*@id_provider_caption.map { |name, caption| [caption, name] }.flatten]
-            
+
             @auth_provider_caption = {
                 "ldap"=> _("Generic directory service (LDAP)"),
                 "krb5"=> _("Generic Kerberos service"),

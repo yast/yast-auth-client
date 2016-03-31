@@ -58,32 +58,32 @@ module Auth
               Left(HBox(
                      HWeight(10, Empty()),
                 HWeight(80, VBox(
-                              Left(Frame(_('Computer name and domain settings'),
+                              Left(Frame(_('Computer Name and Domain'),
                                 VBox(
                                   Left(HBox(
-                                         Label(Opt(:hstretch), _('Computer name:')),
+                                         Label(Opt(:hstretch), _('Computer Name:')),
                                     Label(Id(:computer_name), '')
                                     )),
                                   Left(HBox(
-                                         Label(Opt(:hstretch), _('Network domain:')),
+                                         Label(Opt(:hstretch), _('Network Domain:')),
                                     Label(Id(:network_domain), '')
                                     )),
                                   Left(HBox(
-                                         Label(Opt(:hstretch), _('Full computer name:')),
+                                         Label(Opt(:hstretch), _('Full Computer Name:')),
                                     Label(Id(:full_computer_name), '')
                                     )),
                                   Left(HBox(
-                                         Label(Opt(:hstretch), _('IP address:')),
+                                         Label(Opt(:hstretch), _('IP Address:')),
                                     Label(Id(:ip_addresses), '')
                                     )),
                                   Left(HBox(
-                                         Label(Opt(:hstretch), _('Authentication and user identity domain(s):')),
+                                         Label(Opt(:hstretch), _('Authentication and User Identity Domain(s):')),
                                     Label(Id(:auth_domains), '')
                                     )),
                                   VSpacing(2.0),
                                   HBox(
-                                    PushButton(Id(:manage_sssd), _('Manage authentication domains')),
-                                    PushButton(Id(:manage_ldap_krb), _('Manage Kerberos and legacy LDAP options')),
+                                    PushButton(Id(:manage_sssd), _('Manage Authentication Domains')),
+                                    PushButton(Id(:manage_ldap_krb), _('Manage Kerberos and Legacy LDAP Options')),
                                     PushButton(Id(:finish), Label.FinishButton)
                                     )
                                   )

@@ -66,7 +66,7 @@ module SSSD
             # The frame is hidden if the module is not running in autoyast mode and AD server is not found/specified
             enroll_caption = _('Enroll')
             if AuthConfInst.autoyast_editor_mode
-                enroll_caption = _('Save enrollment details')
+                enroll_caption = _('Save Enrollment Details')
             end
             enroll_frame = Frame(_('Enroll or re-enroll this computer'),
                 VBox(
