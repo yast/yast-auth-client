@@ -932,7 +932,7 @@ module Auth
             # Get rid of the first output line that says "Enter XXX password"
             output = output.split("\n").drop(1).join("\n")
             # Optionally back up and save new samba configuration
-            if @ad_save_smb_conf
+            if @ad_overwrite_smb_conf
                 path_original_smb_conf = '/etc/samba/smb.conf'
                 if File.exist?(path_original_smb_conf)
                     ::FileUtils.copy_file(path_original_smb_conf, "#{path_original_smb_conf}.bak.#{Time.now.strftime('%Y%m%d%I%M%S')}", true, false)
