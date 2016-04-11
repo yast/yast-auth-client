@@ -86,10 +86,11 @@ module SSSD
                                 ),
                                 VSpacing(0.2),
                                 Tree(Id(:section_tree), Opt(:immediate), "", []),
-                                VBox(
-                                    PushButton(Id(:new_domain), Opt(:hstretch), _("Join A Domain")),
-                                    PushButton(Id(:del_domain), Opt(:hstretch), _("Leave The Domain"))
-                                ),
+                                Left(HBox(
+                                    PushButton(Id(:new_domain), _("Join Domain")),
+                                    PushButton(Id(:del_domain), _("Leave Domain")),
+                                    PushButton(Id(:clear_cache), _("Clear Domain Cache"))
+                                )),
                             )),
                             # Config editor
                             HWeight(50, VBox(
@@ -100,8 +101,7 @@ module SSSD
                         # Footer
                         ButtonBox(
                             PushButton(Id(:ok), Label.OKButton),
-                            PushButton(Id(:cancel), Label.CancelButton),
-                            PushButton(Id(:clear_cache), _("Clear Domain Data Cache"))
+                            PushButton(Id(:cancel), Label.CancelButton)
                         )
                     )
                 )
@@ -178,12 +178,12 @@ module SSSD
                                         desc = desc && desc.strip || ""
                                         Item(detail[0], detail[1], desc)
                                     }
-                                ),
-                                VBox(
-                                    PushButton(Id(:edit_param), Label.EditButton),
-                                    PushButton(Id(:del_param), Label.DeleteButton)
                                 )
-                            )
+                            ),
+                            Left(HBox(
+                                PushButton(Id(:edit_param), Label.EditButton),
+                                PushButton(Id(:del_param), Label.DeleteButton)
+                            )),
                         )
                 end
                 UI.ReplaceWidget(Id(:section_conf), content)
@@ -213,8 +213,8 @@ module SSSD
                                         }
                                     ),
                                 ),
-                                PushButton(Id(:add_param), Label.SelectButton)
-                            )
+                            ),
+                            Left(PushButton(Id(:add_param), Label.SelectButton)),
                         )
                 end
                 UI.ReplaceWidget(Id(:list_more_params), content)

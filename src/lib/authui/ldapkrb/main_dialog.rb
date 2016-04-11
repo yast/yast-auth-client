@@ -343,6 +343,7 @@ module LdapKrb
                         InputField(Id(:ldap_host_or_uri), Opt(:hstretch), ''),
                         InputField(Id(:ldap_base), Opt(:hstretch), _('DN of Search Base (e.g. dc=example,dc=com)'),
                                    AuthConfInst.ldap_conf['base'].to_s),
+                        Left(PushButton(Id(:ldap_test), _('Test Connection Settings'))),
                     )),
                     Top(VBox(
                         IntField(Id(:ldap_bind_timelimit), Opt(:hstretch), _('Timeout for Bind Operations in Seconds'), 1, 600,
@@ -368,7 +369,6 @@ module LdapKrb
                         ))),
                     )),
                 ),
-                PushButton(Id(:ldap_test), _('Test Connection Settings')),
             ))
             # Combine host/port/uri into one
             default_port_str = AuthConfInst.ldap_conf['port'] ? AuthConfInst.ldap_conf['port'] : '389'
@@ -408,7 +408,7 @@ module LdapKrb
                             [_('(not specified)')] + AuthConfInst.krb_conf['realms'].keys.sort)),
                         Left(SelectionBox(Id(:krb_realms), _('All Authentication Realms'),
                             AuthConfInst.krb_conf['realms'].keys.sort)),
-                        HBox(PushButton(Id(:krb_realm_new), _('Add Realm')), PushButton(Id(:krb_realm_edit), _('Edit Realm')), PushButton(Id(:krb_realm_del), _('Delete Realm'))),
+                        Left(HBox(PushButton(Id(:krb_realm_new), _('Add Realm')), PushButton(Id(:krb_realm_edit), _('Edit Realm')), PushButton(Id(:krb_realm_del), _('Delete Realm')))),
                         Left(CheckBox(Id(:krb_forwardable), _('Allow KDC on Other Networks to Issue Authentication Tickets'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'forwardable'], false))),
                         Left(CheckBox(Id(:krb_proxiable), _('Allow Kerberos-Enabled Services to Take on The Identity Of a User'),
