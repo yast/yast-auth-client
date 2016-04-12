@@ -76,7 +76,7 @@ module Auth
 
         # Bring up the main dialog to let user work on the configuration.
         def change
-            MainDialog.new.run
+            MainDialog.new(:auto).run
             AuthConfInst.autoyast_modified = true
             return :finish
         end

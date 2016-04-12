@@ -606,6 +606,23 @@ module Auth
             end
         end
 
+        # Return default value for a limited number of configuration keys.
+        # If a default value is not known, return nil.
+        def krb_get_default(key)
+            # These values are taken from Kerberos 1.12 manual
+            case key
+                when :default_keytab_name
+                    return '/etc/krb5.keytab'
+                when :default_tgs_enctypes
+                    return 'aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4'
+                when :default_tkt_enctypes
+                    return 'aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4'
+                when :permitted_enctypes
+                    return 'aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4'
+            end
+            return nil
+        end
+
         # Return LDAP configuration.
         def krb_export
             return {'conf' => @krb_conf, 'pam' => @krb_pam}
@@ -1019,10 +1036,9 @@ module Auth
                 auth_doms_caption = _('Only use local authentication')
             elsif @sssd_enabled && (@sssd_pam || @sssd_nss.any?)
                 # SSSD is configured
-                if Yast::Service.Active('sssd')
-                    auth_doms_caption = @sssd_conf['sssd']['domains'].join(', ')
-                else
-                    auth_doms_caption = _('Configured but not activated')
+                auth_doms_caption = @sssd_conf['sssd']['domains'].join(', ')
+                if !Yast::Service.Active('sssd')
+                    auth_doms_caption += ' ' + _('(daemon is inactive)')
                 end
             else
                 # LDAP and/or Kerberos is configured

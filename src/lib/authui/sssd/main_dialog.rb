@@ -22,6 +22,7 @@ require "authui/sssd/uidata.rb"
 require "authui/sssd/new_section_dialog.rb"
 require "authui/sssd/manage_ad_dialog.rb"
 require "authui/sssd/edit_param_dialog.rb"
+require "authui/sssd/extended_param_dialog.rb"
 
 module SSSD
     # Main dialog is split into overview on left side, and config editor on right side.
@@ -63,7 +64,7 @@ module SSSD
                     VBox(
                         Left(HBox(
                             Icon::Simple("yast-nis"),
-                            Heading(_("Manage Authentication Domains via SSSD"))
+                            Heading(_("Manage Domain User Logon"))
                         )),
                         HBox(
                             # Overview of all config sections
@@ -72,14 +73,14 @@ module SSSD
                                     _(""),
                                     VBox(
                                         Left(HBox(Label(_("Daemon Status: ")), Label(Service.Active("sssd") ? _("Running") : _("Stopped")))),
-                                        Left(CheckBox(Id(:enable_daemon_pam), Opt(:notify), _("Allow Domain Users To Authenticate On This Computer"), AuthConfInst.sssd_enabled && AuthConfInst.sssd_pam)),
-                                        Left(CheckBox(Id(:mkhomedir_enable), _('Automatically Create Home Directory'), AuthConfInst.mkhomedir_pam)),
+                                        Left(CheckBox(Id(:enable_daemon_pam), Opt(:notify), _("Allow Domain User Logon"), AuthConfInst.sssd_enabled && AuthConfInst.sssd_pam)),
+                                        Left(CheckBox(Id(:mkhomedir_enable), _('Create Home Directory'), AuthConfInst.mkhomedir_pam)),
                                         VSpacing(0.2),
-                                        Left(Label(_("Read the following items from domain data source:"))),
+                                        Left(Label(_("Enable domain data source:"))),
                                         Left(CheckBox(Id(:nss_passwd), Opt(:notify), _("Users"), AuthConfInst.sssd_nss.include?('passwd'))),
                                         Left(CheckBox(Id(:nss_group), Opt(:notify), _("Groups"), AuthConfInst.sssd_nss.include?('group'))),
                                         Left(CheckBox(Id(:nss_sudoers), Opt(:notify), _("Super-User Commands (sudo)"), AuthConfInst.sssd_nss.include?('sudoers'))),
-                                        Left(CheckBox(Id(:nss_automount), Opt(:notify), _("Network Disk Locations (automount)"), AuthConfInst.sssd_nss.include?('automount'))),
+                                        Left(CheckBox(Id(:nss_automount), Opt(:notify), _("Map Network Drives (automount)"), AuthConfInst.sssd_nss.include?('automount'))),
                                         Left(CheckBox(Id(:svc_ssh), Opt(:notify), _("SSH Public Keys"), AuthConfInst.sssd_conf['sssd']['services'].include?('ssh'))),
                                         Left(CheckBox(Id(:svc_pac), Opt(:notify), _("Privilege Account Certificate (MS-PAC)"), AuthConfInst.sssd_conf['sssd']['services'].include?('pac'))),
                                     )
@@ -94,8 +95,7 @@ module SSSD
                             )),
                             # Config editor
                             HWeight(50, VBox(
-                                ReplacePoint(Id(:section_conf), Empty()),
-                                ReplacePoint(Id(:list_more_params), Empty())
+                                ReplacePoint(Id(:section_conf), Empty())
                             ))
                         ),
                         # Footer
@@ -107,7 +107,7 @@ module SSSD
                 )
                 render_section_tree
                 render_section_conf
-                render_list_more_params
+
             end
 
             # Get the SSSD configuration section name from the chosen entry in section tree
@@ -157,7 +157,10 @@ module SSSD
                             domain_additions = [CheckBox(Id(:enable_domain), Opt(:notify), _("Use this domain"), enabled)]
                             # Additiona widgets for an AD domain
                             if AuthConfInst.sssd_conf[sect_name]["id_provider"] == "ad" || AuthConfInst.sssd_conf[sect_name]["auth_provider"] == "ad"
-                                domain_additions += [PushButton(Id(:manage_ad_domain), _("Enroll to Active Directory"))]
+                                domain_additions += [
+                                    HSpacing(1.0),
+                                    PushButton(Id(:manage_ad_domain), _("Enroll to Active Directory"))
+                                ]
                             end
                         end
                         # Common widgets
@@ -166,70 +169,25 @@ module SSSD
                         content = VBox(
                             # TRANSLATORS: Label of the area used to customise parameters.
                             # %s is the name of the section being customised.
-                            Left(Label(Opt(:boldFont), _("Basic options - %s") % caption)),
+                            Left(Label(Opt(:boldFont), _("Options - %s") % caption)),
                             Left(HBox(*domain_additions)),
                             HBox(
                                 Table(
                                     Id(:conf_table),
-                                    Header(_("Name"), _("Value"), _("Description")),
+                                    Header(_("Name"), _("Value")),
                                     UIData.instance.get_section_conf.map { |detail|
-                                        # Display a brief of parameter description
-                                        desc = detail[2].lines[0]
-                                        desc = desc && desc.strip || ""
-                                        Item(detail[0], detail[1], desc)
+                                        Item(detail[0], detail[1])
                                     }
                                 )
                             ),
                             Left(HBox(
                                 PushButton(Id(:edit_param), Label.EditButton),
-                                PushButton(Id(:del_param), Label.DeleteButton)
+                                PushButton(Id(:del_param), Label.DeleteButton),
+                                PushButton(Id(:extended_opts), _('Extended Options')),
                             )),
                         )
                 end
                 UI.ReplaceWidget(Id(:section_conf), content)
-            end
-
-            # For the currently selected config section, render list of additional parameters for customisation.
-            def render_list_more_params
-                content = nil
-                sect_name = get_config_sect_name
-                case sect_name
-                    when _("Service Options"), _("Domain Options")
-                        content = Empty()
-                    else
-                        content = VBox(
-                            Left(Label(Opt(:boldFont), _("Extended options"))),
-                            HBox(
-                                VBox(
-                                    InputField(Id(:param_filter), Opt(:hstretch, :notify), _("Name filter:"), ""),
-                                    Table(
-                                        Id(:more_param_table),
-                                        Header(_("Name"), _("Description")),
-                                        UIData.instance.get_section_params_with_filter('').map { |name, detail|
-                                                # Display a brief of parameter description
-                                                desc = detail["desc"].lines[0]
-                                                desc = desc && desc.strip || ""
-                                                Item(name, desc)
-                                        }
-                                    ),
-                                ),
-                            ),
-                            Left(PushButton(Id(:add_param), Label.SelectButton)),
-                        )
-                end
-                UI.ReplaceWidget(Id(:list_more_params), content)
-            end
-
-            # Render the table of parameter name and description.
-            def render_table_more_params(filter_val)
-                UI.ChangeWidget(Id(:more_param_table), :Items,
-                    UIData.instance.get_section_params_with_filter(filter_val).map { |name, detail|
-                            # Display a brief of parameter description
-                            desc = detail["desc"].lines[0]
-                            desc = desc && desc.strip || ""
-                            Item(name, desc)
-                    }
-                )
             end
 
             def ui_event_loop
@@ -242,7 +200,6 @@ module SSSD
                         UIData.instance.switch_section(sect_name)
                         # Re-render the customisation screen on the right side
                         render_section_conf
-                        render_list_more_params
 
                     when :new_domain
                         # Create a new domain
@@ -251,7 +208,6 @@ module SSSD
                             # Re-render to display the new section
                             render_section_tree
                             render_section_conf
-                            render_list_more_params
                         end
 
                     when :del_domain
@@ -270,7 +226,6 @@ module SSSD
                         # Re-render to display default section SSSD
                         render_section_tree
                         render_section_conf
-                        render_list_more_params
 
                     when :enable_domain
                         # Enable/disable domain
@@ -295,7 +250,7 @@ module SSSD
                         if AuthConfInst.sssd_enabled
                             if AuthConfInst.ldap_pam || AuthConfInst.krb_pam
                                 Popup.Error(_("This computer is currently using legacy LDAP or Kerberos method to authenticate users.\n" +
-                                              "Before you may use SSSD to authenticate users, please disable LDAP and Kerberos authentication from \"Manage Kerberos and legacy LDAP options\"."))
+                                              "Before you may use SSSD to authenticate users, please disable LDAP and Kerberos authentication from \"LDAP and Kerberos Client\"."))
                                 UI.ChangeWidget(Id(:enable_daemon_pam), :Value, false)
                                 AuthConfInst.sssd_enabled = false
                                 AuthConfInst.sssd_pam = false
@@ -327,7 +282,7 @@ module SSSD
                         if enable
                             if AuthConfInst.ldap_nss.include?('passwd')
                                 Popup.Error(_("This computer is currently reading user database from LDAP identity provider.\n" +
-                                              "Before you may use SSSD user database, please disable LDAP user database from \"Manage Kerberos and legacy LDAP options\"."))
+                                              "Before you may use SSSD user database, please disable LDAP user database from \"LDAP and Kerberos Client\"."))
                                 UI.ChangeWidget(Id(:nss_passwd), :Value, false)
                                 redo
                             end
@@ -338,14 +293,14 @@ module SSSD
                             AuthConfInst.sssd_disable_svc('nss') if AuthConfInst.sssd_nss.empty?
                         end
                         render_section_tree
-                        
+
                     when :nss_group
                         # Enable/disable NSS group database
                         enable = UI.QueryWidget(Id(:nss_group), :Value)
                         if enable
                             if AuthConfInst.ldap_nss.include?('group')
                                 Popup.Error(_("This computer is currently reading group database from LDAP identity provider.\n" +
-                                              "Before you may use SSSD group database, please disable LDAP group database from \"Manage Kerberos and legacy LDAP options\"."))
+                                              "Before you may use SSSD group database, please disable LDAP group database from \"LDAP and Kerberos Client\"."))
                                 UI.ChangeWidget(Id(:nss_group), :Value, false)
                                 redo
                             end
@@ -363,7 +318,7 @@ module SSSD
                         if enable
                             if AuthConfInst.ldap_nss.include?('sudoers')
                                 Popup.Error(_("This computer is currently reading sudoers database from LDAP identity provider.\n" +
-                                              "Before you may use SSSD sudoers database, please disable LDAP sudoers database from \"Manage Kerberos and legacy LDAP options\"."))
+                                              "Before you may use SSSD sudoers database, please disable LDAP sudoers database from \"LDAP and Kerberos Client\"."))
                                 UI.ChangeWidget(Id(:nss_sudoers), :Value, false)
                                 redo
                             end
@@ -371,7 +326,7 @@ module SSSD
                             AuthConfInst.sssd_enable_svc('nss')
                             AuthConfInst.sssd_enable_svc('sudo')
                             Popup.Message(_("Sudo data source has been globally enabled.\n" + 
-                            "Please remember to also customise \"sudo_provider\" parameter in each individual domain that provides sudo data."))
+                            "Please remember to also customise \"sudo_provider\" parameter in Extended Options of each individual domain that provides sudo data."))
                         else
                             AuthConfInst.sssd_nss.delete_if{ |n| n == 'sudoers' }
                             AuthConfInst.sssd_disable_svc('sudo')
@@ -385,7 +340,7 @@ module SSSD
                         if enable
                             if AuthConfInst.ldap_nss.include?('automount')
                                 Popup.Error(_("This computer is currently reading automount database from LDAP identity provider.\n" +
-                                              "Before you may use SSSD automount database, please disable LDAP automount database from \"Manage Kerberos and legacy LDAP options\"."))
+                                              "Before you may use SSSD automount database, please disable LDAP automount database from \"LDAP and Kerberos Client\"."))
                                 UI.ChangeWidget(Id(:nss_automount), :Value, false)
                                 redo
                             end
@@ -393,7 +348,7 @@ module SSSD
                             AuthConfInst.sssd_enable_svc('nss')
                             AuthConfInst.sssd_enable_svc('autofs')
                             Popup.Message(_("Automount data source has been globally enabled.\n" + 
-                            "Please remember to also customise \"autofs_provider\" parameter in each individual domain that provides automount data."))
+                            "Please remember to also customise \"autofs_provider\" parameter in Extended Options of each individual domain that provides automount data."))
                         else
                             AuthConfInst.sssd_nss.delete_if{ |n| n == 'automount' }
                             AuthConfInst.sssd_disable_svc('autofs')
@@ -434,7 +389,6 @@ module SSSD
                         end
                         if EditParamDialog.new(param_name).run == :ok
                             render_section_conf
-                            render_list_more_params
                         end
 
                     when :del_param
@@ -458,30 +412,19 @@ module SSSD
                         # Warn against removal of important parameters
                         if is_important && !Popup.ContinueCancelHeadline(
                             _("Confirm parameter removal: ") + param_name,
-                            _("The parameter is important. Removal of the parameter may cause SSSD startup failure.\n" +
+                            _("The parameter is important. Removal of the parameter may cause configuration failure.\n" +
                               "Please consult SSSD manual page before moving on.\n" +
-                              "Do you still wish to continue?"))
+                              "Do you still wish to remove the parameter?"))
                             redo
                         end
                         AuthConfInst.sssd_conf[get_config_sect_name].delete(param_name)
                         UIData.instance.reload_section
                         render_section_conf
-                        render_list_more_params
 
-                    when :param_filter
-                        # Reload parameter table according to the filter
-                        filter_val = UI.QueryWidget(Id(:param_filter), :Value)
-                        render_table_more_params(filter_val)
-
-                    when :add_param
-                        # Customise value of the parameter
-                        param_name = UI.QueryWidget(Id(:more_param_table), :CurrentItem)
-                        if param_name.nil?
-                            redo
-                        end
-                        if EditParamDialog.new(param_name).run == :ok
+                    when :extended_opts
+                        if ExtendedParamDialog.new(get_config_sect_name).run == :ok
+                            UIData.instance.reload_section
                             render_section_conf
-                            render_list_more_params
                         end
 
                     # Bottom
@@ -493,6 +436,9 @@ module SSSD
                               "SSSD will fail to start, and only local authentication will be available.\n" +
                               "Do you still wish to proceed?"))
                             redo
+                        end
+                        if AuthConfInst.sssd_enabled
+                            AuthConfInst.nscd_enabled = false
                         end
                         AuthConfInst.mkhomedir_pam = UI.QueryWidget(Id(:mkhomedir_enable), :Value)
                         AuthConfInst.sssd_apply

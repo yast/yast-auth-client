@@ -73,16 +73,16 @@ module SSSD
                         # New domain and provider types
                         Id(:section_dom),
                         InputField(Id(:dom_name), Opt(:hstretch), _("Domain name (such as example.com):"), ""),
-                        SelectionBox(
+                        MinHeight(10, SelectionBox(
                             Id(:id_provider),
                             _("Which service provides identity data, such as user names and group memberships?"),
                             @id_caption_provider.keys.sort
-                        ),
-                        SelectionBox(
+                        )),
+                        MinHeight(12, SelectionBox(
                             Id(:auth_provider),
                             _("Which service handles user authentication?"),
                             @auth_caption_provider.keys.sort
-                        ),
+                        )),
                         Left(CheckBox(Id(:activate), _("Enable the domain"), true)),
                         ButtonBox(
                             PushButton(Id(:ok), Label.OKButton),

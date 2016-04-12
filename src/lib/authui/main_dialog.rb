@@ -36,9 +36,12 @@ module Auth
         include I18n
         include Logger
 
-        def initialize
+        # Entry point can be :sssd, :ldapkrb, or :auto
+        # In auto mode, there will be two change settings buttons.
+        def initialize(entry_point)
             super()
             textdomain 'auth-client'
+            @entry_point = entry_point
         end
 
         def dialog_options
@@ -47,85 +50,70 @@ module Auth
 
         def create_dialog
             return false unless super
-            refresh_config_status
+            render_info_table
             return true
         end
 
         def dialog_content
-            Left(VBox(
-                   Left(Heading(_('System authentication and domain configuration'))),
-              VSpacing(1),
-              Left(HBox(
-                     HWeight(10, Empty()),
+            conf_buttons = [PushButton(Id(:change_settings), _('Change Settings')), PushButton(Id(:cancel), Label.CancelButton)]
+            if @entry_point == :auto
+                # Allow entering both SSSD and ldapkrb settings
+                conf_buttons = [
+                    PushButton(Id(:change_sssd_settings), _('User Logon Configuration')),
+                    PushButton(Id(:change_ldapkrb_settings), _('LDAP/Kerberos Configuration')),
+                    PushButton(Id(:cancel), Label.FinishButton)
+                ]
+            end
+            Left(HBox(
+                HWeight(10, Empty()),
                 HWeight(80, VBox(
-                              Left(Frame(_('Computer Name and Domain'),
-                                VBox(
-                                  Left(HBox(
-                                         Label(Opt(:hstretch), _('Computer Name:')),
-                                    Label(Id(:computer_name), '')
-                                    )),
-                                  Left(HBox(
-                                         Label(Opt(:hstretch), _('Network Domain:')),
-                                    Label(Id(:network_domain), '')
-                                    )),
-                                  Left(HBox(
-                                         Label(Opt(:hstretch), _('Full Computer Name:')),
-                                    Label(Id(:full_computer_name), '')
-                                    )),
-                                  Left(HBox(
-                                         Label(Opt(:hstretch), _('IP Address:')),
-                                    Label(Id(:ip_addresses), '')
-                                    )),
-                                  Left(HBox(
-                                         Label(Opt(:hstretch), _('Authentication and User Identity Domain(s):')),
-                                    Label(Id(:auth_domains), '')
-                                    )),
-                                  VSpacing(2.0),
-                                  HBox(
-                                    PushButton(Id(:manage_sssd), _('Manage Authentication Domains')),
-                                    PushButton(Id(:manage_ldap_krb), _('Manage Kerberos and Legacy LDAP Options')),
-                                    PushButton(Id(:finish), Label.FinishButton)
-                                    )
-                                  )
-                              ))
-                  )),
-                HWeight(10, Empty())
-              ))
+                    Left(Frame(_('System authentication and domain configuration'), VBox(
+                        VSquash(MinHeight(10, ReplacePoint(Id(:info_table), Empty()))),
+                        VSpacing(3),
+                        Right(HBox(*conf_buttons)),
+                    )))
+                )),
+                HWeight(10, Empty()),
             ))
         end
 
-        def user_input
-            UI.TimeoutUserInput(1000)
-        end
-
-        # Display the latest configuration and daemon status.
-        def timeout_handler
-            refresh_config_status
-        end
-
-        # Update widgets to reflect the current configuration and daemon status.
-        def refresh_config_status
+        def render_info_table
             net_facts = AuthConf.get_net_facts
-            UI.ChangeWidget(Id(:computer_name), :Value, net_facts['computer_name'])
-            UI.ChangeWidget(Id(:full_computer_name), :Value, net_facts['full_computer_name'] == '' ? _('(Name is not resolvable)') : net_facts['full_computer_name'])
-            UI.ChangeWidget(Id(:network_domain), :Value, net_facts['network_domain'] == '' ? _('(Name is not resolvable)') : net_facts['network_domain'])
-            UI.ChangeWidget(Id(:ip_addresses), :Value, net_facts['ip_addresses'].join(', '))
-            UI.ChangeWidget(Id(:auth_domains), :Value, AuthConfInst.summary_text)
-            UI.RecalcLayout
+            UI.ReplaceWidget(Id(:info_table), Table(Opt(:keepSorting),
+                Header(_('Name'), _('Value')),
+                [
+                    Item(_('Computer Name'), net_facts['computer_name']),
+                    Item(_('Full Computer Name'), net_facts['full_computer_name'] == '' ? _('(Name is not resolvable)') : net_facts['full_computer_name']),
+                    Item(_('Network Domain'), net_facts['network_domain'] == '' ? _('(Name is not resolvable)') : net_facts['network_domain']),
+                    Item(_('IP Addresses'), net_facts['ip_addresses'].join(', ')),
+                    Item(_('Identity Domains'), AuthConfInst.summary_text),
+                ]
+            ))
         end
 
         # Enter SSSD configuration dialog.
-        def manage_sssd_handler
-            SSSD::MainDialog.new.run
+        def change_settings_handler
+            case @entry_point
+                when :sssd
+                    SSSD::MainDialog.new.run
+                when :ldapkrb
+                    LdapKrb::MainDialog.new.run
+            end
+            render_info_table
         end
 
-        # Enter LDAP/Kerberos/Aux daemon configuration dialog.
-        def manage_ldap_krb_handler
+        def change_sssd_settings_handler
+            SSSD::MainDialog.new.run
+            render_info_table
+        end
+
+        def change_ldapkrb_settings_handler
             LdapKrb::MainDialog.new.run
+            render_info_table
         end
 
         # Close the dialog
-        def finish_handler
+        def cancel_handler
             finish_dialog(:finish)
         end
     end

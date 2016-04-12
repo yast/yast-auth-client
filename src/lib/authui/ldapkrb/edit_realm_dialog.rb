@@ -49,32 +49,34 @@ module LdapKrb
 
         def dialog_content
             VBox(
+                InputField(Id(:realm_name), Opt(:hstretch), _('Realm name'), @realm_name.to_s),
+                CheckBox(Id(:map_domain), Opt(:hstretch), _('Map Domain Name to the Realm (example.com -> EXAMPLE.COM)'),
+                    !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realms', @realm_name.downcase], nil).nil?),
+                CheckBox(Id(:map_wildcard_domain), Opt(:hstretch), _('Map Wild Card Domain Name to the Realm (*.example.com -> EXAMPLE.COM)'),
+                    !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realms', ".#{@realm_name.downcase}"], nil).nil?),
+                VSpacing(1.0),
+                InputField(Id(:admin_server), Opt(:hstretch), _('Host Name of Administration Server (Optional)'),
+                    AuthConfInst.krb_conf_get(['realms', @realm_name, 'admin_server'], '')),
+                InputField(Id(:master_kdc), Opt(:hstretch), _('Host Name of Master Key Distribution Server (Optional)'),
+                    AuthConfInst.krb_conf_get(['realms', @realm_name, 'master_kdc'], '')),
+                SelectionBox(Id(:kdc), Opt(:hstretch), _('Key Distribution Centres (Optional If Auto-Discovery via DNS is Enabled)'),
+                    AuthConfInst.krb_conf_get(['realms', @realm_name, 'kdc'], [])),
+                Left(HBox(PushButton(Id(:kdc_add), Label.AddButton), PushButton(Id(:kdc_remove), Label.DeleteButton))),
+                VSpacing(1.0),
                 HBox(
-                    Top(VBox(
-                        InputField(Id(:realm_name), Opt(:hstretch), _('Realm name'), @realm_name.to_s),
-                        CheckBox(Id(:map_domain), Opt(:hstretch), _('Map Domain Name to the Realm (example.com -> EXAMPLE.COM)'),
-                            !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realms', @realm_name.downcase], nil).nil?),
-                        CheckBox(Id(:map_wildcard_domain), Opt(:hstretch), _('Map Wild Card Domain Name to the Realm (*.example.com -> EXAMPLE.COM)'),
-                            !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realms', ".#{@realm_name.downcase}"], nil).nil?),
-                        InputField(Id(:admin_server), Opt(:hstretch), _('Host Name of Administration Server (Optional)'),
-                            AuthConfInst.krb_conf_get(['realms', @realm_name, 'admin_server'], '')),
-                        InputField(Id(:master_kdc), Opt(:hstretch), _('Host Name of Master Key Distribution Server (Optional)'),
-                            AuthConfInst.krb_conf_get(['realms', @realm_name, 'master_kdc'], '')),
-                        SelectionBox(Id(:kdc), Opt(:hstretch), _('Key Distribution Centres (Optional If Auto-Discovery via DNS is Enabled)'),
-                            AuthConfInst.krb_conf_get(['realms', @realm_name, 'kdc'], [])),
-                        Left(HBox(PushButton(Id(:kdc_add), Label.AddButton), PushButton(Id(:kdc_remove), Label.DeleteButton))),
-                    )),
-                    HSpacing(1.0),
-                    Top(VBox(
-                        SelectionBox(Id(:auth_to_local), _('Customise Rules for Mapping Principal Names to User Names'),
-                            AuthConfInst.krb_conf_get(['realms', @realm_name, 'auth_to_local'], [])),
-                        Left(HBox(PushButton(Id(:a2l_add), Label.AddButton), PushButton(Id(:a2l_remove), Label.DeleteButton))),
-                        Left(Label(_('Customise Mappings Principal Names to User Names'))),
+                    VBox(
+                        Left(Label(_('Custom Mappings of Principal Names to User Names'))),
                         Table(Id(:auth_to_local_names), Header(_('Principal Name'), _('User Name')),
                             AuthConfInst.krb_conf_get(['realms', @realm_name, 'auth_to_local_names'], []).map {|princ_name, user_name| Item(princ_name, user_name)}),
                         Left(HBox(PushButton(Id(:a2ln_add), Label.AddButton), PushButton(Id(:a2ln_remove), Label.DeleteButton))),
-                    )),
+                    ),
+                    VBox(
+                        SelectionBox(Id(:auth_to_local), _('Custom Rules for Mapping Principal Names to User Names'),
+                            AuthConfInst.krb_conf_get(['realms', @realm_name, 'auth_to_local'], [])),
+                        Left(HBox(PushButton(Id(:a2l_add), Label.AddButton), PushButton(Id(:a2l_remove), Label.DeleteButton))),
+                    )
                 ),
+                VSpacing(1.0),
                 ButtonBox(
                     PushButton(Id(:ok), Label.OKButton),
                     PushButton(Id(:cancel), Label.CancelButton),
