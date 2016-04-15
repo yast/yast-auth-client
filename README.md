@@ -10,8 +10,10 @@ With this YaST2 module you can configure the authentication on your machine
 Features
 --------
 
-  * Configure authentication via sssd
-  * Multi domain facility
+  * Configure single or multi-domain authentication via SSSD
+  * Enroll a host at Microsoft Active Directory
+  * Configure PAM/NSS for LDAP
+  * Configure Kerberos client
 
 Installation
 ------------

@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Tue Mar 22 09:55:56 UTC 2016 - hguo@suse.com
+
+- Introduce many new features:
+* Simplify SSSD management interface.
+* Enroll to AD directly from SSSD management interface.
+* Edit settings for NSS/PAM LDAP.
+* Edit settings for Kerberos.
+
+Implements: fate#319137 fate#320407
+Partly implements: fate#316205 fate#320364
+
+-------------------------------------------------------------------
 Mon Nov 23 13:59:57 UTC 2015 - hguo@suse.com
 
 - Redo fix for bsc#948432, with even more space for the two big buttons.

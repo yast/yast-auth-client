@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -17,15 +17,18 @@
 # ------------------------------------------------------------------------------
 
 require "yast"
-require "yauthclient/uidata.rb"
-require "yauthclient/params.rb"
+require "auth/authconf.rb"
+require "authui/sssd/uidata.rb"
+require "authui/sssd/params.rb"
+require "authui/sssd/manage_ad_dialog.rb"
 
-module YAuthClient
+module SSSD
     # Customise important parameters for a newly created domain/service.
     class InitialCustomisationDialog
-        include Yast::UIShortcuts
-        include Yast::I18n
-        include Yast::Logger
+        include Yast
+        include Auth
+        include UIShortcuts
+        include I18n
 
         def initialize(param_categories)
             textdomain "auth-client"
@@ -36,7 +39,7 @@ module YAuthClient
             @custom_params = Hash[]
             param_categories.each { |cat_name|
                 @custom_params.merge!(
-                    Params.instance.get_by_category(cat_name).keep_if { |name, defi|
+                    Params.instance.get_by_category(cat_name).keep_if { |_name, defi|
                         defi["req"] || defi["important"]
                     }
                 )
@@ -45,7 +48,7 @@ module YAuthClient
             # The already-customised or default value of the custom_params
             @custom_params.each { |name, defi|
                 val = UIData.instance.get_param_val(name)
-                if val == nil
+                if val.nil?
                     @custom_param_vals[name] = defi["def"] # default value
                 else
                     @custom_param_vals[name] = val # already-set value
@@ -59,11 +62,12 @@ module YAuthClient
             begin
                 return ui_event_loop
             ensure
-                Yast::UI.CloseDialog()
+                UI.CloseDialog()
             end
         end
 
-        private
+    private
+
             # Create parameter editor controls (label, input, help text) and return them.
             def make_editor(param_names)
                 if param_names.empty?
@@ -98,25 +102,25 @@ module YAuthClient
 
             # Render controls for editing parameter values, according to parameter data type.
             def render_all
-                Yast::UI.OpenDialog(
+                UI.OpenDialog(
                     VBox(
                         VSpacing(0.5),
                         Frame(
                             _("Mandatory Parameters"),
-                            VBox(*make_editor(@custom_params.select {
-                                |name, defi| defi["req"] && !defi["no_init_customisation"]
+                            VBox(*make_editor(@custom_params.select { |_name, defi|
+                                                defi["req"] && !defi["no_init_customisation"]
                             }.keys))
                         ),
                         VSpacing(0.5),
                         Frame(
                             _("Optional Parameters"),
-                            VBox(*make_editor(@custom_params.select {
-                                |name, defi| defi["important"] && !defi["no_init_customisation"]
+                            VBox(*make_editor(@custom_params.select { |_name, defi|
+                                                defi["important"] && !defi["no_init_customisation"]
                             }.keys))
                         ),
                         ButtonBox(
-                            PushButton(Id(:ok), Yast::Label.OKButton),
-                            PushButton(Id(:cancel), Yast::Label.CancelButton)
+                            PushButton(Id(:ok), Label.OKButton),
+                            PushButton(Id(:cancel), Label.CancelButton)
                         )
                     )
                 )
@@ -125,29 +129,33 @@ module YAuthClient
             # Return :ok or :cancel depends user action.
             def ui_event_loop
                 loop do
-                    case Yast::UI.UserInput
+                    case UI.UserInput
                     when :ok
                         # Check that all mandatory parameters are set
-                        missing = @custom_params.select {
-                            |name, defi| defi["req"] && !defi["no_init_customisation"]
+                        missing = @custom_params.select { |_name, defi|
+                                    defi["req"] && !defi["no_init_customisation"]
                         }.keys.select { |name|
-                            Yast::UI.QueryWidget(Id("val-" + name), :Value).to_s.empty?
+                            UI.QueryWidget(Id("val-" + name), :Value).to_s.empty?
                         }
                         if !missing.empty?
                             descs = missing.map { |pname| @custom_params[pname]["desc"] }
-                            Yast::Popup.Error(_("Please complete all of the following mandatory parameters:\n") + descs.join("\n"))
+                            Popup.Error(_("Please complete all of the following mandatory parameters:\n") + descs.join("\n"))
                             redo
                         end
                         # Save parameter values
-                        @custom_params.each { |name, defi|
-                            val = Yast::UI.QueryWidget(Id("val-" + name), :Value).to_s
+                        @custom_params.each { |name, _defi|
+                            val = UI.QueryWidget(Id("val-" + name), :Value).to_s
                             if !val.empty?
-                                sect_conf = UIData.instance.get_conf.fetch(UIData.instance.get_curr_section, Hash[])
+                                sect_conf = AuthConfInst.sssd_conf.fetch(UIData.instance.get_curr_section, Hash[])
                                 sect_conf[name] = val
-                                UIData.instance.get_conf[UIData.instance.get_curr_section] = sect_conf
+                                AuthConfInst.sssd_conf[UIData.instance.get_curr_section] = sect_conf
                             end
                         }
                         UIData.instance.reload_section
+                        # Special case for AD
+                        if UIData.instance.curr_section_involves_ad?
+                            ManageADDialog.new.run
+                        end
                         return :ok
 
                     when :cancel

@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -15,13 +15,19 @@
 # this program; if not, contact SUSE Linux GmbH.
 #
 # ------------------------------------------------------------------------------
+#
+# Authors: Howard Guo <hguo@suse.com>
 
-# Module:       Configure system-wide authentication mechanisms via SSSD
-# Summary:      Invoke main dialog and allow configuring SSSD
-# Authors:      Howard Guo <hguo@suse.com>
+.etc.ldap_conf
 
-require 'auth/authconf'
-require 'authui/main_dialog'
-
-Auth::AuthConfInst.read_all
-Auth::MainDialog.new(:sssd).run
+`ag_ini(
+    `IniAgent("/etc/ldap.conf",
+        $[
+            "options" : ["global_values", "repeat_names", "ignore_case"],
+            "comments" : ["^#.*", "^[ \t]*$"],
+            "params" : [
+                $["match" : ["^[ \t]*([a-zA-Z0-9_]+)[ \t]+(.*[^ \t]|)[ \t]*$", "%s\t%s"]]
+            ]
+        ]
+    )
+)
