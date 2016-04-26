@@ -24,4 +24,4 @@ require 'auth/authconf'
 require 'authui/main_dialog'
 
 Auth::AuthConfInst.read_all
-Auth::MainDialog.new(:sssd).run
+Auth::MainDialog.new(:sssd, 'User Logon Management').run

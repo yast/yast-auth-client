@@ -38,10 +38,11 @@ module Auth
 
         # Entry point can be :sssd, :ldapkrb, or :auto
         # In auto mode, there will be two change settings buttons.
-        def initialize(entry_point)
+        def initialize(entry_point, heading_caption_untranslated)
             super()
             textdomain 'auth-client'
             @entry_point = entry_point
+            @heading_caption_untranslated = heading_caption_untranslated
         end
 
         def dialog_options
@@ -64,17 +65,18 @@ module Auth
                     PushButton(Id(:cancel), Label.FinishButton)
                 ]
             end
-            Left(HBox(
-                HWeight(10, Empty()),
-                HWeight(80, VBox(
-                    Left(Frame(_('System authentication and domain configuration'), VBox(
+            VBox(
+                Left(Heading(_(@heading_caption_untranslated))),
+                Left(HBox(
+                    HWeight(10, Empty()),
+                    HWeight(80, VBox(
                         VSquash(MinHeight(10, ReplacePoint(Id(:info_table), Empty()))),
                         VSpacing(3),
                         Right(HBox(*conf_buttons)),
-                    )))
+                    )),
+                    HWeight(10, Empty()),
                 )),
-                HWeight(10, Empty()),
-            ))
+            )
         end
 
         def render_info_table

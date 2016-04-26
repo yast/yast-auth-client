@@ -100,7 +100,7 @@ module Auth
                 # Just get interface IPs
                 ip_addresses = Socket.getifaddrs.select{|iface| iface.addr.ip?}.map{|iface| iface.addr.ip_address}.select{|addr| !addr.start_with?('127.')}
             end
-            domain_name, status = Open3.capture2('domainname')
+            domain_name, status = Open3.capture2('dnsdomainname')
             if status.exitstatus != 0 || domain_name.strip == '(none)'
                 domain_name = ''
             end
@@ -148,57 +148,77 @@ module Auth
             end
         end
 
-        # Adjust PAM settings to make sure:
-        # - Any of enabled unix/krb/ldap/sss mechanisms can fullfill user authentication.
-        # - Local accounts are sufficient to be accounts.
-        # This is a scary and security critical function, be extra careful with changes.
-        def fix_pam
+        # Adjust PAM authentication setting lines to make sure that among the enabled mechanisms, any of
+        # unix/krb/ldap/sss can fullfill authentication attempt.
+        # Be extra careful with making changes.
+        # Return replacement lines after adjustments.
+        def pam_fix_auth(original_lines)
             sufficient_auth = ['pam_unix.so', 'pam_sss.so', 'pam_ldap.so', 'pam_krb5.so']
-            lines = IO.readlines('/etc/pam.d/common-auth')
-            auth = File.open('/etc/pam.d/common-auth', 'w+', 0600)
-            lines.each { |line|
+            ret = []
+            original_lines.each { |line|
+                line.strip!
                 columns = line.split(/\s+/)
                 if /\s*#/.match(line)
                     # Write down the comment
-                    auth.write(line)
+                    ret.push(line)
                 else
                     if columns.length >= 3 && columns[2] != 'pam_deny.so'
                         if sufficient_auth.include?(columns[2])
                             # Mark the module "sufficient"
                             columns[1] = 'sufficient'
-                            auth.write(columns.join('    ') + "\n")
+                            ret.push(columns.join('    '))
                         else
                             # Write down the module as-is
-                            auth.write(line)
+                            ret.push(line)
                         end
                     else
                         # Too few columns, just write it down.
-                        auth.write(line)
+                        ret.push(line)
                     end
                 end
             }
             # Eventually deny all access if no sufficient module is satisfied
-            # Bad luck for smart card users, this Yast module will not support that scenario.
-            auth.write("auth    required    pam_deny.so\n")
-            auth.close
+            # Bad luck for smart card users, that scenario isn't taken care of.
+            ret.push("auth    required    pam_deny.so")
+            return ret
+        end
 
-            # For accounts, make it sufficient to match local account.
-            lines = IO.readlines('/etc/pam.d/common-account')
-            account = File.open('/etc/pam.d/common-account', 'w+', 0600)
-            lines.each { |line|
+        # Adjust PAM account setting lines to make sure that local account is sufficient.
+        # It is not necessary to adjust modules other tham localuser.
+        # Be extra careful with making changes.
+        # Return replacement lines after adjustments.
+        def pam_fix_account(original_lines)
+            ret = []
+            original_lines.each { |line|
+                line.strip!
                 columns = line.split(/\s+/)
                 if !/\s*#/.match(line) && columns.length >= 3
                     if columns[2] == 'pam_unix.so'
-                        account.write(columns.join('    ') + "\n")
-                        account.write("account    sufficient    pam_localuser.so\n")
+                        ret.push(columns.join('    '))
+                        ret.push('account    sufficient    pam_localuser.so')
                     elsif columns[2] != 'pam_localuser.so'
                        # exclude existing line about pam_localuser
-                       account.write(line)
+                       ret.push(line)
                     end
                 else
-                    account.write(line)
+                    ret.push(line)
                 end
             }
+            return ret
+        end
+
+        # Adjust PAM settings to make sure:
+        # - Any of enabled unix/krb/ldap/sss mechanisms can fullfill user authentication.
+        # - Local accounts are sufficient to be accounts.
+        # Be extra careful with making changes.
+        def fix_pam
+            lines = IO.readlines('/etc/pam.d/common-auth')
+            auth = File.open('/etc/pam.d/common-auth', 'w+', 0600)
+            auth.write(pam_fix_auth(lines).join("\n"))
+            auth.close
+            lines = IO.readlines('/etc/pam.d/common-account')
+            account = File.open('/etc/pam.d/common-account', 'w+', 0600)
+            account.write(pam_fix_account(lines).join("\n"))
             account.close
         end
 
