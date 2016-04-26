@@ -580,13 +580,11 @@ module Auth
                 conf_file = File.new('/etc/krb5.conf')
                 content = conf_file.read
             rescue Errno::ENOENT
-                log('Failed to read /etc/krb5.conf, the file is probably missing.')
+                content = ''
+                log.info('Failed to read /etc/krb5.conf, the file is probably missing.')
             ensure
                 if !conf_file.nil?
                     conf_file.close
-                end
-                if content.nil?
-                    content = ''
                 end
             end
             krb_parse_set(content)
