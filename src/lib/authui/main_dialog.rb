@@ -38,11 +38,15 @@ module Auth
 
         # Entry point can be :sssd, :ldapkrb, or :auto
         # In auto mode, there will be two change settings buttons.
-        def initialize(entry_point, heading_caption_untranslated)
+        def initialize(entry_point)
             super()
             textdomain 'auth-client'
             @entry_point = entry_point
-            @heading_caption_untranslated = heading_caption_untranslated
+            if entry_point == :ldapkrb
+                @heading_caption = _('LDAP and Kerberos Client')
+            elsif entry_point == :sssd || entry_point == :auto
+                @heading_caption = _('User Logon Management')
+            end
         end
 
         def dialog_options
@@ -66,7 +70,7 @@ module Auth
                 ]
             end
             VBox(
-                Left(Heading(_(@heading_caption_untranslated))),
+                Left(Heading(@heading_caption)),
                 Left(HBox(
                     HWeight(10, Empty()),
                     HWeight(80, VBox(
