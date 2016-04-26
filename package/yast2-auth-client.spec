@@ -21,6 +21,7 @@ Version:        3.3.7
 Release:        0
 Group:          System/YaST
 License:        GPL-2.0
+URL:            https://github.com/yast/yast-auth-client
 Summary:        YaST2 - Centralised System Authentication Configuration
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -50,14 +51,12 @@ With this YaST2 module you may configure centralised system authentication, on a
 %install
 rake install DESTDIR="%{buildroot}"
 
-%post
-
 %files
 %defattr(-,root,root)
-%{yast_desktopdir}/
-%{yast_moduledir}/
-%{yast_clientdir}/
-%dir %{yast_libdir}/
-%{yast_libdir}/
 %doc %{yast_docdir}
+%{yast_libdir}/
+%{yast_desktopdir}/
+%{yast_clientdir}/
+%{yast_libdir}/
+%{yast_scrconfdir}/
 
