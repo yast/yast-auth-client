@@ -41,7 +41,7 @@ module SSSD
 
         # Return the parameter description, type, default value, is_required, is_important, section name, and value choices.
         def get_by_name(name)
-            sect_defi = @all_params.find(ifnone=->{ [nil, Hash[]] }) { |_sect, defi| defi.key? name }
+            sect_defi = @all_params.find(lambda{ [nil, Hash[]] }) { |_sect, defi| defi.key? name }
             defi = sect_defi[1].fetch(name, Hash[])
             # Parameter attributes:
             # desc - Help text for the parameter.

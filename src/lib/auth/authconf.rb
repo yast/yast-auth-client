@@ -89,7 +89,7 @@ module Auth
                 resolvable_name = Socket.gethostbyname(Socket.gethostname)
                 resolvable_name = resolvable_name.fetch(0, '')
             rescue SocketError
-              # Intentionally ignored
+                resolvable_name = ''
             end
             ip_addresses = []
             begin
@@ -580,7 +580,7 @@ module Auth
                 conf_file = File.new('/etc/krb5.conf')
                 content = conf_file.read
             rescue Errno::ENOENT
-            # Intentionally ignore if file is not found
+                log('Failed to read /etc/krb5.conf, the file is probably missing.')
             ensure
                 if !conf_file.nil?
                     conf_file.close
@@ -905,7 +905,7 @@ module Auth
             _, status = Open3.capture2("net -s #{smb_conf.path} ads testjoin")
 
             ad_has_computer = status.exitstatus == 0
-            klist, status = Open3.capture2("klist -k")
+            klist, _ = Open3.capture2("klist -k")
             kerberos_has_key = klist.split("\n").any?{ |line| /#{Socket.gethostname}.*#{ad_domain_name.downcase}/.match(line.downcase) }
 
             smb_conf.unlink
@@ -1021,8 +1021,8 @@ module Auth
                     if domain_providers.include?(id_provider)
                         pkgs += ['sssd-' + id_provider]
                     end
-                    if domain_providers.include?(id_provider)
-                        pkgs += ['sssd-' + id_provider]
+                    if domain_providers.include?(auth_provider)
+                        pkgs += ['sssd-' + auth_provider]
                     end
                 }
             end
