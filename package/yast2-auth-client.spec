@@ -17,10 +17,11 @@
 
 
 Name:           yast2-auth-client
-Version:        3.3.6
+Version:        3.3.7
 Release:        0
 Group:          System/YaST
 License:        GPL-2.0
+URL:            https://github.com/yast/yast-auth-client
 Summary:        YaST2 - Centralised System Authentication Configuration
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -41,7 +42,6 @@ Obsoletes:      yast2-ldap-client yast2-kerberos-client
 
 %description
 With this YaST2 module you may configure centralised system authentication, on a single or multipe network domains.
-The authentication capabilities are provided by SSSD.
 
 %prep
 %setup -n %{name}-%{version}
@@ -51,15 +51,12 @@ The authentication capabilities are provided by SSSD.
 %install
 rake install DESTDIR="%{buildroot}"
 
-%post
-
 %files
 %defattr(-,root,root)
-%{yast_desktopdir}/auth-client.desktop
-%{yast_moduledir}/AuthClient.rb
-%{yast_clientdir}/auth-client*.rb
-%{yast_schemadir}/autoyast/rnc/auth-client.rnc
-%dir %{yast_libdir}/yauthclient
-%{yast_libdir}/yauthclient/*
 %doc %{yast_docdir}
+%{yast_libdir}/
+%{yast_desktopdir}/
+%{yast_clientdir}/
+%{yast_libdir}/
+%{yast_scrconfdir}/
 
