@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Wed Jul 13 12:14:39 UTC 2016 - hguo@suse.com
+
+- Fix bsc#986281:
+  * Support importing configuration from legacy XML.
+  * Always install sssd-tools.
+  * Allow customising homedir override in domains.
+  * Fix exceptions caused by missing dependencies at runtime.
+  Bump version to 3.3.8.
+
+-------------------------------------------------------------------
 Tue Mar 22 09:55:56 UTC 2016 - hguo@suse.com
 
 - Introduce many new features:

@@ -505,6 +505,10 @@ module SSSD
                             "type" => "int",
                             "desc" => _("Override the primary GID value with the one specified.")
                         },
+                        "override_homedir" => {
+                            "type" => "string",
+                            "desc" => _("Override the user's home directory. You can either provide an absolute value or a template.")
+                        },
                         "case_sensitive" => {
                             "type" => "boolean",
                             "def"  => true,

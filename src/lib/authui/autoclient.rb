@@ -40,13 +40,36 @@ module Auth
 
         # Import configuration parameters saved by Export operation.
         def import(exported)
-            record = JSON.parse(exported['conf_json'])
-            AuthConfInst.sssd_import(record['sssd'])
-            AuthConfInst.ldap_import(record['ldap'])
-            AuthConfInst.krb_import(record['krb'])
-            AuthConfInst.aux_import(record['aux'])
-            AuthConfInst.ad_import(record['ad'])
-            AuthConfInst.autoyast_modified = true
+            if exported.has_key?('sssd')
+                # Import legacy XML configuration from SLE 12 SP0 or SP1
+                enabled = exported.fetch('sssd', nil)
+                daemon = exported.fetch('sssd_conf', {}).fetch('sssd', nil)
+                domain = exported.fetch('sssd_conf', {}).fetch('auth_domains', {}).fetch('domain', {})
+                domain_name = domain.fetch('domain_name', nil)
+                if enabled != 'yes' || daemon.nil? || domain_name.nil?
+                    log.info('legacy configuration is empty or disabled')
+                    return true
+                end
+                AuthConfInst.clear
+                AuthConfInst.sssd_lint_conf # make a basic config structure
+                AuthConfInst.sssd_enabled = true
+                AuthConfInst.sssd_pam = true
+                AuthConfInst.sssd_nss = ['passwd', 'group']
+                AuthConfInst.sssd_conf['sssd'] = daemon
+                domain.delete('domain_name')
+                AuthConfInst.sssd_conf['domain/' + domain_name] = domain
+                AuthConfInst.sssd_lint_conf # break "domains" and "services" into arrays
+            else
+                # Import JSON configuration from SLE 12 SP2
+                record = JSON.parse(exported['conf_json'])
+                AuthConfInst.sssd_import(record['sssd'])
+                AuthConfInst.ldap_import(record['ldap'])
+                AuthConfInst.krb_import(record['krb'])
+                AuthConfInst.aux_import(record['aux'])
+                AuthConfInst.ad_import(record['ad'])
+                AuthConfInst.autoyast_modified = true
+            end
+
             return true
         end
 

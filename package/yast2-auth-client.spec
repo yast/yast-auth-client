@@ -17,7 +17,7 @@
 
 
 Name:           yast2-auth-client
-Version:        3.3.7
+Version:        3.3.8
 Release:        0
 Group:          System/YaST
 License:        GPL-2.0
@@ -32,6 +32,7 @@ Requires:       yast2
 Requires:       yast2 >= 2.21.22
 Requires:       yast2-pam >= 2.20.0
 Requires:       yast2-ruby-bindings >= 1.0.0
+Requires:       net-tools
 BuildRequires:  yast2
 BuildRequires:  yast2-devtools >= 3.0.6
 BuildRequires:  rubygem(yast-rake)

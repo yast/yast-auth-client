@@ -372,7 +372,7 @@ module Auth
             # Calculate package requirements
             pkgs = []
             if @sssd_enabled || @sssd_pam || @sssd_nss.any?
-                pkgs += ['sssd']
+                pkgs += ['sssd', 'sssd-tools']
                 # Only install the required provider packages. By convention, they are named 'sssd-*'.
                 domain_providers = ['ad', 'ldap', 'ipa', 'proxy', 'krb5']
                 @sssd_conf.each { |_sect_name, conf|
@@ -393,11 +393,13 @@ module Auth
                 end
             end
             # Write SSSD config file and correct its permission and ownerships
-            sssd_conf = File.new('/etc/sssd/sssd.conf', 'w')
-            sssd_conf.chmod(0600)
-            sssd_conf.chown(0, 0)
-            sssd_conf.write(sssd_make_conf)
-            sssd_conf.close
+            if File.exists?('/etc/sssd')
+                sssd_conf = File.new('/etc/sssd/sssd.conf', 'w')
+                sssd_conf.chmod(0600)
+                sssd_conf.chown(0, 0)
+                sssd_conf.write(sssd_make_conf)
+                sssd_conf.close
+            end
             # Save PAM/NSS/daemon status
             if @sssd_pam
                 Yast::Pam.Add('sss')
@@ -865,12 +867,17 @@ module Auth
             return out
         end
 
-        # Call package installer to install Samba if it has not yet been installed.
+        # Call package installer to install Samba and Kerberos if it has not yet been installed.
         def ad_install_samba
-            if Yast::Package.Installed('samba') || Yast::Package.DoInstall(['samba'])
+            pkgs = ['samba-client', 'krb5-client']
+            pkgs.delete_if { |name| Yast::Package.Installed(name) }
+            if pkgs.length == 0
                 return true
             end
-            Yast::Report.Error(_('Failed to install Samba, required by Active Directory operations.'))
+            if Yast::Package.DoInstall(['samba-client', 'krb5-client'])
+                return true
+            end
+            Yast::Report.Error(_('Failed to install Samba & Kerberos required by Active Directory operations.'))
             return false
         end
 
@@ -901,11 +908,9 @@ module Auth
             end
             smb_conf = ad_create_tmp_smb_conf(ad_domain_name, ad_get_workgroup_name(ad_domain_name))
             _, status = Open3.capture2("net -s #{smb_conf.path} ads testjoin")
-
             ad_has_computer = status.exitstatus == 0
             klist, _ = Open3.capture2("klist -k")
             kerberos_has_key = klist.split("\n").any?{ |line| /#{Socket.gethostname}.*#{ad_domain_name.downcase}/.match(line.downcase) }
-
             smb_conf.unlink
             return [ad_has_computer, kerberos_has_key]
         end
@@ -939,6 +944,9 @@ module Auth
             if @autoyast_editor_mode || @ad_domain.to_s == '' || @ad_user.to_s == '' || @ad_pass.to_s == ''
                 return [true, _('Nothing is done because AD is not configured')]
             end
+            if !ad_install_samba
+                return [false, _('Failed to install Samba')]
+            end
             # Configure Kerberos
             kdc_host_name = ad_find_kdc(@ad_domain)
             if kdc_host_name == ''
@@ -949,9 +957,6 @@ module Auth
             krb_apply
 
             # Create a temporary smb.conf to join this computer
-            if !ad_install_samba
-                return [false, _('Failed to install Samba')]
-            end
             smb_conf = ad_create_tmp_smb_conf(@ad_domain, ad_get_workgroup_name(@ad_domain))
             output = ''
             exitstatus = 0
@@ -1010,7 +1015,7 @@ module Auth
         def calc_pkg_deps
             pkgs = []
             if @sssd_enabled || @sssd_pam || @sssd_nss.any?
-                pkgs += ['sssd']
+                pkgs += ['sssd', 'sssd-tools']
                 # Only install the required provider packages. By convention, they are named 'sssd-*'.
                 domain_providers = ['ad', 'ldap', 'ipa', 'proxy', 'krb5']
                 @sssd_conf.each { |_sect_name, conf|
@@ -1041,6 +1046,9 @@ module Auth
             end
             if @nscd_enabled
                 pkgs += ['nscd']
+            end
+            if @ad_domain.to_s != ''
+                pkgs += ['samba-client', 'krb5-client']
             end
             return pkgs
         end
