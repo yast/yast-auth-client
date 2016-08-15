@@ -17,7 +17,7 @@
 
 
 Name:           yast2-auth-client
-Version:        3.3.8
+Version:        3.3.9
 Release:        0
 Group:          System/YaST
 License:        GPL-2.0

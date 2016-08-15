@@ -596,7 +596,7 @@ module SSSD
                         },
                         "ldap_sudo_search_base" => {
                             "type" => "string",
-                            "def"  => "",
+                            "def"  => "the value of ldap_search_base",
                             "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
                             "desc" => _("The default base DN to use for performing LDAP sudo rules.")
                         },
@@ -1090,6 +1090,30 @@ module SSSD
                             "type" => "boolean",
                             "def"  => "false",
                             "desc" => _("Allows to retain local users as members of an LDAP group for servers that use the RFC2307 schema.")
+                        },
+                        "ldap_autofs_search_base" => {
+                            "type" => "string",
+                            "def"  => "the value of ldap_search_base",
+                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                        },
+                        "ldap_group_search_base" => {
+                            "type" => "string",
+                            "def"  => "the value of ldap_search_base",
+                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                        },
+                        "ldap_netgroup_search_base" => {
+                            "type" => "string",
+                            "def"  => "the value of ldap_search_base",
+                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                        },
+                        "ldap_user_search_base" => {
+                            "type" => "string",
+                            "def"  => "the value of ldap_search_base",
+                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
                         },
                         },
                    # The kerberos domain section

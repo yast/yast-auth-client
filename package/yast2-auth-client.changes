@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Aug  3 09:45:49 UTC 2016 - ralf.habacker@freenet.de
+
+- Add missing search_base related attributes
+  to auth-client ldap domain. (bsc#991855)
+  Bump version to 3.3.9.
+
+-------------------------------------------------------------------
 Wed Jul 13 12:14:39 UTC 2016 - hguo@suse.com
 
 - Fix bsc#986281:
