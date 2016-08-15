@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Aug  3 09:45:49 UTC 2016 - ralf.habacker@freenet.de
+
+- Add missing search_base related attributes
+  to auth-client ldap domain. (bnc#991855)
+- 3.1.22
+
+-------------------------------------------------------------------
 Tue Sep 16 12:25:58 UTC 2014 - varkoly@suse.com
 
 - Fix frame description.
