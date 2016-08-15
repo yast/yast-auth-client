@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Aug 15 13:05:03 UTC 2016 - hguo@suse.com
+
+- Continue with bsc#991855 by removing unnecessary default values.
+  Add previously missing autofs parameters as well.
+  Bump version to 3.3.10.
+
+-------------------------------------------------------------------
 Wed Aug  3 09:45:49 UTC 2016 - ralf.habacker@freenet.de
 
 - Add missing search_base related attributes

@@ -590,36 +590,30 @@ module SSSD
                         },
                         "ldap_uri" => {
                             "type" => "string",
-                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "important" => true,
                             "desc" => _("URIs (ldap://) of LDAP servers (comma separated)")
                         },
                         "ldap_sudo_search_base" => {
                             "type" => "string",
-                            "def"  => "the value of ldap_search_base",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("The default base DN to use for performing LDAP sudo rules.")
+                            "def"  => "",
+                            "desc" => _("An optional base DN to restrict LDAP sudo-rule searches. The default value is ldap_search_base.")
                         },
                         "ldap_backup_uri" => {
                             "type" => "string",
-                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference.")
                         },
                         "ldap_chpass_uri" => {
                             "type" => "string",
                             "def"  => "",
-                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference to change the password of a user.")
                         },
                         "ldap_chpass_backup_uri" => {
                             "type" => "string",
                             "def"  => "",
-                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference to change the password of a user.")
                         },
                         "ldap_search_base" => {
                             "type" => "string",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
                             "important" => true,
                             "desc" => _("Base DN for LDAP search")
                         },
@@ -921,9 +915,8 @@ module SSSD
                         },
                         "ldap_service_search_base" => {
                             "type" => "string",
-                            "def"  => "the value of ldap_search_base",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP service searches for this attribute type. The default value is ldap_search_base.")
                         },
                         "ldap_search_timeout" => {
                             "type" => "int",
@@ -1093,27 +1086,48 @@ module SSSD
                         },
                         "ldap_autofs_search_base" => {
                             "type" => "string",
-                            "def"  => "the value of ldap_search_base",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP autofs searches for this attribute type. The default value is ldap_search_base.")
                         },
                         "ldap_group_search_base" => {
                             "type" => "string",
-                            "def"  => "the value of ldap_search_base",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP group searches for this attribute type. The default value is ldap_search_base.")
                         },
                         "ldap_netgroup_search_base" => {
                             "type" => "string",
-                            "def"  => "the value of ldap_search_base",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP netgroup searches for this attribute type. The default value is ldap_search_base.")
                         },
                         "ldap_user_search_base" => {
                             "type" => "string",
-                            "def"  => "the value of ldap_search_base",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP user searches for this attribute type. The default value is ldap_search_base.")
+                        },
+                        "ldap_autofs_map_object_class" => {
+                            "type" => "string",
+                            "def"  => "nisMap",
+                            "desc" => _("The object class of an automount map entry in LDAP.")
+                        },
+                        "ldap_autofs_map_name" => {
+                            "type" => "string",
+                            "def"  => "nisMapName",
+                            "desc" => _("The name of an automount map entry in LDAP.")
+                        },
+                        "ldap_autofs_entry_object_class" => {
+                            "type" => "string",
+                            "def"  => "nisObject",
+                            "desc" => _("The object class of an automount map entry in LDAP.")
+                        },
+                        "ldap_autofs_entry_key" => {
+                            "type" => "string",
+                            "def"  => "cn",
+                            "desc" => _("The key of an automount entry in LDAP. The entry usually corresponds to a mount point.")
+                        },
+                        "ldap_autofs_entry_value" => {
+                            "type" => "string",
+                            "def"  => "nisMapEntry",
+                            "desc" => _("The key of an automount entry in LDAP. The entry usually corresponds to a mount point.")
                         },
                         },
                    # The kerberos domain section
