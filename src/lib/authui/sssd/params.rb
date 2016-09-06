@@ -1231,11 +1231,11 @@ module SSSD
                         "ad_server" => {
                             "type" => "string",
                             "important" => true,
-                            "desc" => _("IP addresses or host names of AD servers (comma separated)")
+                            "desc" => _("Host names of AD servers (comma separated).")
                         },
                         "ad_backup_server" => {
                             "type" => "string",
-                            "desc" => _("The comma-separated list of IP addresses or hostnames of the AD servers to which SSSD should connect in order of preference.")
+                            "desc" => _("Host names of backup AD servers (comma separated).")
                         },
                         "ad_hostname" => {
                             "type" => "string",

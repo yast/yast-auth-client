@@ -36,7 +36,7 @@ module Auth
 
         attr_accessor(:krb_conf, :krb_pam, :ldap_conf, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
         attr_accessor(:autofs_enabled, :nscd_enabled, :mkhomedir_pam)
-        attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :autoyast_editor_mode, :autoyast_modified)
+        attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :ad_update_dns, :autoyast_editor_mode, :autoyast_modified)
 
         # Clear all configuration objects.
         def clear
@@ -67,6 +67,7 @@ module Auth
             @ad_user = ''
             @ad_ou = ''
             @ad_pass = ''
+            @ad_update_dns = true
             @ad_overwrite_smb_conf = false
         end
 
@@ -915,17 +916,10 @@ module Auth
             return [ad_has_computer, kerberos_has_key]
         end
 
-        # Memorise AD enrollment parameters.
-        def ad_set_enrollment_params(domain_name, username, slash_delimited_orgunit, password)
-            @ad_domain = domain_name
-            @ad_user = username
-            @ad_ou = slash_delimited_orgunit
-            @ad_pass = password
-        end
-
         # Return AD enrollment configuration.
         def ad_export
-            return {'domain' => @ad_domain, 'user' => @ad_user, 'ou' => @ad_ou, 'pass' => @ad_pass, 'overwrite_smb_conf' => @ad_overwrite_smb_conf}
+            return {'domain' => @ad_domain, 'user' => @ad_user, 'ou' => @ad_ou, 'pass' => @ad_pass,
+                     'overwrite_smb_conf' => @ad_overwrite_smb_conf, 'update_dns' => @ad_update_dns}
         end
 
         # Set configuration for AD enrollment from exported objects.
@@ -935,6 +929,7 @@ module Auth
             @ad_ou = exported_conf['ou']
             @ad_pass= exported_conf['pass']
             @ad_overwrite_smb_conf = exported_conf['overwrite_smb_conf']
+            @ad_update_dns = exported_conf['update_dns']
         end
 
         # Run "net ads join". Return tuple of boolean success status and command output.
@@ -961,8 +956,11 @@ module Auth
             output = ''
             exitstatus = 0
             ou_param = @ad_ou.to_s == '' ? '' : "createcomputer=#{@ad_ou}"
-
-            Open3.popen2("net -s #{smb_conf.path} ads join #{ou_param} -U #{@ad_user}"){ |stdin, stdout, control|
+            netcmd = "net -s #{smb_conf.path} ads join #{ou_param} -U #{@ad_user}"
+            if !@ad_update_dns
+                netcmd += ' --no-dns-updates'
+            end
+            Open3.popen2(netcmd){ |stdin, stdout, control|
                 stdin.print(@ad_pass + "\n")
                 stdin.close
                 output = stdout.read
@@ -1005,6 +1003,7 @@ module Auth
 
         # Read all authentication configuration items: kerberos, LDAP, pam and auxiliary daemons, and SSSD.
         def read_all
+            clear
             krb_read
             ldap_read
             aux_read

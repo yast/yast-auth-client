@@ -224,6 +224,7 @@ module SSSD
                         AuthConfInst.sssd_conf['sssd']['domains'].delete_if{|a| a == sect_name.sub(/^domain\//, '')}
 
                         # Re-render to display default section SSSD
+                        UIData.instance.switch_section('sssd')
                         render_section_tree
                         render_section_conf
 

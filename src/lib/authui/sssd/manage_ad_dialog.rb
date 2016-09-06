@@ -68,6 +68,7 @@ module SSSD
                     Left(Label(_('Enter AD user credentials (e.g. Administrator) to enroll or re-enroll this computer:'))),
                     InputField(Id(:username), Opt(:hstretch), _('Username'), AuthConfInst.ad_user),
                     Password(Id(:password), Opt(:hstretch), _('Password'), AuthConfInst.ad_pass),
+                    CheckBox(Id(:update_dns), Opt(:hstretch), _('Update AD\'s DNS records as well'), AuthConfInst.ad_update_dns),
                     InputField(Id(:orgunit), Opt(:hstretch), _('Optional Organisation Unit such as "Headquarter/HR/BuildingA"'), AuthConfInst.ad_ou),
                     Left(CheckBox(Id(:overwrite_smb_conf), _('Overwrite Samba configuration to work with this AD'), AuthConfInst.ad_overwrite_smb_conf)),
             )
@@ -139,6 +140,7 @@ module SSSD
                 AuthConfInst.ad_user = username
                 AuthConfInst.ad_ou = orgunit
                 AuthConfInst.ad_pass = password
+                AuthConfInst.ad_update_dns = UI.QueryWidget(Id(:update_dns), :Value)
                 AuthConfInst.ad_overwrite_smb_conf = overwrite_smb_conf
                 if AuthConfInst.autoyast_editor_mode
                     Popup.Message(_('AD enrollment details have been saved for AutoYast. Please keep in mind that AD user password is saved in plain text.'))

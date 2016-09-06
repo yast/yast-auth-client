@@ -37,11 +37,6 @@ module LdapKrb
 
         def create_dialog
             super
-            if AuthConfInst.ldap_conf['bind_policy'] == 'soft'
-                UI.ChangeWidget(Id(:ldap_bind_policy), :CurrentButton, :ldap_bind_policy_soft)
-            else
-                UI.ChangeWidget(Id(:ldap_bind_policy), :CurrentButton, :ldap_bind_policy_hard)
-            end
         end
 
         def dialog_options
@@ -49,11 +44,8 @@ module LdapKrb
         end
 
         def dialog_content
+            # The user cannot possibly understand the implication of 0 in search timeout if the user uses YaST
             MinWidth(80, VBox(
-                Frame(_('In Case Of Connection Outage:'), RadioButtonGroup(Id(:ldap_bind_policy), VBox(
-                    Left(RadioButton(Id(:ldap_bind_policy_hard), _('Retry The Operation Endlessly'))),
-                    Left(RadioButton(Id(:ldap_bind_policy_soft), _('Do Not Retry And Fail The Operation'))),
-                ))),
                 IntField(Id(:ldap_bind_timelimit), Opt(:hstretch), _('Timeout for Bind Operations in Seconds'), 1, 600,
                            (AuthConfInst.ldap_conf['bind_timelimit'].to_s == '' ? '30' : AuthConfInst.ldap_conf['bind_timelimit']).to_i),
                 IntField(Id(:ldap_timelimit), Opt(:hstretch), _('Timeout for Search Operations in Seconds'), 1, 600,
@@ -64,12 +56,8 @@ module LdapKrb
         end
 
         def finish_handler
-            case UI.QueryWidget(Id(:ldap_bind_policy), :CurrentButton)
-            when :ldap_bind_policy_hard
-                AuthConfInst.ldap_conf['bind_policy'] = 'hard'
-            when :ldap_bind_policy_soft
-                AuthConfInst.ldap_conf['bind_policy'] = 'soft'
-            end
+            # The user cannot possibly understand the implication of 'hard' policy if the user uses YaST
+            AuthConfInst.ldap_conf['bind_policy'] = 'soft'
             AuthConfInst.ldap_conf['bind_timelimit'] = UI.QueryWidget(Id(:ldap_bind_timelimit), :Value)
             AuthConfInst.ldap_conf['timelimit'] = UI.QueryWidget(Id(:ldap_timelimit), :Value)
             finish_dialog(:finish)

@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue Sep  6 12:32:42 UTC 2016 - hguo@suse.com
+
+- Fix an issue with UI layout after leaving a domain (bsc#997380).
+- Make DNS update optional for AD enrollment (bsc#991564).
+- Fix inaccurate description of ad_server parameter (bsc#996873).
+- Do not allow using hard bind policy in LDAP config (bsc#996538).
+  Bump version to 3.3.11.
+
+-------------------------------------------------------------------
 Mon Aug 15 13:05:03 UTC 2016 - hguo@suse.com
 
 - Continue with bsc#991855 by removing unnecessary default values.
