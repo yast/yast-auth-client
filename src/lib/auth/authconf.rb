@@ -72,6 +72,8 @@ module Auth
         end
 
         def initialize
+            textdomain "auth-client"
+
             Yast.import "Nsswitch"
             Yast.import "Pam"
             Yast.import "Service"
