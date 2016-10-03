@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Oct  3 12:11:27 UTC 2016 - igonzalezsosa@suse.com
+
+- Add missing textdomain declaration for localization (bsc#988374)
+- Bump version to 3.3.12
+
+-------------------------------------------------------------------
 Tue Sep  6 12:32:42 UTC 2016 - hguo@suse.com
 
 - Fix an issue with UI layout after leaving a domain (bsc#997380).
