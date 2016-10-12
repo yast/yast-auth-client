@@ -101,7 +101,7 @@ module Auth
                 ip_addresses = [resolvable_ip] unless resolvable_ip.empty?
             rescue SocketError
                 # Just get interface IPs
-                ip_addresses = Socket.getifaddrs.select{|iface| iface.addr.ip?}.map{|iface| iface.addr.ip_address}.select{|addr| !addr.start_with?('127.')}
+                ip_addresses = Socket.getifaddrs.select{|iface| iface.addr && iface.addr.ip?}.map{|iface| iface.addr.ip_address}.select{|addr| !addr.start_with?('127.')}
             end
             domain_name, status = Open3.capture2('dnsdomainname')
             if status.exitstatus != 0 || domain_name.strip == '(none)'
