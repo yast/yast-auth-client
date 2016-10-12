@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Oct 12 07:56:07 UTC 2016 - hguo@suse.com
+
+- Add a missing nil check in network fact reader.
+- Bump version to 3.3.13 for bsc#1004083.
+
+-------------------------------------------------------------------
 Tue Oct 11 12:09:49 UTC 2016 - hguo@suse.com
 
 - Change dialog return value to :next so that yast2-users will
