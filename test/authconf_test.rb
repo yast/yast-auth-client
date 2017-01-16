@@ -25,17 +25,14 @@ require 'yast/rspec'
 require 'pp'
 require 'auth/authconf'
 
-include Yast
-include Auth
-
-describe AuthConf do
+describe Auth::AuthConf do
     before(:all) do
         change_scr_root(File.expand_path('../authconf_chroot', __FILE__))
     end
     after(:all) do
         reset_scr_root
     end
-    authconf = AuthConfInst
+    authconf = Auth::AuthConfInst
 
     describe 'SSSD' do
         it 'Read, lint, and export SSSD configuration' do
@@ -398,7 +395,7 @@ module i/j/k.l:RESIDUAL
 
     describe 'Network facts' do
         it 'Read host name and network facts' do
-            facts = AuthConf.get_net_facts
+            facts = Auth::AuthConf.get_net_facts
             # No value can be nil
             expect(facts.any?{ |_k, v| v.nil? }).to eq(false)
             # There has to be at least one value that is present
