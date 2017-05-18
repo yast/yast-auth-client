@@ -217,7 +217,7 @@ module SSSD
                             Popup.Error(_("Please select a domain among the list."))
                             redo
                         end
-                        if !Popup.YesNo(_("Do you really wish to erase configuration for domain %s?" % sect_name))
+                        if !Popup.YesNo(_("Do you really wish to erase configuration for domain %s?") % sect_name)
                             redo
                         end
                         AuthConfInst.sssd_conf.delete(sect_name)
