@@ -986,7 +986,7 @@ module Auth
         # Return the PDC host name of the given AD domain via DNS lookup. If it cannot be found, return an empty string.
         def ad_find_pdc(ad_domain_name)
             begin
-                return Resolv::DNS.new.getresource("_ldap._tcp.pdc._msdcs.#{ad_domain_name}", Resolv::DNS::Resource::IN::SRV).target.to_s
+                return Resolv::DNS.new.getresource("_ldap._tcp.pdc._msdcs.#{ad_domain_name}".downcase, Resolv::DNS::Resource::IN::SRV).target.to_s
             rescue Resolv::ResolvError
                 return ''
             end
@@ -996,7 +996,7 @@ module Auth
         # Return the KDC host name of the given AD domain via DNS lookup. If it cannot be found, return an empty string.
         def ad_find_kdc(ad_domain_name)
             begin
-                return Resolv::DNS.new.getresource("_kerberos._tcp.dc._msdcs.#{ad_domain_name}", Resolv::DNS::Resource::IN::SRV).target.to_s
+                return Resolv::DNS.new.getresource("_kerberos._tcp.dc._msdcs.#{ad_domain_name}".downcase, Resolv::DNS::Resource::IN::SRV).target.to_s
             rescue Resolv::ResolvError
                 return ''
             end
