@@ -571,7 +571,7 @@ module Auth
             if exitstatus == 0
                 return ''
             end
-            return "#{_('ERROR: ')} #{out}\n#{errout}"
+            return _("ERROR: ") + "#{out}\n#{errout}"
         end
 
         # Parse and set Kerberos configuration
