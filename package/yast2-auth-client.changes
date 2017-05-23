@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Tue May 23 13:00:19 UTC 2017 - hguo@suse.com
+
+- Bump to version 3.3.15 to fix four issues:
+  * Correctly install sss name databases even in the presence of
+    special NSS database directives (bsc#1024841).
+  * Fix missing translation of "Leave Domain" button (bsc#1038291).
+  * Do AD's DNS lookup in lower case (bsc#1038720).
+  * Understand XML data exported by SLES 12 SP0 (bsc#1040393).
+
+-------------------------------------------------------------------
 Fri May 19 11:41:59 UTC 2017 - lslezak@suse.cz
 
 - Translation fix: Ruby gettext cannot extract translatable texts
