@@ -121,9 +121,22 @@ module Auth
 
         # Enable the specified NSS database.
         def nss_enable_module(db_name, module_name)
-            names = Yast::Nsswitch.ReadDb(db_name)
-            return if names.include?(module_name)
-            Yast::Nsswitch.WriteDb(db_name, names + [module_name])
+            existing_names = Yast::Nsswitch.ReadDb(db_name)
+            return if existing_names.include?(module_name)
+            # Place new module in front of first conditional module
+            new_names = []
+            new_module_is_placed = false
+            existing_names.each { |name|
+                if name[0] == '['
+                    new_names << module_name
+                    new_module_is_placed = true
+                end
+                new_names << name
+            }
+            if !new_module_is_placed
+                new_names << module_name
+            end
+            Yast::Nsswitch.WriteDb(db_name, new_names)
             Yast::Nsswitch.Write
         end
 
