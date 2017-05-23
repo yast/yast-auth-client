@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue May 23 13:00:19 UTC 2017 - hguo@suse.com
+
+- Bump to version 3.3.14 to fix three issues:
+  * Correctly install sss name databases even in the presence of
+    special NSS database directives (bsc#1024841).
+  * Fix missing translation of "Leave Domain" button (bsc#1038291).
+  * Do AD's DNS lookup in lower case (bsc#1038720).
+
+-------------------------------------------------------------------
 Wed Oct 12 07:56:07 UTC 2016 - hguo@suse.com
 
 - Add a missing nil check in network fact reader.
