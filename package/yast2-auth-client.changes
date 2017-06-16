@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Fri Jun 16 13:47:40 UTC 2017 - hguo@suse.com
+
+- Bump to version 3.3.16 to fix minor issues across UI and backend:
+  * Fix misspelt kerberos option name "noaddresses".
+  * Improve UI captions, consistency.
+  * Introduce module name "auth" as an alias to "auth-client".
+  for bsc#1043211, bsc#1043184, bsc#1032733.
+
+-------------------------------------------------------------------
 Tue May 23 13:00:19 UTC 2017 - hguo@suse.com
 
 - Bump to version 3.3.15 to fix four issues:
