@@ -413,7 +413,7 @@ module LdapKrb
                     Top(VBox(
                         Left(CheckBox(Id(:krb_dns_lookup_realm), _('Use DNS TXT Record to Discover Realms'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'dns_lookup_realm'], false))),
-                        Left(CheckBox(Id(:krb_dns_lookup_kdc), _('Use DNS SVC record to Discover KDC servers'),
+                        Left(CheckBox(Id(:krb_dns_lookup_kdc), _('Use DNS SRV record to Discover KDC servers'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'dns_lookup_kdc'], false))),
                         VSpacing(1.0),
                         Left(CheckBox(Id(:krb_allow_weak_crypto), _('Allow Insecure Encryption (Windows NT)'),
