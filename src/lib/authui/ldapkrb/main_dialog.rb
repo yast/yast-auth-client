@@ -320,7 +320,7 @@ module LdapKrb
             end
             AuthConfInst.krb_conf['libdefaults']['forwardable'] = UI.QueryWidget(Id(:krb_forwardable), :Value)
             AuthConfInst.krb_conf['libdefaults']['proxiable'] = UI.QueryWidget(Id(:krb_proxiable), :Value)
-            AuthConfInst.krb_conf['libdefaults']['noaddress'] = UI.QueryWidget(Id(:krb_noaddress), :Value)
+            AuthConfInst.krb_conf['libdefaults']['noaddresses'] = UI.QueryWidget(Id(:krb_noaddresses), :Value)
             AuthConfInst.krb_conf['libdefaults']['dns_lookup_realm'] = UI.QueryWidget(Id(:krb_dns_lookup_realm), :Value)
             AuthConfInst.krb_conf['libdefaults']['dns_lookup_kdc'] = UI.QueryWidget(Id(:krb_dns_lookup_kdc), :Value)
             AuthConfInst.krb_conf['libdefaults']['allow_weak_crypto'] = UI.QueryWidget(Id(:krb_allow_weak_crypto), :Value)
@@ -422,8 +422,8 @@ module LdapKrb
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'forwardable'], false))),
                         Left(CheckBox(Id(:krb_proxiable), _('Allow Kerberos-Enabled Services to Take on The Identity Of a User'),
                             AuthConfInst.krb_conf_get_bool(['libdefaults', 'proxiable'], false))),
-                        Left(CheckBox(Id(:krb_noaddress), _('Issue Address-Less Tickets for Computers Behind NAT'),
-                            AuthConfInst.krb_conf_get_bool(['libdefaults', 'noaddress'], false))),
+                        Left(CheckBox(Id(:krb_noaddresses), _('Issue Address-Less Tickets for Computers Behind NAT'),
+                            AuthConfInst.krb_conf_get_bool(['libdefaults', 'noaddresses'], false))),
                         VSpacing(1.0),
                         Left(PushButton(Id(:krb_extended_opts), _('Extended Options'))),
                     )),
