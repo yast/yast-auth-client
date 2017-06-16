@@ -88,7 +88,7 @@ module SSSD
                                 VSpacing(0.2),
                                 Tree(Id(:section_tree), Opt(:immediate), "", []),
                                 Left(HBox(
-                                    PushButton(Id(:new_domain), _("Join Domain")),
+                                    PushButton(Id(:new_domain), _("Add Domain")),
                                     PushButton(Id(:del_domain), _("Leave Domain")),
                                     PushButton(Id(:clear_cache), _("Clear Domain Cache"))
                                 )),
