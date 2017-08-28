@@ -194,6 +194,7 @@ module i/j/k.l:RESIDUAL
 #       default_realm = EXAMPLE.COM 
         default_realm = ABC.ZZZ
     forwardable = true
+    default_ccache_name = FILE:/tmp/krb5cc_%{uid}
 
 [realms]
 #       EXAMPLE.COM = {
@@ -249,7 +250,7 @@ suse.de = ABC.ZZZ
 ')
             expect(authconf.krb_export).to eq("conf"=>{
                 "include"=>["include a/b/c.d", "includedir e/f/g.h", "module i/j/k.l:RESIDUAL"],
-                    "libdefaults"=>{"default_realm"=>"ABC.ZZZ", "forwardable"=>"true"},
+                    "libdefaults"=>{"default_realm"=>"ABC.ZZZ", "forwardable"=>"true", "default_ccache_name"=>"FILE:/tmp/krb5cc_%{uid}"},
                     "realms"=>{
                         "ABC.ZZZ"=>{
                             "kdc"=>["howie.suse.de", "backup.howie.suse.de"],
@@ -286,6 +287,7 @@ module i/j/k.l:RESIDUAL
 [libdefaults]
     default_realm = ABC.ZZZ
     forwardable = true
+    default_ccache_name = FILE:/tmp/krb5cc_%{uid}
 
 [domain_realms]
     .suse.de = ABC.ZZZ
