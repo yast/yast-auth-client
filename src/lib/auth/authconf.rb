@@ -169,7 +169,7 @@ module Auth
         # Be extra careful with making changes.
         # Return replacement lines after adjustments.
         def pam_fix_auth(original_lines)
-            sufficient_auth = ['pam_unix.so', 'pam_sss.so', 'pam_ldap.so', 'pam_krb5.so']
+            sufficient_auth = ['pam_unix.so', 'pam_unix2.so', 'pam_sss.so', 'pam_ldap.so', 'pam_krb5.so']
             ret = []
             original_lines.each { |line|
                 line.strip!
@@ -209,7 +209,7 @@ module Auth
                 line.strip!
                 columns = line.split(/\s+/)
                 if !/\s*#/.match(line) && columns.length >= 3
-                    if columns[2] == 'pam_unix.so'
+                    if columns[2] == 'pam_unix.so' || columns[2] == 'pam_unix2.so'
                         ret.push(columns.join('    '))
                         ret.push('account    sufficient    pam_localuser.so')
                     elsif columns[2] != 'pam_localuser.so'

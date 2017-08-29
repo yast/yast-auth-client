@@ -1,9 +1,11 @@
 -------------------------------------------------------------------
-Mon Aug 28 12:17:21 UTC 2017 - hguo@suse.com
+Tue Aug 29 13:54:21 UTC 2017 - hguo@suse.com
 
-- Bump to version 3.3.17 to fix a kerberos config file parser that
-  would mistakenly remove default_ccache_name key.
-  (bsc#1054436)
+- Bump to version 3.3.17 to fix two issues:
+  * Mistake in kerberos config file parser removes default_ccache_name
+    key (bsc#1054436).
+  * PAM configuration did not allow local user login if pam_unix2 is
+    in use (bsc#1056158).
 
 -------------------------------------------------------------------
 Fri Jun 16 13:47:40 UTC 2017 - hguo@suse.com

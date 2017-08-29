@@ -427,6 +427,29 @@ auth    required        pam_ldap.so     use_first_pass
                 "auth    required    pam_deny.so"
             ]
         end
+
+        it 'Fix pam authentication configuration (unix2)' do
+            expect(authconf.pam_fix_auth("
+# comment
+auth    required        pam_env.so
+auth    optional        pam_gnome_keyring.so
+auth    sufficient      pam_unix2.so     try_first_pass
+auth    sufficient      pam_krb5.so     use_first_pass
+auth    sufficient      pam_sss.so      use_first_pass
+auth    required        pam_ldap.so     use_first_pass
+".split("\n"))).to eq [
+                "",
+                "# comment",
+                "auth    required        pam_env.so",
+                "auth    optional        pam_gnome_keyring.so",
+                "auth    sufficient    pam_unix2.so    try_first_pass",
+                "auth    sufficient    pam_krb5.so    use_first_pass",
+                "auth    sufficient    pam_sss.so    use_first_pass",
+                "auth    sufficient    pam_ldap.so    use_first_pass",
+                "auth    required    pam_deny.so"
+            ]
+        end
+
         it 'Fix pam account configuration' do
             expect(authconf.pam_fix_account("
 # comment
@@ -439,6 +462,25 @@ account required        pam_ldap.so     use_first_pass
                 "",
                 "# comment",
                 "account    requisite    pam_unix.so    try_first_pass",
+                "account    sufficient    pam_localuser.so",
+                "account required        pam_krb5.so     use_first_pass",
+                "account sufficient      pam_sss.so      use_first_pass",
+                "account required        pam_ldap.so     use_first_pass"
+            ]
+        end
+
+        it 'Fix pam account configuration (unix2)' do
+            expect(authconf.pam_fix_account("
+# comment
+account requisite       pam_unix2.so     try_first_pass
+account required        pam_krb5.so     use_first_pass
+account sufficient      pam_localuser.so
+account sufficient      pam_sss.so      use_first_pass
+account required        pam_ldap.so     use_first_pass
+".split("\n"))).to eq [
+                "",
+                "# comment",
+                "account    requisite    pam_unix2.so    try_first_pass",
                 "account    sufficient    pam_localuser.so",
                 "account required        pam_krb5.so     use_first_pass",
                 "account sufficient      pam_sss.so      use_first_pass",
