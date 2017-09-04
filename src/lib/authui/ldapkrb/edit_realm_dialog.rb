@@ -57,9 +57,9 @@ module LdapKrb
                 VSpacing(1.0),
                 InputField(Id(:admin_server), Opt(:hstretch), _('Host Name of Administration Server (Optional)'),
                     AuthConfInst.krb_conf_get(['realms', @realm_name, 'admin_server'], '')),
-                InputField(Id(:master_kdc), Opt(:hstretch), _('Host Name of Master Key Distribution Server (Optional)'),
+                InputField(Id(:master_kdc), Opt(:hstretch), _('Host Name of Master Key Distribution Center (Optional)'),
                     AuthConfInst.krb_conf_get(['realms', @realm_name, 'master_kdc'], '')),
-                SelectionBox(Id(:kdc), Opt(:hstretch), _('Key Distribution Centres (Optional If Auto-Discovery via DNS is Enabled)'),
+                SelectionBox(Id(:kdc), Opt(:hstretch), _('Key Distribution Centers (Optional If Auto-Discovery via DNS is Enabled)'),
                     AuthConfInst.krb_conf_get(['realms', @realm_name, 'kdc'], [])),
                 Left(HBox(PushButton(Id(:kdc_add), Label.AddButton), PushButton(Id(:kdc_remove), Label.DeleteButton))),
                 VSpacing(1.0),
@@ -99,7 +99,7 @@ module LdapKrb
 
         # Add an auth_to_local
         def a2l_add_handler
-            new_a2l = GenericInputDialog.new(_('Please type in the auth_to_local rule:'), '').run
+            new_a2l = GenericInputDialog.new(_('Please type the new rule string (e.g. "RULE:[2:$1](johndoe)s/^.*$/guest/")'), '').run
             if !new_a2l.nil?
                 UI.ChangeWidget(Id(:auth_to_local), :Items, UI.QueryWidget(Id(:auth_to_local), :Items) + [new_a2l])
             end
