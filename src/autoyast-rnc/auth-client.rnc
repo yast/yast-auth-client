@@ -1,0 +1,5 @@
+default namespace = "http://www.suse.com/1.0/yast2ns"
+
+auth-client = element auth-client {
+    element conf_json  { text }?
+}

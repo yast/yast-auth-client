@@ -11,6 +11,7 @@ X-SuSE-YaST-RootOnly=true
 X-SuSE-YaST-AutoInst=all
 X-SuSE-YaST-AutoInstResource=auth-client
 X-SuSE-YaST-AutoInstClonable=true
+X-SuSE-YaST-AutoInstSchema=auth-client.rnc
 X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,kerberos,krb,krb5,windows,microsoft,ad,activedirectory
 
 Icon=yast-kerberos
