@@ -4,19 +4,18 @@ Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
 
 X-KDE-ModuleType=Library
 X-KDE-HasReadOnlyMode=true
-X-SuSE-YaST-Call=auth-client
+X-SuSE-YaST-Call=ldapkrb
 
 X-SuSE-YaST-Group=Net_advanced
 X-SuSE-YaST-RootOnly=true
 X-SuSE-YaST-AutoInst=all
 X-SuSE-YaST-AutoInstResource=auth-client
 X-SuSE-YaST-AutoInstClonable=true
-X-SuSE-YaST-AutoInstSchema=auth-client.rnc
 X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,kerberos,krb,krb5,windows,microsoft,ad,activedirectory
 
 Icon=yast-kerberos
-Exec=xdg-su -c "/sbin/yast2 auth-client"
+Exec=xdg-su -c "/sbin/yast2 ldapkrb"
 
-Name=User Logon Management
-GenericName=User Logon Management
+Name=LDAP and Kerberos Client
+GenericName=LDAP And Kerberos Client
 StartupNotify=true

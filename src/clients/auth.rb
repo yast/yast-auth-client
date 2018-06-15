@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -17,7 +17,8 @@
 # ------------------------------------------------------------------------------
 
 # Module:       Configure system-wide authentication mechanisms via SSSD
-# Summary:      Invoke main dialog and allow configuring SSSD
+# Summary:      Invoke main dialog and allow configuring SSSD, this is an alias of
+#               less appropriately named "auth-client".
 # Authors:      Howard Guo <hguo@suse.com>
 
 require 'auth/authconf'

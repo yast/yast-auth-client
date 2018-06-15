@@ -1,62 +1,149 @@
 # encoding: utf-8
 
-# File: include/auth-client/sssd-parameters.rb
-# Package:      Configuration of auth-client
-# Summary:      The sssd.conf parameters
-# Authors:      Peter Varkoly <varkoly@suse.de>
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
 #
-module Yast
-  module AuthClientSssdParametersInclude
-    def initialize_auth_client_sssd_parameters(include_target)
-        textdomain "auth-client"
-        @params = {
-                   #Define Global Parameters
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+
+require "yast"
+
+Yast.import "UI"
+
+module SSSD
+    # A database of SSSD configuration parameter names, type, default, etc.
+    class Params
+        include Singleton
+        include Yast::UIShortcuts
+        include Yast::I18n
+        include Yast::Logger
+
+        def initialize
+            textdomain "auth-client"
+            @all_params = Hash[]
+            init_params
+        end
+
+        # Return all parameter descriptions, categorised by section type.
+        def all_params
+            return @all_params
+        end
+
+        # Return the parameter description, type, default value, is_required, is_important, section name, and value choices.
+        def get_by_name(name)
+            sect_defi = @all_params.find(lambda{ [nil, Hash[]] }) { |_sect, defi| defi.key? name }
+            defi = sect_defi[1].fetch(name, Hash[])
+            # Parameter attributes:
+            # desc - Help text for the parameter.
+            # type - Data type (boolean, string, int).
+            # vals - Limited value choices.
+            # def  - Default value (or default value choice).
+            # req  - Value must be customised. Cannot be deleted.
+            # sect - Name of the category the parameter belongs to.
+            # important - Should be customised when section is created. May be deleted with caution.
+            return Hash[
+                "desc", defi["desc"] && defi["desc"] || "",
+                "type", defi["type"] && defi["type"] || "string",
+                "vals", defi["vals"] && defi["vals"] || [],
+                "def",  defi["def"]  && defi["def"]  || "",
+                "req",  defi["req"]  && defi["req"]  || false,
+                "important", defi["important"]  && defi["important"]  || false,
+                "no_init_customisation", defi["no_init_customisation"]  && defi["no_init_customisation"]  || false,
+                "sect", sect_defi[0]
+            ]
+        end
+
+        # Return true only if the parameter is mandatory in the context of the specified section (Not category).
+        def is_required?(sect_name, param_name)
+            param_def = get_by_name(param_name)
+            return param_def["req"] && (param_def["sect"] == "domain" || param_def["sect"] == sect_name)
+        end
+
+        # Return all parameter details that are customisable for the specified category.
+        def get_by_category(category_name)
+            defs = @all_params.fetch(category_name, Hash[]).keys.map { |pname| [pname, get_by_name(pname)] }
+            return Hash[[*defs]]
+        end
+
+        # Return all parameter details that are customisable for every domain.
+        def get_common_domain_params
+            return get_by_category("domain")
+        end
+
+        # Return all parameter details that are customisable for every service.
+        def get_common_service_params
+            return get_by_category("services")
+        end
+
+        # Return all parameter details that are customisable for the specified ID/authentication provider.
+        def get_by_provider(provider_name)
+            defs = get_by_category(provider_name)
+            if provider_name == "ipa" || provider_name == "ad"
+                defs.merge!(get_by_category("ldap"))
+                defs.merge!(get_by_category("krb5"))
+            end
+            return defs
+        end
+
+    private
+
+        def init_params
+            @all_params = {
+                   # Define Global Parameters
+                   # Omit 'services' and 'domains' from section [sssd], because they are never customised directly by the end-user.
                    "sssd" => {
                         "config_file_version" => {
                             "type" => "int",
-                            "desc" => _("Indicates what is the syntax of the config file.")
-                        },
-                        "services" => {
-                            "type" => "string",
-                            "desc" => _("Comma separated list of services that are started when sssd itself starts.")
+                            "def" => 2,
+                            "vals" => "2",
+                            "req" => true,
+                            "desc" => _("Version of configuration file syntax (1 or 2)")
                         },
                         "reconnection_retries" => {
                             "type" => "int",
                             "def"  => 3,
-                            "desc" => _("Number of times services should attempt to reconnect in the event of a Data Provider crash or restart before they give up" )
-                        },
-                        "domains" => {
-                            "type" => "string",
-                            "desc" => _("SSSD can use more domains at the same time, but at least one must be configured or SSSD won't start.") +
-                                      _("This parameter contains the list of domains in the order these will be queried.")
+                            "desc" => _("Number of times services should attempt to reconnect in the event of a Data Provider crash or restart before they give up")
                         },
                         "re_expression" => {
                             "type" => "string",
-                            "desc" => _("Default regular expression that describes how to parse the string containing user name and domain into these components")
+                            "desc" => _("The regular expression parses user name and domain name into components")
                         },
                         "full_name_format" => {
                             "type" => "string",
-                            "desc" => _("The default printf(3)-compatible format that describes how to translate a (name, domain) tuple into a fully qualified name.")
+                            "desc" => _("The default printf(3)-compatible format that describes translation of a name/domain tuple into FQDN")
                         },
                         "try_inotify" => {
                             "type" => "boolean",
-                            "desc" => _("SSSD monitors the state of resolv.conf to identify when it needs to update its internal DNS resolver.") +
-                                      _("By default, we will attempt to use inotify for this, and will fall back to polling resolv.conf every five seconds if inotify cannot be used.")
+                            "desc" => _("Whether or not to use inotify mechanism to monitor resolv.conf to update internal DNS resolver")
                         },
                         "krb5_rcache_dir" => {
                             "type" => "string",
-                            "desc" => _("Directory on the filesystem where SSSD should store Kerberos replay cache files.")
+                            "desc" => _("Directory on the filesystem where SSSD should store Kerberos replay cache files")
                         },
                         "default_domain_suffix" => {
                             "type" => "string",
-                            "desc" => _("This string will be used as a default domain name for all names without a domain name component.")
-                        }
+                            "desc" => _("A default domain name for all names without a domian name component")
+                        },
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                    },
-                   #Define Global Services Parameters
+                   # Define Global Services Parameters
                    "services" => {
                         "debug_level" => {
-                            "type" => "int",
-                            "desc" => _("Bit mask that indicates which debug levels will be visible. 0x0010 is the default value as well as the lowest allowed value, 0xFFF0 is the most verbose mode.")
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
                         },
                         "debug_timestamps" => {
                             "type" => "boolean",
@@ -71,7 +158,7 @@ module Yast
                         "timeout" => {
                             "type" => "int",
                             "def"  => 10,
-                            "desc" => _("Timeout in seconds between heartbeats for this service.")
+                            "desc" => _("Timeout in seconds between heartbeats for this service")
                         },
                         "reconnection_retries" => {
                             "type" => "int",
@@ -81,21 +168,25 @@ module Yast
                         "fd_limit" => {
                             "type" => "int",
                             "def"  =>  8192,
-                            "desc" => _("This option specifies the maximum number of file descriptors that may be opened at one time by this SSSD process.") 
+                            "desc" => _("Maximum number of file descriptors that may be opened at a time by SSSD service process")
                         },
                         "client_idle_timeout" => {
                             "type" => "int",
                             "def"  =>  60,
-                            "desc" => _("This option specifies the number of seconds that a client of an SSSD process can hold onto a file descriptor without communicating on it.")
+                            "desc" => _("Number of seconds a client of SSSD process can hold onto a file descriptor without any communication")
                         },
                         "force_timeout" => {
                             "type" => "int",
                             "def"  =>  60,
-                            "desc" => _("If a service is not responding to ping checks (see the “timeout” option), it is first sent the SIGTERM signal that instructs it to quit gracefully.")
+                            "desc" => _("The service will receive SIGTERM after this number of seconds of consecutive ping check failure")
                         }
                    },
-                   #NSS configuration options
+                   # NSS configuration options
                    "nss" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "enum_cache_timeout" => {
                             "type" => "int",
                             "def"  =>  120,
@@ -114,12 +205,14 @@ module Yast
                         "filter_users" => {
                             "type" => "string",
                             "def"  =>  "root",
-                            "desc" => _("Exclude certain users from being fetched from the sss NSS database.")
+                            "important" => true,
+                            "desc" => _("Exclude certain users from being fetched by SSS backend")
                         },
                         "filter_groups" => {
                             "type" => "string",
                             "def"  =>  "root",
-                            "desc" => _("Exclude certain groups from being fetched from the sss NSS database.")
+                            "important" => true,
+                            "desc" => _("Exclude certain groups from being fetched by SSS backend")
                         },
                         "filter_users_in_groups" => {
                             "type" => "boolean",
@@ -166,8 +259,12 @@ module Yast
                             "desc" => _("Specifies time in seconds for which records in the in-memory cache will be valid.")
                         }
                    },
-                   #PAM configuration options
+                   # PAM configuration options
                    "pam" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "offline_credentials_expiration" => {
                             "type" => "int",
                             "def"  => 0,
@@ -204,24 +301,36 @@ module Yast
                             "desc" => _("Specifies time in seconds for which the list of subdomains will be considered valid.")
                         }
                   },
-                  #SUDO configuration options
+                  # SUDO configuration options
                   "sudo" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "sudo_timed" => {
                             "type" => "boolean",
                             "def"  => false,
                             "desc" => _("Whether or not to evaluate the sudoNotBefore and sudoNotAfter attributes that implement time-dependent sudoers entries.")
                         }
                   },
-                  #AUTOFS configuration options
+                  # AUTOFS configuration options
                   "autofs" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "autofs_negative_timeout" => {
                             "type" => "int",
                             "def"  => 15,
                             "desc" => _("Specifies for how many seconds the autofs responder should cache negative hits before asking the back end again.")
                         }
                   },
-                  #SSH configuration options
+                  # SSH configuration options
                   "ssh" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "ssh_hash_known_hosts" => {
                             "type" => "boolean",
                             "def"  => true,
@@ -233,9 +342,13 @@ module Yast
                             "desc" => _("How many seconds to keep a host in the managed known_hosts file after its host keys were requested.")
                         }
                   },
-                  #DOMAIN SECTIONS
-                  #These configuration options can be present in a domain configuration section, that is, in a section called “[domain/NAME]”
+                  # DOMAIN SECTIONS
+                  # These configuration options can be present in a domain configuration section, that is, in a section called “[domain/NAME]”
                   "domain" => {
+                        "debug_level" => {
+                            "type" => "string",
+                            "desc" => _("Level of details for logging. Can be numeric (0-9) or a big mask such as 0x0010 (lowest level) or 0xFFF (highest level)")
+                        },
                         "min_id" => {
                             "type" => "int",
                             "def"  => 1,
@@ -247,9 +360,10 @@ module Yast
                             "desc" => _("UID and GID limits for the domain. If a domain contains an entry that is outside these limits, it is ignored.")
                         },
                         "enumerate" => {
-                            "type" => "bool",
+                            "type" => "boolean",
                             "def"  => false,
-                            "desc" => _("Determines if a domain can be enumerated.")
+                            "important" => true,
+                            "desc" => _("Read all entities from backend database (increase server load)")
                         },
                         "force_timeout" => {
                             "type" => "int",
@@ -294,7 +408,8 @@ module Yast
                         "cache_credentials" => {
                             "type" => "boolean",
                             "def"  => false,
-                            "desc" => _("Determines if user credentials are also cached in the local LDB cache.")
+                            "important" => true,
+                            "desc" => _("Cache credentials for offline use")
                         },
                         "account_cache_expiration" => {
                             "type" => "int",
@@ -304,6 +419,8 @@ module Yast
                         "id_provider" => {
                             "type" => "string",
                             "vals" => "ldap, local, ipa, ad",
+                            "req" => true,
+                            "no_init_customisation" => true,
                             "desc" => _("The identification provider used for the domain.")
                         },
                         "use_fully_qualified_names" => {
@@ -313,9 +430,10 @@ module Yast
                         },
                         "auth_provider" => {
                             "type" => "string",
-                            "vals" => "ldap, krb5, ipa, ad, proxy, none",
-                            "def"  => "id_provider",
-                            "desc" => _("The authentication provider used for the domain.")
+                            "vals" => "ldap, krb5, ipa, ad, proxy, local, none",
+                            "important" => true,
+                            "no_init_customisation" => true,
+                            "desc" => _("The authentication provider used for the domain")
                         },
                         "access_provider" => {
                             "type" => "string",
@@ -326,36 +444,35 @@ module Yast
                         "chpass_provider" => {
                             "type" => "string",
                             "vals" => "ldap, krb5, ipa, ad, proxy, none",
-                            "def"  => "auth_provider",
                             "desc" => _("The provider which should handle change password operations for the domain.")
                         },
                         "sudo_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
-                            "vals" => "ldap, none",
+                            "def"  => "",
+                            "vals" => "ldap, ipa, none",
                             "desc" => _("The SUDO provider used for the domain.")
                         },
                         "selinux_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ipa, none",
                             "desc" => _("The provider which should handle loading of selinux settings.")
                         },
                         "subdomains_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ipa, none",
                             "desc" => _("The provider which should handle fetching of subdomains.")
                         },
                         "autofs_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ldap, ipa, none",
                             "desc" => _("The autofs provider used for the domain.")
                         },
                         "hostid_provider" => {
                             "type" => "string",
-                            "def"  => "id_provider",
+                            "def"  => "",
                             "vals" => "ipa, none",
                             "desc" => _("The provider used for retrieving host identity information.")
                         },
@@ -382,16 +499,20 @@ module Yast
                         },
                         "dns_discovery_domain" => {
                             "type" => "string",
-                            "def"  => _("Use the domain part of machine's hostname."),
                             "desc" => _("If service discovery is used in the back end, specifies the domain part of the service discovery DNS query.")
                         },
                         "override_gid" => {
                             "type" => "int",
                             "desc" => _("Override the primary GID value with the one specified.")
                         },
+                        "override_homedir" => {
+                            "type" => "string",
+                            "desc" => _("Override the user's home directory. You can either provide an absolute value or a template.")
+                        },
                         "case_sensitive" => {
                             "type" => "boolean",
                             "def"  => true,
+                            "important" => true,
                             "desc" => _("Treat user and group names as case sensitive.")
                         },
                         "proxy_fast_alias" => {
@@ -418,22 +539,11 @@ module Yast
                         "simple_deny_users" => {
                             "type" => "string",
                             "def"  => "",
-                            "desc" => _("Comma separated list of users who are explicitly denied access.")
-                        },
-                        "simple_deny_users" => {
-                            "type" => "string",
-                            "def"  => "",
                             "desc" => _("Comma separated list of groups that are explicitly denied access. This applies only to groups within this SSSD domain.")
-                        },
-                        "ldap_sudo_search_base" => {
-                            "type" => "string",
-                            "def"  => "",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("The default base DN to use for performing LDAP sudo rules.")
                         }
                    },
-                   #The local domain section
-                   #This section contains settings for domain that stores users and groups in SSSD native database, that is, a domain that uses id_provider=local.
+                   # The local domain section
+                   # This section contains settings for domain that stores users and groups in SSSD native database, that is, a domain that uses id_provider=local.
                    "local" => {
                         "base_directory" => {
                             "type" => "string",
@@ -470,41 +580,49 @@ module Yast
                             "desc" => _("The command that is run after a user is removed.")
                         }
                    },
-                   #The ldap domain section
+                   # The ldap domain section
                    "ldap" => {
+                        "ldap_use_tokengroups" => {
+                            "type" => "boolean",
+                            "def" => true,
+                            "important" => true,
+                            "desc" => _('(Active Directory specific) Use token-groups attribute if available'),
+                        },
                         "ldap_uri" => {
                             "type" => "string",
-                            "req"  => 1,
-                            "rule" => /(ldap[s]?:\/\/|^$)/,
-                            "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference.")
+                            "important" => true,
+                            "desc" => _("URIs (ldap://) of LDAP servers (comma separated)")
+                        },
+                        "ldap_sudo_search_base" => {
+                            "type" => "string",
+                            "def"  => "",
+                            "desc" => _("An optional base DN to restrict LDAP sudo-rule searches. The default value is ldap_search_base.")
                         },
                         "ldap_backup_uri" => {
                             "type" => "string",
-                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference.")
                         },
                         "ldap_chpass_uri" => {
                             "type" => "string",
                             "def"  => "",
-                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference to change the password of a user.")
                         },
                         "ldap_chpass_backup_uri" => {
                             "type" => "string",
                             "def"  => "",
-                            "rule" => /(ldap[s]?:\/\/|^$)/,
                             "desc" => _("Specifies the comma-separated list of URIs of the LDAP servers to which SSSD should connect in the order of preference to change the password of a user.")
                         },
                         "ldap_search_base" => {
                             "type" => "string",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("The default base DN to use for performing LDAP user operations.")
+                            "important" => true,
+                            "desc" => _("Base DN for LDAP search")
                         },
                         "ldap_schema" => {
                             "type" => "string",
                             "vals" => "rfc2307, rfc2307bis, ipa, ad",
                             "def"  => "rfc2307",
-                            "desc" => _("Specifies the Schema Type in use on the target LDAP server.")
+                            "important" => true,
+                            "desc" => _("LDAP schema type")
                         },
                         "ldap_default_bind_dn" => {
                             "type" => "string",
@@ -653,7 +771,7 @@ module Yast
                             "type" => "boolean",
                             "def"  => false,
                             "desc" => _("Some directory servers, for example Active Directory, might deliver the realm part of the UPN in lower case, which might cause the authentication to fail.") +
-                                      _("Set this option to true if you want to use an upper-case realm.")
+                              _("Set this option to true if you want to use an upper-case realm.")
                         },
                         "ldap_enumeration_refresh_timeout" => {
                             "type" => "int",
@@ -797,9 +915,8 @@ module Yast
                         },
                         "ldap_service_search_base" => {
                             "type" => "string",
-                            "def"  => "the value of ldap_search_base",
-                            "rule" => /(^[\s]*[\w]+=[\w]+|^$)/,
-                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP searches for this attribute type.")
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP service searches for this attribute type. The default value is ldap_search_base.")
                         },
                         "ldap_search_timeout" => {
                             "type" => "int",
@@ -838,7 +955,6 @@ module Yast
                         },
                         "ldap_sasl_minssf" => {
                             "type" => "int",
-                            "def"  => "system default",
                             "desc" => _("When communicating with an LDAP server using SASL, specify the minimum security level necessary to establish the connection.")
                         },
                         "ldap_deref_threshold" => {
@@ -848,18 +964,17 @@ module Yast
                         },
                         "ldap_tls_reqcert" => {
                             "type" => "string",
-                            "def"  => "hard",
                             "vals" => "never, allow, try, demand, hard",
-                            "desc" => _("Specifies what checks to perform on server certificates in a TLS session, if any.")
+                            "def"  => "hard",
+                            "important" => true,
+                            "desc" => _("Validate server certification in LDAP TLS session")
                         },
                         "ldap_tls_cacert" => {
                             "type" => "string",
-                            "def"  => "OpenLDAP defaults",
                             "desc" => _("Specifies the file that contains certificates for all of the Certificate Authorities that sssd will recognize.")
                         },
                         "ldap_tls_cacertdir" => {
                             "type" => "string",
-                            "def"  => "OpenLDAP defaults",
                             "desc" => _("Specifies the path of a directory that contains Certificate Authority certificates in separate individual files.")
                         },
                         "ldap_tls_cert" => {
@@ -896,7 +1011,7 @@ module Yast
                         },
                         "ldap_sasl_realm" => {
                             "type" => "string",
-                            "def"  => "value of krb5_realm.",
+                            "def"  => ".",
                             "desc" => _("Specify the SASL realm to use.")
                         },
                         "ldap_sasl_canonicalize" => {
@@ -906,7 +1021,7 @@ module Yast
                         },
                         "ldap_krb5_keytab" => {
                             "type" => "string",
-                            "def"  => "System keytab",
+                            "def"  => "",
                             "desc" => _("Specify the keytab to use when using SASL/GSSAPI.")
                         },
                         "ldap_krb5_init_creds" => {
@@ -916,7 +1031,7 @@ module Yast
                         },
                         "ldap_krb5_ticket_lifetime" => {
                             "type" => "int",
-                            "def"  => "86400 (24 hours)",
+                            "def"  => "86400",
                             "desc" => _("Specifies the lifetime in seconds of the TGT if GSSAPI is used.")
                         },
                         "ldap_pwd_policy" => {
@@ -969,18 +1084,53 @@ module Yast
                             "def"  => "false",
                             "desc" => _("Allows to retain local users as members of an LDAP group for servers that use the RFC2307 schema.")
                         },
-                        "" => {
+                        "ldap_autofs_search_base" => {
                             "type" => "string",
                             "def"  => "",
-                            "desc" => ""
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP autofs searches for this attribute type. The default value is ldap_search_base.")
                         },
-#                        "" => {
-#                            "type" => "string",
-#                            "def"  => "",
-#                            "desc" => _("")
-#                        },
+                        "ldap_group_search_base" => {
+                            "type" => "string",
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP group searches for this attribute type. The default value is ldap_search_base.")
                         },
-                   #The kerberos domain section
+                        "ldap_netgroup_search_base" => {
+                            "type" => "string",
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP netgroup searches for this attribute type. The default value is ldap_search_base.")
+                        },
+                        "ldap_user_search_base" => {
+                            "type" => "string",
+                            "def"  => "",
+                            "desc" => _("An optional base DN, search scope and LDAP filter to restrict LDAP user searches for this attribute type. The default value is ldap_search_base.")
+                        },
+                        "ldap_autofs_map_object_class" => {
+                            "type" => "string",
+                            "def"  => "nisMap",
+                            "desc" => _("The object class of an automount map entry in LDAP.")
+                        },
+                        "ldap_autofs_map_name" => {
+                            "type" => "string",
+                            "def"  => "nisMapName",
+                            "desc" => _("The name of an automount map entry in LDAP.")
+                        },
+                        "ldap_autofs_entry_object_class" => {
+                            "type" => "string",
+                            "def"  => "nisObject",
+                            "desc" => _("The object class of an automount map entry in LDAP.")
+                        },
+                        "ldap_autofs_entry_key" => {
+                            "type" => "string",
+                            "def"  => "cn",
+                            "desc" => _("The key of an automount entry in LDAP. The entry usually corresponds to a mount point.")
+                        },
+                        "ldap_autofs_entry_value" => {
+                            "type" => "string",
+                            "def"  => "nisMapEntry",
+                            "desc" => _("The key of an automount entry in LDAP. The entry usually corresponds to a mount point.")
+                        },
+                        },
+                   # The kerberos domain section
                    "krb5" => {
                         "pwd_expiration_warning" => {
                             "type" => "int",
@@ -989,8 +1139,8 @@ module Yast
                         },
                         "krb5_server" => {
                             "type" => "string",
-                            "req"  => 1,
-                            "desc" => _("Specifies the comma-separated list of IP addresses or hostnames of the Kerberos servers to which SSSD should connect, in the order of preference.")
+                            "important" => true,
+                            "desc" => _("IP address or host names of Kerberos servers (comma separated)")
                         },
                         "krb5_backup_server" => {
                             "type" => "string",
@@ -998,12 +1148,11 @@ module Yast
                         },
                         "krb5_realm" => {
                             "type" => "string",
-                            "req"  => 1,
-                            "desc" => _("The name of the Kerberos realm.")
+                            "req" => true,
+                            "desc" => _("Kerberos realm (e.g. EXAMPLE.COM)")
                         },
                         "krb5_kpasswd" => {
                             "type" => "string",
-                            "def"  => "Use the KDC",
                             "desc" => _("If the change password service is not running on the KDC, alternative servers can be defined here.")
                         },
                         "krb5_backup_kpasswd" => {
@@ -1067,30 +1216,31 @@ module Yast
                             "def"  => "false",
                             "desc" => _("Specifies if the host and user principal should be canonicalized.")
                         },
-#                        "" => {
-#                            "type" => "string",
-#                            "def"  => "",
-#                            "desc" => _("")
-#                        },
+                    #                        "" => {
+                    #                            "type" => "string",
+                    #                            "def"  => "",
+                    #                            "desc" => _("")
+                    #                        },
                   },
-                #The Active Directory domain section
+                # The Active Directory domain section
                 "ad" => {
-                          
                         "ad_domain" => {
                             "type" => "string",
                             "desc" => _("Specifies the name of the Active Directory domain.")
                         },
                         "ad_server" => {
                             "type" => "string",
-                            "desc" => _("The comma-separated list of IP addresses or hostnames of the AD servers to which SSSD should connect in order of preference.")
+                            "important" => true,
+                            "desc" => _("Host names of AD servers (comma separated).")
                         },
                         "ad_backup_server" => {
                             "type" => "string",
-                            "desc" => _("The comma-separated list of IP addresses or hostnames of the AD servers to which SSSD should connect in order of preference.")
+                            "desc" => _("Host names of backup AD servers (comma separated).")
                         },
                         "ad_hostname" => {
                             "type" => "string",
-                            "desc" => _("Optional. May be set on machines where the hostname(5) does not reflect the fully qualified name used in the Active Directory domain to identify this host.")
+                            "important" => true,
+                            "desc" => _("AD hostname (optional) - may be set if hostname(5) does not reflect the FQDN used by AD to identify this host.")
                         },
                         "override_homedir" => {
                             "type" => "string",
@@ -1132,25 +1282,32 @@ module Yast
                             "def"  => "False",
                             "desc" => _("Changes the behavior of the ID-mapping algorithm to behave more similarly to winbind's “idmap_autorid” algorithm.")
                         }
-#                        "" => {
-#                            "type" => "string",
-#                            "def"  => "",
-#                            "desc" => _("")
-#                        }
+                    #                        "" => {
+                    #                            "type" => "string",
+                    #                            "def"  => "",
+                    #                            "desc" => _("")
+                    #                        }
                   },
-                #The Active Directory domain section
+                # The Active Directory domain section
                 "ipa" => {
                         "ipa_domain" => {
                             "type" => "string",
                             "desc" => _("Specifies the name of the IPA domain.")
                         },
-                        "ipa_server," => {
+                        "ipa_server" => {
                             "type" => "string",
-                            "desc" => _("The comma-separated list of IP addresses or hostnames of the IPA servers to which SSSD should connect in the order of preference.")
+                            "important" => true,
+                            "desc" => _("IP addresses or host names of IPA servers (comma separated)")
                         },
                         "ipa_hostname" => {
                             "type" => "string",
-                            "desc" => _("May be set on machines where the hostname(5) does not reflect the fully qualified name.")
+                            "important" => true,
+                            "desc" => _("IPA hostname (optional) - may be set if hostname(5) does not reflect the FQDN used by IPA to identify this host.")
+                        },
+                        "ipa_automount_location" => {
+                            "type" => "string",
+                            "def" => "default",
+                            "desc" => _("The automounter location this IPA client will be using.")
                         },
                         "dyndns_update" => {
                             "type" => "boolean",
@@ -1166,10 +1323,9 @@ module Yast
                             "type" => "string",
                             "desc" => _("Choose the interface whose IP address should be used for dynamic DNS updates.")
                         }
-		}
+                }
 
-        }
-    end
-  end
-end
-
+            }
+        end # init_params
+    end # Params
+end # module
