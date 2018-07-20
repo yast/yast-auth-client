@@ -112,53 +112,6 @@ krb5_realm = ABC.ZZZ
         end
     end
 
-    describe 'LDAP' do
-        it 'Read, lint, and export LDAP configuration' do
-            authconf.ldap_read
-            expect(authconf.ldap_export).to eq(
-                'conf'=>{
-                    'host'=>'127.0.0.1',
-                    'base'=>'dc=example,dc=com',
-                    'bind_policy'=>'soft',
-                    'pam_lookup_policy'=>'yes',
-                    'pam_password'=>'exop',
-                    'nss_initgroups_ignoreusers'=>'root,ldap',
-                    'nss_schema'=>'rfc2307bis',
-                    'nss_map_attribute'=>'uniqueMember member',
-                    'ssl'=>'start_tls'},
-                'pam'=>false,
-                'nss'=>[])
-        end
-        it 'Create LDAP configuration file' do
-            expect(authconf.ldap_make_conf).to eq('host 127.0.0.1
-base dc=example,dc=com
-bind_policy soft
-pam_lookup_policy yes
-pam_password exop
-nss_initgroups_ignoreusers root,ldap
-nss_schema rfc2307bis
-nss_map_attribute uniqueMember member
-ssl start_tls
-')
-        end
-        it 'Import and recreate the same configuration' do
-            conf = {'conf'=>{
-                    'host'=>'127.0.0.1',
-                    'base'=>'dc=example,dc=com',
-                    'bind_policy'=>'soft',
-                    'pam_lookup_policy'=>'yes',
-                    'pam_password'=>'exop',
-                    'nss_initgroups_ignoreusers'=>'root,ldap',
-                    'nss_schema'=>'rfc2307bis',
-                    'nss_map_attribute'=>'uniqueMember member',
-                    'ssl'=>'start_tls'},
-                'pam'=>true,
-                'nss'=>['passwd', 'group']}
-            authconf.ldap_import(conf)
-            expect(authconf.ldap_export).to eq(conf)
-        end
-    end
-
     describe 'Kerberos' do
         it 'Read, lint, and export Kerberos configuration' do
             # The first example is very simple
@@ -414,7 +367,6 @@ auth    optional        pam_gnome_keyring.so
 auth    sufficient      pam_unix.so     try_first_pass
 auth    sufficient      pam_krb5.so     use_first_pass
 auth    sufficient      pam_sss.so      use_first_pass
-auth    required        pam_ldap.so     use_first_pass
 ".split("\n"))).to eq [
                 "",
                 "# comment",
@@ -423,7 +375,6 @@ auth    required        pam_ldap.so     use_first_pass
                 "auth    sufficient    pam_unix.so    try_first_pass",
                 "auth    sufficient    pam_krb5.so    use_first_pass",
                 "auth    sufficient    pam_sss.so    use_first_pass",
-                "auth    sufficient    pam_ldap.so    use_first_pass",
                 "auth    required    pam_deny.so"
             ]
         end
@@ -436,7 +387,6 @@ auth    optional        pam_gnome_keyring.so
 auth    sufficient      pam_unix2.so     try_first_pass
 auth    sufficient      pam_krb5.so     use_first_pass
 auth    sufficient      pam_sss.so      use_first_pass
-auth    required        pam_ldap.so     use_first_pass
 ".split("\n"))).to eq [
                 "",
                 "# comment",
@@ -445,7 +395,6 @@ auth    required        pam_ldap.so     use_first_pass
                 "auth    sufficient    pam_unix2.so    try_first_pass",
                 "auth    sufficient    pam_krb5.so    use_first_pass",
                 "auth    sufficient    pam_sss.so    use_first_pass",
-                "auth    sufficient    pam_ldap.so    use_first_pass",
                 "auth    required    pam_deny.so"
             ]
         end
@@ -457,7 +406,6 @@ account requisite       pam_unix.so     try_first_pass
 account required        pam_krb5.so     use_first_pass
 account sufficient      pam_localuser.so
 account sufficient      pam_sss.so      use_first_pass
-account required        pam_ldap.so     use_first_pass
 ".split("\n"))).to eq [
                 "",
                 "# comment",
@@ -465,7 +413,6 @@ account required        pam_ldap.so     use_first_pass
                 "account    sufficient    pam_localuser.so",
                 "account required        pam_krb5.so     use_first_pass",
                 "account sufficient      pam_sss.so      use_first_pass",
-                "account required        pam_ldap.so     use_first_pass"
             ]
         end
 
@@ -476,7 +423,6 @@ account requisite       pam_unix2.so     try_first_pass
 account required        pam_krb5.so     use_first_pass
 account sufficient      pam_localuser.so
 account sufficient      pam_sss.so      use_first_pass
-account required        pam_ldap.so     use_first_pass
 ".split("\n"))).to eq [
                 "",
                 "# comment",
@@ -484,7 +430,6 @@ account required        pam_ldap.so     use_first_pass
                 "account    sufficient    pam_localuser.so",
                 "account required        pam_krb5.so     use_first_pass",
                 "account sufficient      pam_sss.so      use_first_pass",
-                "account required        pam_ldap.so     use_first_pass"
             ]
         end
     end

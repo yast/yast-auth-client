@@ -34,7 +34,7 @@ module Auth
         include Yast::Logger
         include Yast::UIShortcuts
 
-        attr_accessor(:krb_conf, :krb_pam, :ldap_conf, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
+        attr_accessor(:krb_conf, :krb_pam, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
         attr_accessor(:autofs_enabled, :nscd_enabled, :mkhomedir_pam)
         attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :ad_update_dns, :autoyast_editor_mode, :autoyast_modified)
 
@@ -43,10 +43,6 @@ module Auth
             # Kerberos configuration
             @krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realms' => {}, 'logging' => {}}
             @krb_pam = false
-            # LDAP configuration (/etc/ldap.conf)
-            @ldap_conf = {}
-            @ldap_pam = false
-            @ldap_nss = []
             # SSSD configuration (/etc/sssd/sssd.conf)
             @sssd_conf = {}
             @sssd_pam = false
@@ -165,11 +161,11 @@ module Auth
         end
 
         # Adjust PAM authentication setting lines to make sure that among the enabled mechanisms, any of
-        # unix/krb/ldap/sss can fullfill authentication attempt.
+        # unix/krb/sss can fullfill authentication attempt.
         # Be extra careful with making changes.
         # Return replacement lines after adjustments.
         def pam_fix_auth(original_lines)
-            sufficient_auth = ['pam_unix.so', 'pam_unix2.so', 'pam_sss.so', 'pam_ldap.so', 'pam_krb5.so']
+            sufficient_auth = ['pam_unix.so', 'pam_unix2.so', 'pam_sss.so', 'pam_krb5.so']
             ret = []
             original_lines.each { |line|
                 line.strip!
@@ -224,7 +220,7 @@ module Auth
         end
 
         # Adjust PAM settings to make sure:
-        # - Any of enabled unix/krb/ldap/sss mechanisms can fullfill user authentication.
+        # - Any of enabled unix/krb//sss mechanisms can fullfill user authentication.
         # - Local accounts are sufficient to be accounts.
         # Be extra careful with making changes.
         def fix_pam
@@ -434,118 +430,6 @@ module Auth
                 service_enable_start('sssd')
             else
                 service_disable_stop('sssd')
-            end
-        end
-
-        # Load LDAP configuration.
-        def ldap_read
-            @ldap_conf = {}
-            # Destruct ldap.conf file
-            Yast::SCR.UnmountAgent(Yast::Path.new('.etc.ldap_conf'))
-            Yast::SCR.Read(Yast::Path.new('.etc.ldap_conf.all')).fetch('value', []).each { |entry|
-                if entry['kind'] != 'value'
-                    skip
-                end
-                entry_name = entry['name'].strip
-                entry_value = entry['value'].strip
-                # Store values from duplicate keys in the original order
-                existing_value = @ldap_conf[entry_name]
-                if existing_value && existing_value.kind_of?(::String)
-                    @ldap_conf[entry_name] = [existing_value, entry_value]
-                elsif existing_value && existing_value.kind_of?(::Array)
-                    @ldap_conf[entry_name] = existing_value + [entry_value]
-                else
-                    @ldap_conf[entry_name] = entry_value
-                end
-            }
-            # Read PAM/NSS
-            @ldap_pam = Yast::Pam.Enabled('ldap')
-            @ldap_nss = []
-            LDAP_CAPABLE_NSS_DBS.each { |name|
-                if Yast::Nsswitch.ReadDb(name).any? { |db| db == 'ldap' }
-                    @ldap_nss += [name]
-                end
-            }
-        end
-
-        # Return LDAP configuration.
-        def ldap_export
-            return {'conf' => @ldap_conf, 'pam' => @ldap_pam, 'nss' => @ldap_nss}
-        end
-
-        # Set configuration for LDAP from exported objects.
-        def ldap_import(exported_conf)
-            @ldap_conf = exported_conf['conf']
-            @ldap_conf = {} if @ldap_conf.nil?
-            @ldap_pam = exported_conf['pam']
-            @ldap_pam = false if @ldap_pam.nil?
-            @ldap_nss = exported_conf['nss']
-            @ldap_nss = [] if @ldap_nss.nil?
-        end
-
-        # Generate ldap.conf content from the current configuration.
-        def ldap_make_conf
-            content = ''
-            @ldap_conf.each { |key, value|
-                if value.kind_of?(Array)
-                    value.each { |v|
-                        if v.to_s != ''
-                            content += "#{key} #{v}\n"
-                        end
-                    }
-                elsif value.to_s != ''
-                    content += "#{key} #{value}\n"
-                end
-            }
-            return content
-        end
-
-        # Immediately apply LDAP configuration, including PAM/NSS configuration.
-        def ldap_apply
-            if @autoyast_editor_mode
-                return
-            end
-            # Calculate package requirements
-            pkgs = []
-            if @ldap_pam
-                pkgs += ['pam_ldap']
-            end
-            if @ldap_nss
-                pkgs += ['nss_ldap']
-                if @ldap_nss.include?('automount')
-                    pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
-                end
-            end
-            pkgs.delete_if { |name| Yast::Package.Installed(name) }
-            if pkgs.any?
-                if !Yast::Package.DoInstall(pkgs)
-                    Yast::Report.Error(_('Failed to install software packages required for LDAP.'))
-                end
-            end
-            # Write LDAP config file and correct its permission and ownerships
-            ldap_conf = File.new('/etc/ldap.conf', 'w')
-            ldap_conf.chmod(644)
-            ldap_conf.chown(0, 0)
-            ldap_conf.write(ldap_make_conf)
-            ldap_conf.close
-            # If automount is enabled, overwrite openldap's ldap.conf as well.
-            if @ldap_nss.include?('automount')
-                ldap_conf = File.new('/etc/openldap/ldap.conf', 'w')
-                ldap_conf.chmod(644)
-                ldap_conf.chown(0, 0)
-                ldap_conf.write(ldap_make_conf)
-                ldap_conf.close
-            end
-            # Save PAM/NSS/daemon status
-            if @ldap_pam
-                Yast::Pam.Add('ldap')
-            else
-                Yast::Pam.Remove('ldap')
-            end
-            fix_pam
-            LDAP_CAPABLE_NSS_DBS.each { |db| nss_disable_module(db, 'ldap') }
-            if @ldap_nss.any?
-                @ldap_nss.each { |db| nss_enable_module(db, 'ldap') }
             end
         end
 
@@ -833,7 +717,7 @@ module Auth
             end
             # Install required packages
             pkgs = []
-            if @autofs_enabled || @sssd_nss.include?('automount') || @ldap_nss.include?('automount')
+            if @autofs_enabled || @sssd_nss.include?('automount')
                 pkgs += ['autofs']
             end
             if @nscd_enabled
@@ -853,7 +737,7 @@ module Auth
             end
             fix_pam
             # Start/stop daemons
-            if @autofs_enabled || @sssd_nss.include?('automount') || @ldap_nss.include?('automount')
+            if @autofs_enabled || @sssd_nss.include?('automount')
                 service_enable_start('autofs')
             else
                 service_disable_stop('autofs')
@@ -1020,7 +904,6 @@ module Auth
         def read_all
             clear
             krb_read
-            ldap_read
             aux_read
             sssd_read
         end
@@ -1043,19 +926,10 @@ module Auth
                     end
                 }
             end
-            if @ldap_pam
-                pkgs += ['pam_ldap']
-            end
             if @krb_pam
                 pkgs += ['pam_krb5', 'krb5', 'krb5-client']
             end
-            if @ldap_nss
-                pkgs += ['nss_ldap']
-                if @ldap_nss.include?('automount')
-                    pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
-                end
-            end
-            if @autofs_enabled || @sssd_nss.include?('automount') || @ldap_nss.include?('automount')
+            if @autofs_enabled || @sssd_nss.include?('automount')
                 pkgs += ['autofs']
             end
             if @nscd_enabled
@@ -1071,7 +945,7 @@ module Auth
         def summary_text
             # Figure out how authentication works on this computer
             auth_doms_caption = ''
-            if !@sssd_enabled && @ldap_nss.empty? && !@ldap_pam && !@krb_pam
+            if !@sssd_enabled && !@krb_pam
                 # Local only
                 auth_doms_caption = _('Only use local authentication')
             elsif @sssd_enabled && (@sssd_pam || @sssd_nss.any?)
@@ -1081,14 +955,6 @@ module Auth
                     auth_doms_caption += ' ' + _('(daemon is inactive)')
                 end
             else
-                # LDAP and/or Kerberos is configured
-                if @ldap_nss.any? || @ldap_pam
-                    if @ldap_conf['base'].to_s == ''
-                        auth_doms_caption = _('LDAP is enabled but the setup is incomplete')
-                    else
-                        auth_doms_caption = _('via LDAP on %s') % [@ldap_conf['base']]
-                    end
-                end
                 if @krb_pam
                     if auth_doms_caption != ''
                         # 'and' as in "authenticate via LDAP and Kerberos"
