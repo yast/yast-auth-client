@@ -21,7 +21,7 @@ Version:        4.0.0
 Release:        0
 Url:            https://github.com/yast/yast-auth-client
 Summary:        YaST2 - Centralised System Authentication Configuration
-License:        GPL-2.0
+License:        GPL-2.0-only
 Group:          System/YaST
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
