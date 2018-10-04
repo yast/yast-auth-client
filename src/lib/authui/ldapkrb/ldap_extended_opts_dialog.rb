@@ -51,7 +51,7 @@ module LdapKrb
                 IntField(Id(:ldap_timelimit), Opt(:hstretch), _('Timeout for Search Operations in Seconds'), 1, 600,
                            (AuthConfInst.ldap_conf['timelimit'].to_s == '' ? '30' : AuthConfInst.ldap_conf['timelimit']).to_i),
                 VSpacing(1.0),
-                PushButton(Id(:finish), Label.FinishButton)
+                PushButton(Id(:finish), Label.OKButton)
             ))
         end
 

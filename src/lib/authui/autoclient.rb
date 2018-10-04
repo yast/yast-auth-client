@@ -42,9 +42,13 @@ module Auth
         def import(exported)
             if exported.has_key?('sssd')
                 # Import legacy XML configuration from SLE 12 SP0 or SP1
-                enabled = exported.fetch('sssd', nil)
-                daemon = exported.fetch('sssd_conf', {}).fetch('sssd', nil)
-                domain = exported.fetch('sssd_conf', {}).fetch('auth_domains', {}).fetch('domain', {})
+                sssd = exported['sssd']
+                if sssd.has_key?('listentry')
+                    sssd = sssd['listentry']
+                end
+                enabled = sssd.fetch('sssd', nil)
+                daemon = sssd.fetch('sssd_conf', {}).fetch('sssd', nil)
+                domain = sssd.fetch('sssd_conf', {}).fetch('auth_domains', {}).fetch('domain', {})
                 domain_name = domain.fetch('domain_name', nil)
                 if enabled != 'yes' || daemon.nil? || domain_name.nil?
                     log.info('legacy configuration is empty or disabled')

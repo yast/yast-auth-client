@@ -1,4 +1,38 @@
 -------------------------------------------------------------------
+Fri Nov  3 14:56:08 UTC 2017 - hguo@suse.com
+
+- Upgrade to version 3.1.18 to introduce an RNC file that assists in
+  autoyast XML validation (bsc#1062828).
+
+-------------------------------------------------------------------
+Tue Aug 29 13:54:21 UTC 2017 - hguo@suse.com
+
+- Bump to version 3.3.17 to fix two issues:
+  * Mistake in kerberos config file parser removes default_ccache_name
+    key (bsc#1054436).
+  * PAM configuration did not allow local user login if pam_unix2 is
+    in use (bsc#1056158).
+
+-------------------------------------------------------------------
+Fri Jun 16 13:47:40 UTC 2017 - hguo@suse.com
+
+- Bump to version 3.3.16 to fix minor issues across UI and backend:
+  * Fix misspelt kerberos option name "noaddresses".
+  * Improve UI captions, consistency.
+  * Introduce module name "auth" as an alias to "auth-client".
+  for bsc#1043211, bsc#1043184, bsc#1032733.
+
+-------------------------------------------------------------------
+Tue May 23 13:00:19 UTC 2017 - hguo@suse.com
+
+- Bump to version 3.3.15 to fix four issues:
+  * Correctly install sss name databases even in the presence of
+    special NSS database directives (bsc#1024841).
+  * Fix missing translation of "Leave Domain" button (bsc#1038291).
+  * Do AD's DNS lookup in lower case (bsc#1038720).
+  * Understand XML data exported by SLES 12 SP0 (bsc#1040393).
+
+-------------------------------------------------------------------
 Fri May 19 11:41:59 UTC 2017 - lslezak@suse.cz
 
 - Translation fix: Ruby gettext cannot extract translatable texts
