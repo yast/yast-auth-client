@@ -63,7 +63,7 @@ module SSSD
                     Opt(:decorated, :defaultsize),
                     VBox(
                         Left(HBox(
-                            Icon::Simple("yast-nis"),
+                            Icon::Simple("yast-auth-client"),
                             Heading(_("Manage Domain User Logon"))
                         )),
                         HBox(

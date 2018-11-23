@@ -17,7 +17,7 @@
 
 
 Name:           yast2-auth-client
-Version:        4.0.0
+Version:        4.1.0
 Release:        0
 Url:            https://github.com/yast/yast-auth-client
 Summary:        YaST2 - Centralised System Authentication Configuration
@@ -68,6 +68,7 @@ rake install DESTDIR="%{buildroot}"
 %{yast_libdir}/
 %{yast_scrconfdir}/
 %{yast_schemadir}/
+%{_datadir}/icons/*
 %license COPYING
 
 %changelog

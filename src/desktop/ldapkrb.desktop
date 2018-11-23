@@ -13,7 +13,7 @@ X-SuSE-YaST-AutoInstResource=auth-client
 X-SuSE-YaST-AutoInstClonable=true
 X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,kerberos,krb,krb5,windows,microsoft,ad,activedirectory
 
-Icon=yast-kerberos
+Icon=yast-ldap-kerberos
 Exec=xdg-su -c "/sbin/yast2 ldapkrb"
 
 Name=LDAP and Kerberos Client
