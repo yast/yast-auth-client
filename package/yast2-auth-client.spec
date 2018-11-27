@@ -68,7 +68,7 @@ rake install DESTDIR="%{buildroot}"
 %{yast_libdir}/
 %{yast_scrconfdir}/
 %{yast_schemadir}/
-%{_datadir}/icons/*
+%{yast_icondir}
 %license COPYING
 
 %changelog
