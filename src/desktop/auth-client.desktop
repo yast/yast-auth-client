@@ -14,7 +14,7 @@ X-SuSE-YaST-AutoInstClonable=true
 X-SuSE-YaST-AutoInstSchema=auth-client.rnc
 X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,kerberos,krb,krb5,windows,microsoft,ad,activedirectory
 
-Icon=yast-kerberos
+Icon=yast-auth-client
 Exec=xdg-su -c "/sbin/yast2 auth-client"
 
 Name=User Logon Management
