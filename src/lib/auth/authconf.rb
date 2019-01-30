@@ -524,14 +524,14 @@ module Auth
             end
             # Write LDAP config file and correct its permission and ownerships
             ldap_conf = File.new('/etc/ldap.conf', 'w')
-            ldap_conf.chmod(644)
+            ldap_conf.chmod(0644)
             ldap_conf.chown(0, 0)
             ldap_conf.write(ldap_make_conf)
             ldap_conf.close
             # If automount is enabled, overwrite openldap's ldap.conf as well.
             if @ldap_nss.include?('automount')
                 ldap_conf = File.new('/etc/openldap/ldap.conf', 'w')
-                ldap_conf.chmod(644)
+                ldap_conf.chmod(0644)
                 ldap_conf.chown(0, 0)
                 ldap_conf.write(ldap_make_conf)
                 ldap_conf.close
