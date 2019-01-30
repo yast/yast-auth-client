@@ -393,7 +393,7 @@ module LdapKrb
             else
                 UI.ChangeWidget(Id(:ldap_bind_policy), :CurrentButton, :ldap_bind_policy_hard)
             end
-            if AuthConfInst.ldap_conf['ssl'] == 'on'
+            if AuthConfInst.ldap_conf['ssl'] == 'yes'
                 UI.ChangeWidget(Id(:ldap_tls_method), :CurrentButton, :ldap_tls_method_yes)
             elsif AuthConfInst.ldap_conf['ssl'] == 'start_tls'
                 UI.ChangeWidget(Id(:ldap_tls_method), :CurrentButton, :ldap_tls_method_starttls)
