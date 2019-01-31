@@ -524,7 +524,7 @@ module Auth
             end
             # Write LDAP config file and correct its permission and ownerships
             ldap_conf = File.new('/etc/ldap.conf', 'w')
-            ldap_conf.chmod(600)
+            ldap_conf.chmod(0600)
             ldap_conf.chown(0, 0)
             ldap_conf.write(ldap_make_conf)
             ldap_conf.close
