@@ -51,9 +51,9 @@ module LdapKrb
             VBox(
                 InputField(Id(:realm_name), Opt(:hstretch), _('Realm name'), @realm_name.to_s),
                 CheckBox(Id(:map_domain), Opt(:hstretch), _('Map Domain Name to the Realm (example.com -> EXAMPLE.COM)'),
-                    !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realms', @realm_name.downcase], nil).nil?),
+                    !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realm', @realm_name.downcase], nil).nil?),
                 CheckBox(Id(:map_wildcard_domain), Opt(:hstretch), _('Map Wild Card Domain Name to the Realm (*.example.com -> EXAMPLE.COM)'),
-                    !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realms', ".#{@realm_name.downcase}"], nil).nil?),
+                    !@realm_name.nil? && !AuthConfInst.krb_conf_get(['domain_realm', ".#{@realm_name.downcase}"], nil).nil?),
                 VSpacing(1.0),
                 InputField(Id(:admin_server), Opt(:hstretch), _('Host Name of Administration Server (Optional)'),
                     AuthConfInst.krb_conf_get(['realms', @realm_name, 'admin_server'], '')),
@@ -142,9 +142,9 @@ module LdapKrb
                 if AuthConfInst.krb_conf['libdefaults']['default_realm'] == @realm_name
                     AuthConfInst.krb_conf['libdefaults']['default_realm'] = input_realm_name
                 end
-                domains = AuthConfInst.krb_conf['domain_realms'].select{ |_, realm| realm == @realm_name}.keys
-                domains.each {|domain| AuthConfInst.krb_conf['domain_realms'].delete(domain)}
-                domains.each {|domain| AuthConfInst.krb_conf['domain_realms'][domain] = input_realm_name}
+                domains = AuthConfInst.krb_conf['domain_realm'].select{ |_, realm| realm == @realm_name}.keys
+                domains.each {|domain| AuthConfInst.krb_conf['domain_realm'].delete(domain)}
+                domains.each {|domain| AuthConfInst.krb_conf['domain_realm'][domain] = input_realm_name}
             end
             # Create new realm
             if !AuthConfInst.krb_conf['realms'].include?(input_realm_name)
@@ -156,14 +156,14 @@ module LdapKrb
             realm_conf['master_kdc'] = UI.QueryWidget(Id(:master_kdc), :Value)
             realm_conf['kdc'] = UI.QueryWidget(Id(:kdc), :Items).map{|item| item[1]}
             if UI.QueryWidget(Id(:map_domain), :Value)
-                AuthConfInst.krb_conf['domain_realms'][input_realm_name.downcase] = input_realm_name
+                AuthConfInst.krb_conf['domain_realm'][input_realm_name.downcase] = input_realm_name
             else
-                AuthConfInst.krb_conf['domain_realms'].delete(input_realm_name.downcase)
+                AuthConfInst.krb_conf['domain_realm'].delete(input_realm_name.downcase)
             end
             if UI.QueryWidget(Id(:map_wildcard_domain), :Value)
-                AuthConfInst.krb_conf['domain_realms'][".#{input_realm_name.downcase}"] = input_realm_name
+                AuthConfInst.krb_conf['domain_realm'][".#{input_realm_name.downcase}"] = input_realm_name
             else
-                AuthConfInst.krb_conf['domain_realms'].delete(".#{input_realm_name.downcase}")
+                AuthConfInst.krb_conf['domain_realm'].delete(".#{input_realm_name.downcase}")
             end
             realm_conf['auth_to_local'] = UI.QueryWidget(Id(:auth_to_local), :Items).map{|item| item[1]}
             realm_conf['auth_to_local_names'] = Hash[*UI.QueryWidget(Id(:auth_to_local_names), :Items).map{|item| [item[1], item[2]]}.flatten]
