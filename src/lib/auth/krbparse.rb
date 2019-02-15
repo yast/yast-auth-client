@@ -26,7 +26,7 @@ module Auth
             long_attr1 = ''
             long_attr2 = ''
             sect = ''
-            new_krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realms' => {}, 'logging' => {}}
+            new_krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realm' => {}, 'logging' => {}}
             # Break down sections and key-value pairs
             krb_conf_text.split(/\n/).each{ |line|
                 # Throw away comment
