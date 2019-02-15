@@ -200,7 +200,7 @@ module LdapKrb
                             redo
                         end
                         if Popup.YesNo(_('Are you sure to delete realm %s?') % [realm_name])
-                            AuthConfInst.krb_conf['domain_realms'].delete_if{ |_, domain_realm| domain_realm == realm_name}
+                            AuthConfInst.krb_conf['domain_realm'].delete_if{ |_, domain_realm| domain_realm == realm_name}
                             if UI.QueryWidget(Id(:krb_default_realm), :Value) == realm_name
                                 UI.ChangeWidget(Id(:krb_default_realm), :Value, _('(not specified)'))
                             end

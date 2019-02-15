@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Aug 28 15:32:59 UTC 2026 - Noel Power <nopower@suse.com>
+
+- yast auth-client and krb5.conf wrong domain_realm entry;
+- Bump version to 3.3.19 for bsc#1122026.
+
+-------------------------------------------------------------------
 Wed Aug 12 12:31:12 UTC 2026 - Noel Power <nopower@suse.com>
 
 - fix non specified optional params being unconditionally added to

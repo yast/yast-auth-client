@@ -26,7 +26,7 @@ module Auth
             long_attr1 = ''
             long_attr2 = ''
             sect = ''
-            new_krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realms' => {}, 'logging' => {}}
+            new_krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realm' => {}, 'logging' => {}}
             # Break down sections and key-value pairs
             krb_conf_text.split(/\n/).each{ |line|
                 # Throw away comment
@@ -45,6 +45,16 @@ module Auth
                 if sect_match
                     # remember current section
                     sect = sect_match[1]
+                    # Bug 1122026: krb5.conf sections can have a variable amount
+                    # of characters appended to the name, and still be valid.
+                    # domain_realm for example could have an 's' appended, but
+                    # is not the documented section title.
+                    new_krb_conf.each { |k, v|
+                        if sect_match[1].start_with?(k)
+                            sect = k
+                            break
+                        end
+                    }
                     next
                 end
                 # Remember expanded attribute
