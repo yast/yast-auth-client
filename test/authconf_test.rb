@@ -183,9 +183,33 @@ ssl start_tls
                             "auth_to_local"=>["RULE:[2:$1](johndoe)s/^.*$/guest/"]
                         },
                     },
-                    "domain_realms"=>{}, "logging"=>{}
+                    "domain_realm"=>{}, "logging"=>{}
                 }, "pam"=>false)
-            # The second example is very comprehensive
+            # The second tests for cruft in the section names
+            authconf.krb_parse_set('
+[libdefaultsXXXXXXXXX]
+    default_realm = ABC.ZZZ
+
+[realmsYYYZZZZXXXXX]
+        ABC.ZZZ = {
+            kdc = howie.suse.de
+            admin_server = howie.suse.de
+            auth_to_local = RULE:[2:$1](johndoe)s/^.*$/guest/
+        }
+')
+            expect(authconf.krb_export).to eq("conf"=>{
+                    "include"=>[],
+                    "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
+                    "realms"=>{
+                        "ABC.ZZZ"=>{
+                            "kdc"=>["howie.suse.de"],
+                            "admin_server"=>"howie.suse.de",
+                            "auth_to_local"=>["RULE:[2:$1](johndoe)s/^.*$/guest/"]
+                        },
+                    },
+                    "domain_realm"=>{}, "logging"=>{}
+                }, "pam"=>false)
+            # The third example is very comprehensive
             authconf.krb_parse_set('include a/b/c.d
 includedir e/f/g.h
 module i/j/k.l:RESIDUAL
@@ -222,7 +246,7 @@ module i/j/k.l:RESIDUAL
         EMPTY.NET = {
         }
 
-[domain_realms]
+[domain_realm]
 .suse.de = ABC.ZZZ
 suse.de = ABC.ZZZ
 
@@ -262,7 +286,7 @@ suse.de = ABC.ZZZ
                         },
                         "EMPTY.NET"=> {},
                     },
-                    "domain_realms"=>{".suse.de"=>"ABC.ZZZ", "suse.de"=>"ABC.ZZZ"},
+                    "domain_realm"=>{".suse.de"=>"ABC.ZZZ", "suse.de"=>"ABC.ZZZ"},
                     "logging"=>{"kdc"=>"FILE:/var/log/krb5/krb5kdc.log", "admin_server"=>"FILE:/var/log/krb5/kadmind.log", "default"=>"SYSLOG:NOTICE:DAEMON"},
                     "dbmodules"=>{
                         "openldap_ldapconf"=>{
@@ -287,7 +311,7 @@ module i/j/k.l:RESIDUAL
     default_realm = ABC.ZZZ
     forwardable = true
 
-[domain_realms]
+[domain_realm]
     .suse.de = ABC.ZZZ
     suse.de = ABC.ZZZ
 
@@ -336,7 +360,7 @@ module i/j/k.l:RESIDUAL
                 {"ABC.ZZZ"=>{"kdc"=>["howie.suse.de"], "admin_server"=>"howie.suse.de"},
                  "ABD.ZZZ"=>{"kdc"=>["howie2.suse.de"], "admin_server"=>"howie2.suse.de"}},
                "libdefaults"=>{"default_realm"=>"ABC.ZZZ", "forwardable"=>"true"},
-               "domain_realms"=>{".suse.de"=>"ABC.ZZZ", "suse.de"=>"ABC.ZZZ"},
+               "domain_realm"=>{".suse.de"=>"ABC.ZZZ", "suse.de"=>"ABC.ZZZ"},
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
@@ -349,7 +373,7 @@ module i/j/k.l:RESIDUAL
             conf = {"conf"=>
               {"realms"=>{},
                "libdefaults"=>{},
-               "domain_realms"=>{},
+               "domain_realm"=>{},
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
@@ -361,7 +385,7 @@ module i/j/k.l:RESIDUAL
               {"realms"=>
                 {"ABC.ZZZ"=>{"kdc"=>"howie.suse.de", "admin_server"=>"howie2.suse.de"}},
                "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
-               "domain_realms"=>{".abc.zzz"=>"ABC.ZZZ", "abc.zzz"=>"ABC.ZZZ"},
+               "domain_realm"=>{".abc.zzz"=>"ABC.ZZZ", "abc.zzz"=>"ABC.ZZZ"},
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
@@ -372,7 +396,7 @@ module i/j/k.l:RESIDUAL
               {"realms"=>
                 {"ABC.ZZZ"=>{"kdc"=>"3.suse.de", "admin_server"=>"4.suse.de"}},
                "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
-               "domain_realms"=>{},
+               "domain_realm"=>{},
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
