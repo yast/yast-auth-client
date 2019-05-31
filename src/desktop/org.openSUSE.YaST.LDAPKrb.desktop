@@ -16,6 +16,7 @@ X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,kerberos,krb,krb5,windows,micr
 Icon=yast-ldap-kerberos
 Exec=xdg-su -c "/sbin/yast2 ldapkrb"
 
-Name=LDAP and Kerberos Client
-GenericName=LDAP And Kerberos Client
+Name=YaST LDAP and Kerberos
+GenericName=LDAP and Kerberos
+Comment=Configure LDAP And Kerberos
 StartupNotify=true
