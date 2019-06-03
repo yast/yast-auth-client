@@ -31,7 +31,7 @@ BuildRequires:  perl-XML-Writer
 BuildRequires:  update-desktop-files
 BuildRequires:  yast2
 BuildRequires:  yast2
-BuildRequires:  yast2-devtools >= 3.0.6
+BuildRequires:  yast2-devtools >= 4.2.2
 BuildRequires:  yast2-network
 BuildRequires:  yast2-pam
 BuildRequires:  yast2-testsuite
