@@ -17,6 +17,7 @@ X-SuSE-YaST-Keywords=authentication,sssd,pam,ldap,kerberos,krb,krb5,windows,micr
 Icon=yast-auth-client
 Exec=xdg-su -c "/sbin/yast2 auth-client"
 
-Name=User Logon Management
-GenericName=User Logon Management
+Name=YaST User Logon
+GenericName=User Logon
+Comment=User Logon Management
 StartupNotify=true
