@@ -67,7 +67,6 @@ With this YaST2 module you may configure centralised system authentication, on a
 %{yast_desktopdir}
 %{yast_metainfodir}
 %{yast_clientdir}
-%{yast_libdir}
 %{yast_scrconfdir}
 %{yast_schemadir}
 %{yast_icondir}
