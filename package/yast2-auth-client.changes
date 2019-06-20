@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jun 20 09:29:49 UTC 2019 - Samuel Cabrero <scabrero@suse.de>
+
+- Fix an issue importing legacy XML based autoyast configuration;
+  (bsc#1137380);
+
+-------------------------------------------------------------------
 Fri Feb 15 17:47:05 UTC 2019 - David Mulder <dmulder@suse.com>
 
 - yast auth-client and krb5.conf wrong domain_realm entry; (bsc#1122026)
