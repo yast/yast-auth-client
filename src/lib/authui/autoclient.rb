@@ -42,22 +42,44 @@ module Auth
         def import(exported)
             if exported.has_key?('sssd')
                 # Import legacy XML configuration from SLE 12 SP0 or SP1
-                sssd = exported['sssd']
+                sssd = exported
                 if sssd.has_key?('listentry')
                     sssd = sssd['listentry']
                 end
-                enabled = sssd.fetch('sssd', nil)
+
+                sssd_enabled = sssd.fetch('sssd', nil)
+                if sssd_enabled == 'yes' || sssd_enabled == 'true'
+                    sssd_enabled = true
+                elsif sssd_enabled == 'no' || sssd_enabled == 'false'
+                    sssd_enabled = false
+                end
+
+                mkhomedir_enabled = sssd.fetch('mkhomedir', nil)
+                if mkhomedir_enabled == 'yes' || mkhomedir_enabled == 'true'
+                    mkhomedir_enabled = true
+                elsif mkhomedir_enabled == 'no' || mkhomedir_enabled == 'false'
+                    mkhomedir_enabled = false
+                end
+
                 daemon = sssd.fetch('sssd_conf', {}).fetch('sssd', nil)
-                domain = sssd.fetch('sssd_conf', {}).fetch('auth_domains', {}).fetch('domain', {})
+                auth_domain = sssd.fetch('sssd_conf', {}).fetch('auth_domains', {})
+
+                if auth_domain.is_a?(Array)
+                    domain = auth_domain[0]
+                else
+                    domain = auth_domain.fetch('domain', {})
+                end
+
                 domain_name = domain.fetch('domain_name', nil)
-                if enabled != 'yes' || daemon.nil? || domain_name.nil?
+                if !sssd_enabled || daemon.nil? || domain_name.nil?
                     log.info('legacy configuration is empty or disabled')
                     return true
                 end
                 AuthConfInst.clear
                 AuthConfInst.sssd_lint_conf # make a basic config structure
-                AuthConfInst.sssd_enabled = true
+                AuthConfInst.sssd_enabled = sssd_enabled
                 AuthConfInst.sssd_pam = true
+                AuthConfInst.mkhomedir_pam = mkhomedir_enabled
                 AuthConfInst.sssd_nss = ['passwd', 'group']
                 AuthConfInst.sssd_conf['sssd'] = daemon
                 domain.delete('domain_name')
