@@ -540,6 +540,11 @@ module SSSD
                             "type" => "string",
                             "def"  => "",
                             "desc" => _("Comma separated list of groups that are explicitly denied access. This applies only to groups within this SSSD domain.")
+                        },
+                        "ignore_group_members" => {
+                          "type" => "boolean",
+                          "def"  => "false",
+                          "desc" => _("Do not return group members for group lookups. If set to true, the group membership attribute is not requested from the ldap server, and group members are not returned when processing group lookup calls.")
                         }
                    },
                    # The local domain section
