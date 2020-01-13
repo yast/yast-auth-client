@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Mon Jan 13 14:57:07 UTC 2020 - Peter Varkoly <varkoly@suse.com>
+
+- SLEx_15_LOC : YaST: ALL_LANGS:Untranslated text in User Logon 
+  Management/Manage Domain User Login/Active Directory Enrollment dialog 
+  bsc#1083947
+- 4.1.0
+
+-------------------------------------------------------------------
 Mon Aug 20 10:45:18 CEST 2018 - schubi@suse.de
 
 - Switched license in spec file from SPDX2 to SPDX3 format.
