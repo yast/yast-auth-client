@@ -98,10 +98,10 @@ module SSSD
                         Opt(:keepSorting),
                         Header(_('Name'), _('Value')),
                         [
-                            Item('Active Directory Server', ad_entry),
-                            Item('Active Directory Domain', @ad_domain),
-                            Item('Workgroup', @workgroup_name),
-                            Item('Enrollment Status', enrollment_status)
+                            Item(_('Active Directory Server'), ad_entry),
+                            Item(_('Active Directory Domain'), @ad_domain),
+                            Item(_('Workgroup'), @workgroup_name),
+                            Item(_('Enrollment Status'), enrollment_status)
                         ]
                     )
                 ))
