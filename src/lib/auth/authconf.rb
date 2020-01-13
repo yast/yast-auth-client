@@ -41,7 +41,7 @@ module Auth
         # Clear all configuration objects.
         def clear
             # Kerberos configuration
-            @krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realms' => {}, 'logging' => {}}
+            @krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realm' => {}, 'logging' => {}}
             @krb_pam = false
             # LDAP configuration (/etc/ldap.conf)
             @ldap_conf = {}
@@ -524,14 +524,14 @@ module Auth
             end
             # Write LDAP config file and correct its permission and ownerships
             ldap_conf = File.new('/etc/ldap.conf', 'w')
-            ldap_conf.chmod(644)
+            ldap_conf.chmod(0644)
             ldap_conf.chown(0, 0)
             ldap_conf.write(ldap_make_conf)
             ldap_conf.close
             # If automount is enabled, overwrite openldap's ldap.conf as well.
             if @ldap_nss.include?('automount')
                 ldap_conf = File.new('/etc/openldap/ldap.conf', 'w')
-                ldap_conf.chmod(644)
+                ldap_conf.chmod(0644)
                 ldap_conf.chown(0, 0)
                 ldap_conf.write(ldap_make_conf)
                 ldap_conf.close
@@ -674,7 +674,7 @@ module Auth
 
         # Make sure the Kerberos configuration has all the necessary keys.
         def krb_lint_conf
-            ['libdefaults', 'realms', 'domain_realms', 'logging'].each { |key|
+            ['libdefaults', 'realms', 'domain_realm', 'logging'].each { |key|
                 @krb_conf[key] = {} if @krb_conf[key].nil?
             }
             @krb_conf['include'] = [] if @krb_conf['include'].nil?
@@ -794,10 +794,10 @@ module Auth
             end
             @krb_conf['realms'][realm_name].merge!("kdc" => kdc_addr, "admin_server" => admin_addr)
             if make_domain_realms
-                @krb_conf['domain_realms'].merge!(".#{realm_name.downcase}" => realm_name, "#{realm_name.downcase}" => realm_name)
+                @krb_conf['domain_realm'].merge!(".#{realm_name.downcase}" => realm_name, "#{realm_name.downcase}" => realm_name)
             else
-                @krb_conf['domain_realms'].delete(".#{realm_name.downcase}")
-                @krb_conf['domain_realms'].delete("#{realm_name.downcase}")
+                @krb_conf['domain_realm'].delete(".#{realm_name.downcase}")
+                @krb_conf['domain_realm'].delete("#{realm_name.downcase}")
             end
             if make_default || @krb_conf['libdefaults']['default_realm'].to_s == ''
                 @krb_conf['libdefaults']['default_realm'] = realm_name
