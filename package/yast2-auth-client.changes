@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Jan 30 09:57:03 UTC 2020 - Samuel Cabrero <scabrero@suse.de>
+
+- Default bind_policy to 'soft' if not present in the config
+  (bsc#1162025).
+- 3.3.19
+
+-------------------------------------------------------------------
 Fri Nov  3 14:56:08 UTC 2017 - hguo@suse.com
 
 - Upgrade to version 3.1.18 to introduce an RNC file that assists in
