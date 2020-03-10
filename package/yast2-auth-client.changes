@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar 10 10:03:54 UTC 2020 - Samuel Cabrero <scabrero@suse.de>
+
+- yast auth-client and krb5.conf wrong domain_realm entry; (bsc#1122026)
+- 3.3.20
+
+-------------------------------------------------------------------
 Thu Jan 30 09:57:03 UTC 2020 - Samuel Cabrero <scabrero@suse.de>
 
 - Default bind_policy to 'soft' if not present in the config
