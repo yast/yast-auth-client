@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar 10 10:02:52 UTC 2020 - Samuel Cabrero <scabrero@suse.de>
+
+- yast auth-client and krb5.conf wrong domain_realm entry; (bsc#1122026)
+- 3.3.15
+
+-------------------------------------------------------------------
 Fri May 19 11:41:59 UTC 2017 - lslezak@suse.cz
 
 - Translation fix: Ruby gettext cannot extract translatable texts
