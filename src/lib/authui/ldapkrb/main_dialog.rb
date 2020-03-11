@@ -306,6 +306,12 @@ module LdapKrb
             when :ldap_tls_method_starttls
                 AuthConfInst.ldap_conf['ssl'] = 'start_tls'
             end
+
+            # bsc#1162025: Default bind_policy to soft if not present.
+            if not AuthConfInst.ldap_conf.key?('bind_policy')
+              AuthConfInst.ldap_conf['bind_policy'] = 'soft'
+            end
+
             AuthConfInst.mkhomedir_pam = UI.QueryWidget(Id(:mkhomedir_enable), :Value)
         end
 
