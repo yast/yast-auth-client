@@ -1,9 +1,15 @@
 -------------------------------------------------------------------
+Tue Mar 10 10:09:59 UTC 2020 - Samuel Cabrero <scabrero@suse.de>
+
+- yast auth-client and krb5.conf wrong domain_realm entry; (bsc#1122026)
+- 4.0.2
+
+-------------------------------------------------------------------
 Fri Jul 20 09:37:43 UTC 2018 - varkoly@suse.com
 
 - Bug 1085084 yast2 client-auth tries to install nss_ldap and pam_ldap
   All pam_ldap and nss_ldap stuff was removed
-- 4.0.1 
+- 4.0.1
 
 -------------------------------------------------------------------
 Thu Apr  5 10:52:48 UTC 2018 - mfilka@suse.com
