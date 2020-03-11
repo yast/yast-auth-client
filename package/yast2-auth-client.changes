@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar 10 09:58:29 UTC 2020 - Samuel Cabrero <scabrero@suse.de>
+
+- yast auth-client and krb5.conf wrong domain_realm entry;
+- Bump version to 3.3.14 for bsc#1122026.
+
+-------------------------------------------------------------------
 Wed Oct 12 07:56:07 UTC 2016 - hguo@suse.com
 
 - Add a missing nil check in network fact reader.
