@@ -45,10 +45,9 @@ zypper install -C "rubygem(ruby:$ruby_version:rspec)"
 zypper install git yast2-devtools yast2-testsuite yast2
 ```
 
-You can then run the auth-server module with:
+You can then run the auth-server client from src/clients/auth-server.rb with:
 
 ```
 rake run
-rake run[module name]
 rake run[auth-client]
 ```
