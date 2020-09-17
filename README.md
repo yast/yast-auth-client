@@ -32,3 +32,23 @@ To run the module, use the following command:
 This will run the module in text mode. For more options, including running in
 your desktop environment, see section on [running YaST](https://en.opensuse.org/SDB:Starting_YaST) in the YaST documentation.
 
+
+Development
+-----------
+
+You need to prepare your environment with:
+
+```
+ruby_version=$(ruby -e "puts RbConfig::CONFIG['ruby_version']")
+zypper install -C "rubygem(ruby:$ruby_version:yast-rake)"
+zypper install -C "rubygem(ruby:$ruby_version:rspec)"
+zypper install git yast2-devtools yast2-testsuite yast2
+```
+
+You can then run the auth-server module with:
+
+```
+rake run
+rake run[module name]
+rake run[auth-client]
+```
