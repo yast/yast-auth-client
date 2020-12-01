@@ -1,8 +1,10 @@
 yast2-auth-client
 =================
 
-[![Travis Build](https://travis-ci.org/yast/yast-auth-client.svg?branch=master)](https://travis-ci.org/yast/yast-auth-client)
-[![Jenkins Build](http://img.shields.io/jenkins/s/https/ci.opensuse.org/yast-auth-client-master.svg)](https://ci.opensuse.org/view/Yast/job/yast-auth-client-master/)
+[![Workflow Status](https://github.com/yast/yast-auth-client/workflows/CI/badge.svg?branch=master)](
+https://github.com/yast/yast-auth-client/actions?query=branch%3Amaster)
+[![Jenkins Status](https://ci.opensuse.org/buildStatus/icon?job=yast-yast-auth-client-master)](
+https://ci.opensuse.org/view/Yast/job/yast-yast-auth-client-master/)
 
 
 With this YaST2 module you can configure the authentication on your machine
