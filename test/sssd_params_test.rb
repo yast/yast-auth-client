@@ -1,7 +1,7 @@
 #!/usr/bin/env rspec
-ENV['Y2DIR'] = File.expand_path('../../src', __FILE__)
 
-require 'yast'
+require_relative "test_helper.rb"
+
 require 'authui/sssd/params'
 
 params = SSSD::Params.instance
