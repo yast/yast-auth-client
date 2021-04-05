@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Apr  5 15:03:28 UTC 2021 - Samuel Cabrero <scabrero@suse.de>
+
+- Fix cli 'help' handling for auth-client and ldapkrb;
+  (bsc#1172340);
+- 4.3.2
+
+-------------------------------------------------------------------
 Mon Aug 10 17:01:10 CEST 2020 - schubi@suse.de
 
 - AutoYaST: Added supplements: autoyast(auth-client) into the spec file
