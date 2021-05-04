@@ -516,7 +516,7 @@ module Auth
             if @ldap_pam
                 pkgs += ['pam_ldap']
             end
-            if @ldap_nss
+            if @ldap_nss.any?
                 pkgs += ['nss_ldap']
                 if @ldap_nss.include?('automount')
                     pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
@@ -1076,7 +1076,7 @@ module Auth
             if @krb_pam
                 pkgs += ['pam_krb5', 'krb5', 'krb5-client']
             end
-            if @ldap_nss
+            if @ldap_nss.any?
                 pkgs += ['nss_ldap']
                 if @ldap_nss.include?('automount')
                     pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
