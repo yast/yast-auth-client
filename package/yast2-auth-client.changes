@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue May  4 16:15:36 UTC 2021 - Samuel Cabrero <scabrero@suse.de>
+
+- Fix an error importing the configuration when the json does not
+  contain all keys; (bsc#1184630);
+- Fix nss_ldap package unnecessarily installed; (bsc#1185499);
+- 4.2.6
+
+-------------------------------------------------------------------
 Mon Apr  5 12:04:45 UTC 2021 - Samuel Cabrero <scabrero@suse.de>
 
 - Fix reading value of LDAP TLS setting (bsc#1181927);
