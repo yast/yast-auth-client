@@ -475,12 +475,18 @@ module Auth
 
         # Set configuration for LDAP from exported objects.
         def ldap_import(exported_conf)
-            @ldap_conf = exported_conf['conf']
-            @ldap_conf = {} if @ldap_conf.nil?
-            @ldap_pam = exported_conf['pam']
-            @ldap_pam = false if @ldap_pam.nil?
-            @ldap_nss = exported_conf['nss']
-            @ldap_nss = [] if @ldap_nss.nil?
+            if exported_conf.nil?
+                @ldap_conf = {}
+                @ldap_pam = false
+                @ldap_nss = []
+            else
+                @ldap_conf = exported_conf['conf']
+                @ldap_conf = {} if @ldap_conf.nil?
+                @ldap_pam = exported_conf['pam']
+                @ldap_pam = false if @ldap_pam.nil?
+                @ldap_nss = exported_conf['nss']
+                @ldap_nss = [] if @ldap_nss.nil?
+            end
         end
 
         # Generate ldap.conf content from the current configuration.
@@ -510,7 +516,7 @@ module Auth
             if @ldap_pam
                 pkgs += ['pam_ldap']
             end
-            if @ldap_nss
+            if @ldap_nss.any?
                 pkgs += ['nss_ldap']
                 if @ldap_nss.include?('automount')
                     pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
@@ -666,10 +672,16 @@ module Auth
 
         # Set configuration for Kerberos from exported objects.
         def krb_import(exported_conf)
-            @krb_conf = exported_conf['conf']
+            if exported_conf.nil?
+                @krb_conf = {}
+                @krb_pam = false
+            else
+                @krb_conf = exported_conf['conf']
+                @krb_conf = {} if @krb_conf.nil?
+                @krb_pam = exported_conf['pam']
+                @krb_pam = false if @krb_pam.nil?
+            end
             krb_lint_conf
-            @krb_pam = exported_conf['pam']
-            @krb_pam = false if @krb_pam.nil?
         end
 
         # Make sure the Kerberos configuration has all the necessary keys.
@@ -818,12 +830,18 @@ module Auth
 
         # Set configuration for auxiliary daemons/PAM from exported objects.
         def aux_import(exported_conf)
-            @autofs_enabled = exported_conf['autofs']
-            @autofs_enabled = false if @autofs_enabled.nil?
-            @nscd_enabled = exported_conf['nscd']
-            @nscd_enabled = false if @nscd_enabled.nil?
-            @mkhomedir_pam = exported_conf['mkhomedir']
-            @mkhomedir_pam = false if @mkhomedir_pam.nil?
+            if exported_conf.nil?
+                @autofs_enabled = false
+                @nscd_enabled = false
+                @mkhomedir_pam = false
+            else
+                @autofs_enabled = exported_conf['autofs']
+                @autofs_enabled = false if @autofs_enabled.nil?
+                @nscd_enabled = exported_conf['nscd']
+                @nscd_enabled = false if @nscd_enabled.nil?
+                @mkhomedir_pam = exported_conf['mkhomedir']
+                @mkhomedir_pam = false if @mkhomedir_pam.nil?
+            end
         end
 
         # Immediately enable(start)/disable(stop) the auxiliary daemons.
@@ -939,12 +957,21 @@ module Auth
 
         # Set configuration for AD enrollment from exported objects.
         def ad_import(exported_conf)
-            @ad_domain = exported_conf['domain']
-            @ad_user = exported_conf['user']
-            @ad_ou = exported_conf['ou']
-            @ad_pass= exported_conf['pass']
-            @ad_overwrite_smb_conf = exported_conf['overwrite_smb_conf']
-            @ad_update_dns = exported_conf['update_dns']
+            if exported_conf.nil?
+                @ad_domain = ''
+                @ad_user = ''
+                @ad_ou = ''
+                @ad_pass = ''
+                @ad_overwrite_smb_conf = false
+                @ad_update_dns = false
+            else
+                @ad_domain = exported_conf['domain']
+                @ad_user = exported_conf['user']
+                @ad_ou = exported_conf['ou']
+                @ad_pass= exported_conf['pass']
+                @ad_overwrite_smb_conf = exported_conf['overwrite_smb_conf']
+                @ad_update_dns = exported_conf['update_dns']
+            end
         end
 
         # Run "net ads join". Return tuple of boolean success status and command output.
@@ -1049,7 +1076,7 @@ module Auth
             if @krb_pam
                 pkgs += ['pam_krb5', 'krb5', 'krb5-client']
             end
-            if @ldap_nss
+            if @ldap_nss.any?
                 pkgs += ['nss_ldap']
                 if @ldap_nss.include?('automount')
                     pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
