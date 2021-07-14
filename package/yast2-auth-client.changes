@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Jul 14 15:16:38 UTC 2021 - Peter Varkoly <varkoly@suse.com>
+
+- SLEx_15_LOC : YaST: ALL_LANGS:Untranslated text 'domain' appears 
+  in User Logon Management/Manage Domain User Login main dialog when domain added 
+  (bsc#1083949)
+- 4.3.2
+
+-------------------------------------------------------------------
 Mon Aug 10 17:01:10 CEST 2020 - schubi@suse.de
 
 - AutoYaST: Added supplements: autoyast(auth-client) into the spec file

@@ -169,7 +169,7 @@ module SSSD
                         content = VBox(
                             # TRANSLATORS: Label of the area used to customise parameters.
                             # %s is the name of the section being customised.
-                            Left(Label(Opt(:boldFont), _("Options - %s") % caption)),
+                            Left(Label(Opt(:boldFont), format(_("Options - %s"), caption))),
                             Left(HBox(*domain_additions)),
                             HBox(
                                 Table(
@@ -217,7 +217,7 @@ module SSSD
                             Popup.Error(_("Please select a domain among the list."))
                             redo
                         end
-                        if !Popup.YesNo(_("Do you really wish to erase configuration for domain %s?") % sect_name)
+                        if !Popup.YesNo(format(_("Do you really wish to erase configuration for domain %s?"), sect_name))
                             redo
                         end
                         AuthConfInst.sssd_conf.delete(sect_name)
