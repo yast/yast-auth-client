@@ -21,7 +21,12 @@
 # Authors:      Howard Guo <hguo@suse.com>
 
 require 'auth/authconf'
+require 'auth/auth-cli'
 require 'authui/main_dialog'
 
-Auth::AuthConfInst.read_all
-Auth::MainDialog.new(:sssd).run
+if Yast::WFM.Args.empty?
+  Auth::AuthConfInst.read_all
+  Auth::MainDialog.new(:sssd).run
+else
+  Auth::CLI.run("auth-client")
+end

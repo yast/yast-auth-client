@@ -4,6 +4,26 @@ Wed Jul 14 15:16:38 UTC 2021 - Peter Varkoly <varkoly@suse.com>
 - SLEx_15_LOC : YaST: ALL_LANGS:Untranslated text 'domain' appears 
   in User Logon Management/Manage Domain User Login main dialog when domain added 
   (bsc#1083949)
+- 4.4.2
+
+-------------------------------------------------------------------
+Wed May  5 10:21:50 UTC 2021 - Samuel Cabrero <scabrero@suse.de>
+
+- Fix an error importing the configuration when the json does not
+  contain all keys; (bsc#1184630);
+- Fix nss_ldap package unnecessarily installed; (bsc#1185499);
+- 4.4.1
+
+-------------------------------------------------------------------
+Tue Apr 20 13:51:55 UTC 2021 - Ladislav Slezák <lslezak@suse.cz>
+
+- 4.4.0 (bsc#1185510)
+
+-------------------------------------------------------------------
+Tue Nov 24 10:53:05 UTC 2020 - Noel Power <nopower@suse.com>
+
+- Fix cli 'help' handling for auth-client & ldapkrb;
+  (bsc#1172340).
 - 4.3.2
 
 -------------------------------------------------------------------
