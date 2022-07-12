@@ -70,6 +70,7 @@ module SSSD
                     Password(Id(:password), Opt(:hstretch), _('Password'), AuthConfInst.ad_pass),
                     CheckBox(Id(:update_dns), Opt(:hstretch), _('Update AD\'s DNS records as well'), AuthConfInst.ad_update_dns),
                     InputField(Id(:orgunit), Opt(:hstretch), _('Optional Organisation Unit such as "Headquarter/HR/BuildingA"'), AuthConfInst.ad_ou),
+                    InputField(Id(:dnshostname), Opt(:hstretch), _('Optional dnsHostName attribute during the join'), AuthConfInst.ad_dnshostname),
                     Left(CheckBox(Id(:overwrite_smb_conf), _('Overwrite Samba configuration to work with this AD'), AuthConfInst.ad_overwrite_smb_conf)),
             )
             ad_entry = ''
@@ -128,6 +129,7 @@ module SSSD
             orgunit = UI.QueryWidget(Id(:orgunit), :Value)
             password = UI.QueryWidget(Id(:password), :Value)
             overwrite_smb_conf = UI.QueryWidget(Id(:overwrite_smb_conf), :Value)
+            dnshostname = UI.QueryWidget(Id(:dnshostname), :Value)
 
             if !username.nil? && username != '' || !password.nil? && password != '' || !orgunit.nil? && orgunit != ''
                 # Enroll the computer, or save the enrollment details
@@ -140,6 +142,7 @@ module SSSD
                 AuthConfInst.ad_user = username
                 AuthConfInst.ad_ou = orgunit
                 AuthConfInst.ad_pass = password
+                AuthConfInst.ad_dnshostname = dnshostname
                 AuthConfInst.ad_update_dns = UI.QueryWidget(Id(:update_dns), :Value)
                 AuthConfInst.ad_overwrite_smb_conf = overwrite_smb_conf
                 if AuthConfInst.autoyast_editor_mode
@@ -154,6 +157,7 @@ module SSSD
                     AuthConfInst.ad_user = ''
                     AuthConfInst.ad_ou = ''
                     AuthConfInst.ad_pass = ''
+                    AuthConfInst.ad_dnshostname = ''
                     finish_dialog(:finish)
                     return
                 else
