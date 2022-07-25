@@ -14,8 +14,7 @@ Features
 
   * Configure single or multi-domain authentication via SSSD
   * Enroll a host at Microsoft Active Directory
-  * Configure PAM/NSS for LDAP
-  * Configure Kerberos client
+  * Configure PAM/NSS for LDAP or Kerberos via SSSD
 
 Installation
 ------------
@@ -57,5 +56,5 @@ rake run
 To specifically run the `auth-client` module:
 
 ```
-rake run[auth-client]
+rake run[auth-client]A
 ```

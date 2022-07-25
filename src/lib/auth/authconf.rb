@@ -34,7 +34,7 @@ module Auth
         include Yast::Logger
         include Yast::UIShortcuts
 
-        attr_accessor(:krb_conf, :krb_pam, :ldap_conf, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
+        attr_accessor(:krb_conf, :krb_pam, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
         attr_accessor(:autofs_enabled, :nscd_enabled, :mkhomedir_pam)
         attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :ad_update_dns, :ad_dnshostname, :autoyast_editor_mode, :autoyast_modified)
 
@@ -44,7 +44,6 @@ module Auth
             @krb_conf = {'include' => [], 'libdefaults' => {}, 'realms' => {}, 'domain_realm' => {}, 'logging' => {}}
             @krb_pam = false
             # LDAP configuration (/etc/ldap.conf)
-            @ldap_conf = {}
             @ldap_pam = false
             @ldap_nss = []
             # SSSD configuration (/etc/sssd/sssd.conf)
@@ -440,25 +439,6 @@ module Auth
 
         # Load LDAP configuration.
         def ldap_read
-            @ldap_conf = {}
-            # Destruct ldap.conf file
-            Yast::SCR.UnmountAgent(Yast::Path.new('.etc.ldap_conf'))
-            Yast::SCR.Read(Yast::Path.new('.etc.ldap_conf.all')).fetch('value', []).each { |entry|
-                if entry['kind'] != 'value'
-                    skip
-                end
-                entry_name = entry['name'].strip
-                entry_value = entry['value'].strip
-                # Store values from duplicate keys in the original order
-                existing_value = @ldap_conf[entry_name]
-                if existing_value && existing_value.kind_of?(::String)
-                    @ldap_conf[entry_name] = [existing_value, entry_value]
-                elsif existing_value && existing_value.kind_of?(::Array)
-                    @ldap_conf[entry_name] = existing_value + [entry_value]
-                else
-                    @ldap_conf[entry_name] = entry_value
-                end
-            }
             # Read PAM/NSS
             @ldap_pam = Yast::Pam.Enabled('ldap')
             @ldap_nss = []
@@ -471,18 +451,15 @@ module Auth
 
         # Return LDAP configuration.
         def ldap_export
-            return {'conf' => @ldap_conf, 'pam' => @ldap_pam, 'nss' => @ldap_nss}
+            return {'pam' => @ldap_pam, 'nss' => @ldap_nss}
         end
 
         # Set configuration for LDAP from exported objects.
         def ldap_import(exported_conf)
             if exported_conf.nil?
-                @ldap_conf = {}
                 @ldap_pam = false
                 @ldap_nss = []
             else
-                @ldap_conf = exported_conf['conf']
-                @ldap_conf = {} if @ldap_conf.nil?
                 @ldap_pam = exported_conf['pam']
                 @ldap_pam = false if @ldap_pam.nil?
                 @ldap_nss = exported_conf['nss']
@@ -505,93 +482,6 @@ module Auth
                 end
             }
             return content
-        end
-
-        # Immediately apply LDAP configuration, including PAM/NSS configuration.
-        def ldap_apply
-            if @autoyast_editor_mode
-                return
-            end
-            # Calculate package requirements
-            pkgs = []
-            if @ldap_pam
-                pkgs += ['pam_ldap']
-            end
-            if @ldap_nss.any?
-                pkgs += ['nss_ldap']
-                if @ldap_nss.include?('automount')
-                    pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
-                end
-            end
-            pkgs.delete_if { |name| Yast::Package.Installed(name) }
-            if pkgs.any?
-                if !Yast::Package.DoInstall(pkgs)
-                    Yast::Report.Error(_('Failed to install software packages required for LDAP.'))
-                end
-            end
-            # Write LDAP config file and correct its permission and ownerships
-            ldap_conf = File.new('/etc/ldap.conf', 'w')
-            ldap_conf.chmod(0600)
-            ldap_conf.chown(0, 0)
-            ldap_conf.write(ldap_make_conf)
-            ldap_conf.close
-            # If automount is enabled, overwrite openldap's ldap.conf as well.
-            if @ldap_nss.include?('automount')
-                ldap_conf = File.new('/etc/openldap/ldap.conf', 'w')
-                ldap_conf.chmod(0644)
-                ldap_conf.chown(0, 0)
-                ldap_conf.write(ldap_make_conf)
-                ldap_conf.close
-            end
-            # Save PAM/NSS/daemon status
-            if @ldap_pam
-                Yast::Pam.Add('ldap')
-            else
-                Yast::Pam.Remove('ldap')
-            end
-            fix_pam
-            LDAP_CAPABLE_NSS_DBS.each { |db| nss_disable_module(db, 'ldap') }
-            if @ldap_nss.any?
-                @ldap_nss.each { |db| nss_enable_module(db, 'ldap') }
-            end
-        end
-
-        # Run ldapsearch to test the parameters. Return empty string if test is successful, otherwise return ldapsearch error output.
-        def ldap_test_bind(uri, start_tls, dn, password, base_dn)
-            # Make sure openldap client is installed
-            if !Yast::Package.Installed('openldap2-client')
-                if !Yast::Package.DoInstall(['openldap2-client'])
-                    return 'Failed to install openldap2-client package'
-                end
-            end
-            # Create a temporary file to hold the password
-            pwd_filename = "yastauthclient-ldaptestbind-#{Time.now.strftime('%Y%m%d%I%M%S')}"
-            pwd_file = File.open(pwd_filename, 'w', 0600)
-            pwd_file.write(password)
-            pwd_file.close
-            # Run ldapsearch with password bind
-            cmd = "ldapsearch -o nettimeout=5 -s one -x -H '#{uri}' "
-            if start_tls
-                cmd += '-ZZ '
-            end
-            if dn.to_s != ''
-                cmd += "-D '#{dn}' -y '#{pwd_filename}' "
-            end
-            cmd += "-b #{base_dn}"
-            out = ''
-            errout = ''
-            exitstatus = 0
-            Open3.popen3(cmd){ |stdin, stdout, stderr, control|
-                stdin.close
-                out = stdout.read
-                errout = stderr.read
-                exitstatus = control.value
-            }
-            File.unlink(pwd_file)
-            if exitstatus == 0
-                return ''
-            end
-            return _("ERROR: ") + "#{out}\n#{errout}"
         end
 
         # Parse and set Kerberos configuration
@@ -773,32 +663,14 @@ module Auth
             if @autoyast_editor_mode
                 return
             end
-            # Calculate package requirements
-            pkgs = []
-            if @krb_pam
-                pkgs += ['pam_krb5', 'krb5', 'krb5-client']
-            end
-            pkgs.delete_if { |name| Yast::Package.Installed(name) }
-            if pkgs.any?
-                if !Yast::Package.DoInstall(pkgs)
-                    Yast::Report.Error(_('Failed to install software packages required for Kerberos.'))
-                end
-            end
             # Write LDAP config file and correct its permission and ownerships
             krb_conf = File.new('/etc/krb5.conf', 'w')
             krb_conf.chmod(0644)
             krb_conf.chown(0, 0)
             krb_conf.write(krb_make_conf)
             krb_conf.close
-            # Save PAM/NSS/daemon status
-            if @krb_pam
-                Yast::Pam.Add('krb5')
-            else
-                Yast::Pam.Remove('krb5')
-            end
-            fix_pam
         end
-        
+
         # Create a Kerberos realm if it does not yet exist. If it already exists, update the configuration. All parameters are required.
         def krb_add_update_realm(realm_name, kdc_addr, admin_addr, make_domain_realms, make_default)
             realm_name = realm_name.upcase.strip
@@ -1075,18 +947,6 @@ module Auth
                     end
                 }
             end
-            if @ldap_pam
-                pkgs += ['pam_ldap']
-            end
-            if @krb_pam
-                pkgs += ['pam_krb5', 'krb5', 'krb5-client']
-            end
-            if @ldap_nss.any?
-                pkgs += ['nss_ldap']
-                if @ldap_nss.include?('automount')
-                    pkgs += ['openldap2-client'] # provides /etc/openldap/ldap.conf
-                end
-            end
             if @autofs_enabled || @sssd_nss.include?('automount') || @ldap_nss.include?('automount')
                 pkgs += ['autofs']
             end
@@ -1113,26 +973,25 @@ module Auth
                     auth_doms_caption += ' ' + _('(daemon is inactive)')
                 end
             else
-                # LDAP and/or Kerberos is configured
-                if @ldap_nss.any? || @ldap_pam
-                    if @ldap_conf['base'].to_s == ''
-                        auth_doms_caption = _('LDAP is enabled but the setup is incomplete')
+                list_of_providers = ''
+                if @ldap_nss.any?
+                    list_of_providers = _('NSS LDAP')
+                end
+                if @ldap_pam
+                    if list_of_providers != ''
+                        list_of_providers = _('PAM + NSS LDAP')
                     else
-                        auth_doms_caption = _('via LDAP on %s') % [@ldap_conf['base']]
+                        list_of_providers = _('PAM LDAP')
                     end
                 end
                 if @krb_pam
-                    if auth_doms_caption != ''
-                        # 'and' as in "authenticate via LDAP and Kerberos"
-                        auth_doms_caption += _(' and ')
-                    end
-                    realms = @krb_conf.fetch('realms', {})
-                    if realms.length == 0
-                        auth_doms_caption += _('via Kerberos')
+                    if list_of_providers != ''
+                        list_of_providers += _('and PAM KRB5')
                     else
-                        auth_doms_caption += _('via Kerberos on %s') % [realms.keys.join(', ')]
+                        list_of_providers = _('PAM KRB5')
                     end
                 end
+                auth_doms_caption = _('⚠️  Use of %s detected. These modules can no longer be configured and you MUST migrate to SSSD') % [list_of_providers]
             end
             return auth_doms_caption
         end
