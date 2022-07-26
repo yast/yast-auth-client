@@ -56,5 +56,5 @@ rake run
 To specifically run the `auth-client` module:
 
 ```
-rake run[auth-client]A
+rake run[auth-client]
 ```
