@@ -155,6 +155,7 @@ module Auth
             AuthConfInst.ad_user = ''
             AuthConfInst.ad_ou = ''
             AuthConfInst.ad_pass = ''
+            AuthConfInst.ad_dnshostname = ''
             AuthConfInst.ad_overwrite_smb_conf = false
             AuthConfInst.autoyast_modified = true
             return true

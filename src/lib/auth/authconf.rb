@@ -36,7 +36,7 @@ module Auth
 
         attr_accessor(:krb_conf, :krb_pam, :ldap_conf, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
         attr_accessor(:autofs_enabled, :nscd_enabled, :mkhomedir_pam)
-        attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :ad_update_dns, :autoyast_editor_mode, :autoyast_modified)
+        attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :ad_update_dns, :ad_dnshostname, :autoyast_editor_mode, :autoyast_modified)
 
         # Clear all configuration objects.
         def clear
@@ -68,6 +68,7 @@ module Auth
             @ad_ou = ''
             @ad_pass = ''
             @ad_update_dns = true
+            @ad_dnshostname = ''
             @ad_overwrite_smb_conf = false
         end
 
@@ -952,7 +953,8 @@ module Auth
         # Return AD enrollment configuration.
         def ad_export
             return {'domain' => @ad_domain, 'user' => @ad_user, 'ou' => @ad_ou, 'pass' => @ad_pass,
-                     'overwrite_smb_conf' => @ad_overwrite_smb_conf, 'update_dns' => @ad_update_dns}
+                    'overwrite_smb_conf' => @ad_overwrite_smb_conf, 'update_dns' => @ad_update_dns,
+                    'dnshostname' => @ad_dnshostname}
         end
 
         # Set configuration for AD enrollment from exported objects.
@@ -964,6 +966,7 @@ module Auth
                 @ad_pass = ''
                 @ad_overwrite_smb_conf = false
                 @ad_update_dns = false
+                @ad_dnshostname = ''
             else
                 @ad_domain = exported_conf['domain']
                 @ad_user = exported_conf['user']
@@ -971,6 +974,7 @@ module Auth
                 @ad_pass= exported_conf['pass']
                 @ad_overwrite_smb_conf = exported_conf['overwrite_smb_conf']
                 @ad_update_dns = exported_conf['update_dns']
+                @ad_dnshostname = exported_conf['dnshostname']
             end
         end
 
@@ -998,7 +1002,8 @@ module Auth
             output = ''
             exitstatus = 0
             ou_param = @ad_ou.to_s == '' ? '' : "createcomputer=#{@ad_ou}"
-            netcmd = "net -s #{smb_conf.path} ads join #{ou_param} -U #{@ad_user}"
+            dnshostname_param = @ad_dnshostname.to_s == '' ? '' : "dnshostname=#{@ad_dnshostname}"
+            netcmd = "net -s #{smb_conf.path} ads join #{ou_param} #{dnshostname_param} -U #{@ad_user}"
             if !@ad_update_dns
                 netcmd += ' --no-dns-updates'
             end
