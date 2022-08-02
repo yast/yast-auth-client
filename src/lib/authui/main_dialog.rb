@@ -22,7 +22,6 @@ require 'yast'
 require 'ui/dialog'
 require 'auth/authconf'
 require 'authui/sssd/main_dialog'
-require 'authui/ldapkrb/main_dialog'
 Yast.import 'UI'
 Yast.import 'Icon'
 Yast.import 'Label'
@@ -41,12 +40,6 @@ module Auth
         def initialize(entry_point)
             super()
             textdomain 'auth-client'
-            @entry_point = entry_point
-            if entry_point == :ldapkrb
-                @heading_caption = _('LDAP and Kerberos Client')
-            elsif entry_point == :sssd || entry_point == :auto
-                @heading_caption = _('User Logon Management')
-            end
         end
 
         def dialog_options
@@ -61,16 +54,8 @@ module Auth
 
         def dialog_content
             conf_buttons = [PushButton(Id(:change_settings), _('Change Settings')), PushButton(Id(:finish), Label.OKButton)]
-            if @entry_point == :auto
-                # Allow entering both SSSD and ldapkrb settings
-                conf_buttons = [
-                    PushButton(Id(:change_sssd_settings), _('User Logon Configuration')),
-                    PushButton(Id(:change_ldapkrb_settings), _('LDAP/Kerberos Configuration')),
-                    PushButton(Id(:finish), Label.OKButton)
-                ]
-            end
             VBox(
-                Left(Heading(@heading_caption)),
+                Left(Heading(_('User Logon Management'))),
                 Left(HBox(
                     HWeight(10, Empty()),
                     HWeight(80, VBox(
@@ -99,22 +84,7 @@ module Auth
 
         # Enter SSSD configuration dialog.
         def change_settings_handler
-            case @entry_point
-                when :sssd
-                    SSSD::MainDialog.new.run
-                when :ldapkrb
-                    LdapKrb::MainDialog.new.run
-            end
-            render_info_table
-        end
-
-        def change_sssd_settings_handler
             SSSD::MainDialog.new.run
-            render_info_table
-        end
-
-        def change_ldapkrb_settings_handler
-            LdapKrb::MainDialog.new.run
             render_info_table
         end
 
