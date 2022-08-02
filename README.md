@@ -14,8 +14,7 @@ Features
 
   * Configure single or multi-domain authentication via SSSD
   * Enroll a host at Microsoft Active Directory
-  * Configure PAM/NSS for LDAP
-  * Configure Kerberos client
+  * Configure PAM/NSS for LDAP or Kerberos via SSSD
 
 Installation
 ------------
