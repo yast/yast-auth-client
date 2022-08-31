@@ -6,7 +6,7 @@ Wed Aug 31 07:27:37 UTC 2022 - Michal Filka <mfilka@suse.com>
 - 4.5.4
 
 -------------------------------------------------------------------
-Tue Aug  2 11:12:22 UTC 2022 - Samuel Cabrero <scabrero@suse.de>
+Tue Aug  2 09:47:47 UTC 2022 - Samuel Cabrero <scabrero@suse.de>
 
 - Fix an error opening "User Logon" after removing pam_ldap
 - Drop a desktop file to remove the "LDAP and Kerberos" menu entry
