@@ -133,7 +133,6 @@ module Auth
         # Apply all configuration.
         def write
             AuthConfInst.autoyast_editor_mode = false
-            AuthConfInst.ldap_apply
             AuthConfInst.krb_apply
             AuthConfInst.aux_apply
             # If there is an AD domain, it has to join before SSSD is started
