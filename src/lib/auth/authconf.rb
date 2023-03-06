@@ -409,7 +409,7 @@ module Auth
                 end
             end
             # Write SSSD config file and correct its permission and ownerships
-            if File.exists?('/etc/sssd')
+            if File.exist?('/etc/sssd')
                 sssd_conf = File.new('/etc/sssd/sssd.conf', 'w')
                 sssd_conf.chmod(0600)
                 sssd_conf.chown(0, 0)
