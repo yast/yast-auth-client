@@ -34,6 +34,8 @@ module Auth
                 if comment_match
                     next
                 end
+                # Skip empty lines
+                next if line.match?(/^\s+$/)
                 # Remember include/includedir directives
                 include_match = /^(includedir|include|module)\s+(.+)$/.match(line)
                 if include_match
