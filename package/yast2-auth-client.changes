@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Sep 13 10:04:35 UTC 2023 - Samuel Cabrero <scabrero@suse.de>
+
+- Skip whitespace-only lines parsing krb5.conf; (bsc#1215297);
+- 4.4.5
+
+-------------------------------------------------------------------
 Wed Aug 31 07:27:37 UTC 2022 - Michal Filka <mfilka@suse.com>
 
 - bsc#1202919
