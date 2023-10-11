@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Wed Sep 13 10:04:35 UTC 2023 - Samuel Cabrero <scabrero@suse.de>
+
+- Skip whitespace-only lines parsing krb5.conf; (bsc#1215297);
+- Remove duplicated when clause (dead code) in
+  src/lib/authui/ldapkrb/main_dialog.rb
+- Default bind_policy to 'soft' if not present in the config
+  (bsc#1162025).
+- 4.0.3
+
+-------------------------------------------------------------------
 Tue Mar 10 10:09:59 UTC 2020 - Samuel Cabrero <scabrero@suse.de>
 
 - yast auth-client and krb5.conf wrong domain_realm entry; (bsc#1122026)
