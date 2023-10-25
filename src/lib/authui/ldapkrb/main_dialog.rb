@@ -166,8 +166,6 @@ module LdapKrb
                                 UI.ChangeWidget(Id(:nscd_enable), :Value, false)
                             end
                         end
-                    when :ldap_extended_opts
-                        LdapExtendedOptsDialog.new.run
 
                     # Kerberos tab events
                     when :krb_pam
@@ -306,6 +304,12 @@ module LdapKrb
             when :ldap_tls_method_starttls
                 AuthConfInst.ldap_conf['ssl'] = 'start_tls'
             end
+
+            # bsc#1162025: Default bind_policy to soft if not present.
+            if !AuthConfInst.ldap_conf.key?('bind_policy')
+              AuthConfInst.ldap_conf['bind_policy'] = 'soft'
+            end
+
             AuthConfInst.mkhomedir_pam = UI.QueryWidget(Id(:mkhomedir_enable), :Value)
         end
 
