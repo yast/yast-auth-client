@@ -166,8 +166,6 @@ module LdapKrb
                                 UI.ChangeWidget(Id(:nscd_enable), :Value, false)
                             end
                         end
-                    when :ldap_extended_opts
-                        LdapExtendedOptsDialog.new.run
 
                     # Kerberos tab events
                     when :krb_pam
