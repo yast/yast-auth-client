@@ -3,9 +3,6 @@ yast2-auth-client
 
 [![Workflow Status](https://github.com/yast/yast-auth-client/workflows/CI/badge.svg?branch=master)](
 https://github.com/yast/yast-auth-client/actions?query=branch%3Amaster)
-[![Jenkins Status](https://ci.opensuse.org/buildStatus/icon?job=yast-yast-auth-client-master)](
-https://ci.opensuse.org/view/Yast/job/yast-yast-auth-client-master/)
-
 
 With this YaST2 module you can configure the authentication on your machine
 
