@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-auth-client
 #
-# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2023 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -19,7 +19,7 @@
 Name:           yast2-auth-client
 Version:        4.6.1
 Release:        0
-Url:            https://github.com/yast/yast-auth-client
+URL:            https://github.com/yast/yast-auth-client
 Summary:        YaST2 - Centralised System Authentication Configuration
 License:        GPL-2.0-only
 Group:          System/YaST
