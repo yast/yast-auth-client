@@ -755,10 +755,91 @@ module Auth
                 service_disable_stop('nscd')
             end
         end
-        
+
+        def IsInstalledVersionNewerOrEqual(installed_rpm_version, test_rpm_version)
+            installed_rpm_version_l = Yast::Builtins.filter(
+                Yast::Builtins.splitstring(installed_rpm_version, "-.+")
+            ) do |one_item|
+                    Yast::Builtins.regexpmatch(one_item, "^[0123456789]+$")
+                end
+            test_rpm_version_l = Yast::Builtins.filter(
+                Yast::Builtins.splitstring(test_rpm_version, "-.+")
+            ) do |one_item|
+                    Yast::Builtins.regexpmatch(one_item, "^[0123456789]+$")
+                end
+
+            Yast::Builtins.y2milestone(
+                "Evaluating installed %1 and test %2 versions",
+                installed_rpm_version_l,
+                test_rpm_version_l
+            )
+
+            installed_version_item = nil
+            test_version_item = nil
+
+            installed_version_is_equal_or_newer = false
+            loop_counter = 0
+            Yast::Builtins.foreach(installed_rpm_version_l) do |i_item|
+                installed_version_item = Yast::Builtins.tointeger(i_item)
+                test_version_item = Yast::Builtins.tointeger(
+                    Yast::Ops.get(test_rpm_version_l, loop_counter, "0")
+                )
+                if test_version_item != installed_version_item
+                    installed_version_is_equal_or_newer = Yast::Ops.greater_or_equal(
+                        installed_version_item,
+                        test_version_item
+                    )
+                    raise Yast::Break
+                end
+                loop_counter = Yast::Ops.add(loop_counter, 1)
+            end
+
+            Yast::Builtins.y2milestone(
+                "%1 >= %2 -> %3",
+                installed_rpm_version,
+                test_rpm_version,
+                installed_version_is_equal_or_newer
+            )
+            installed_version_is_equal_or_newer
+        end
+
         # Create a temporary file holding smb.conf for the specified AD domain.
         # @return [File] a closed file, caller should #unlink after it is no longer used.
         def ad_create_tmp_smb_conf(ad_domain_name, workgroup_name)
+            query_format = "%{VERSION}"
+
+            cmd_installed_rpm_version = Yast::Convert.to_map(
+                Yast::SCR.Execute(
+                    Yast::Path.new(".target.bash_output"),
+                    Yast::Builtins.sformat(
+                        "/bin/rpm -q --queryformat \"%1\" samba",
+                        query_format
+                    )
+                )
+            )
+
+            if Yast::Ops.get_integer(cmd_installed_rpm_version, "exit", -1) != 0
+                Yast::Builtins.y2warning(
+                    "Cannot check the installed samba version: %1",
+                    cmd_installed_rpm_version
+                )
+                Yast::Report.Error(_('Failed to check the installed samba version.'))
+                return nil
+            end
+
+            installed_rpm_version = Yast::Ops.get_string(
+                cmd_installed_rpm_version,
+                "stdout",
+                "undefined-i"
+            )
+
+            system_keytab = krb_get_default(:default_keytab_name)
+            if IsInstalledVersionNewerOrEqual(installed_rpm_version, "4.21.0")
+                system_keytab_param = "sync machine password to keytab = #{system_keytab}:account_name:sync_etypes:sync_kvno:machine_password"
+            else
+                system_keytab_param = "kerberos method = secrets and keytab"
+            end
+
             out = Tempfile.new("tempfile")
             out.write("
 [global]
@@ -766,7 +847,7 @@ module Auth
     realm = #{ad_domain_name}
     workgroup = #{workgroup_name}
     log file = /var/log/samba/%m.log
-    kerberos method = secrets and keytab
+    #{system_keytab_param}
     client signing = yes
     client use spnego = yes
 ")
@@ -814,6 +895,9 @@ module Auth
                 return [false, false]
             end
             smb_conf = ad_create_tmp_smb_conf(ad_domain_name, ad_get_workgroup_name(ad_domain_name))
+            if smb_conf.nil?
+                return [false, false]
+            end
             _, status = Open3.capture2("net -s #{smb_conf.path} ads testjoin")
             ad_has_computer = status.exitstatus == 0
             klist, _ = Open3.capture2("klist -k")
@@ -871,6 +955,9 @@ module Auth
 
             # Create a temporary smb.conf to join this computer
             smb_conf = ad_create_tmp_smb_conf(@ad_domain, ad_get_workgroup_name(@ad_domain))
+            if smb_conf.nil?
+                return [false, _('Failed to create temporary smb.conf')]
+            end
             output = ''
             exitstatus = 0
             ou_param = @ad_ou.to_s == '' ? '' : "createcomputer=#{@ad_ou}"
