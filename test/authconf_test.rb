@@ -32,6 +32,20 @@ describe Auth::AuthConf do
     end
     authconf = Auth::AuthConfInst
 
+    describe 'Samba' do
+        it 'Detect samba version' do
+            expect(authconf.is_installed_version_newer_or_equal?("4.20.1", "4.21.0")).to eq(false)
+            expect(authconf.is_installed_version_newer_or_equal?("4.21.0", "4.20.1")).to eq(true)
+            expect(authconf.is_installed_version_newer_or_equal?("4.21.0", "4.21.0")).to eq(true)
+            expect(authconf.is_installed_version_newer_or_equal?("4.20.1", "4.21")).to eq(false)
+            expect(authconf.is_installed_version_newer_or_equal?("4.21.0", "4.20")).to eq(true)
+            expect(authconf.is_installed_version_newer_or_equal?("4.21.0", "4.21")).to eq(true)
+            expect(authconf.is_installed_version_newer_or_equal?("4.20", "4.21.0")).to eq(false)
+            expect(authconf.is_installed_version_newer_or_equal?("4.21", "4.20.1")).to eq(true)
+            expect(authconf.is_installed_version_newer_or_equal?("4.21", "4.20.0")).to eq(true)
+        end
+    end
+
     describe 'SSSD' do
         it 'Read, lint, and export SSSD configuration' do
             authconf.sssd_read

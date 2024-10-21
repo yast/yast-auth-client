@@ -26,6 +26,8 @@ require 'tempfile'
 require 'fileutils'
 require 'date'
 require 'auth/krbparse'
+require 'shellwords'
+require "yast2/execute"
 
 module Auth
     # Manage system-wide authentication configuration from Kerberos, LDAP, Samba, and SSSD's perspectives.
@@ -33,6 +35,7 @@ module Auth
         include Yast::I18n
         include Yast::Logger
         include Yast::UIShortcuts
+        include Yast::Logger
 
         attr_accessor(:krb_conf, :krb_pam, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
         attr_accessor(:autofs_enabled, :nscd_enabled, :mkhomedir_pam)
@@ -755,10 +758,57 @@ module Auth
                 service_disable_stop('nscd')
             end
         end
-        
+
+        def is_installed_version_newer_or_equal?(installed_rpm_version, test_rpm_version)
+            installed_rpm_version_l = installed_rpm_version
+                .split(/[-.+]/)
+                .select { |i| i.match?(/^\d+$/) }
+                .map(&:to_i)
+
+            test_rpm_version_l = test_rpm_version
+                .split(/[-.+]/)
+                .select { |i| i.match?(/^\d+$/) }
+                .map(&:to_i)
+
+            log.info(
+                "Evaluating installed #{installed_rpm_version_l} and test #{test_rpm_version_l} versions"
+            )
+
+            comparison_result = installed_rpm_version_l <=> test_rpm_version_l
+            installed_version_is_equal_or_newer = comparison_result != -1
+
+            log.info(
+                "#{installed_rpm_version} >= #{test_rpm_version} -> #{installed_version_is_equal_or_newer}"
+            )
+            installed_version_is_equal_or_newer
+        end
+
+        # @return [String, nil]
+        def samba_version
+            cmd = "/bin/rpm -q --queryformat %{VERSION} samba"
+            bin, *args = cmd.split
+            Yast::Execute.locally!(bin, *args, stdout: :capture)
+        rescue Cheetah::ExecutionFailed
+            log.warn("Cannot check the installed samba version: #{cmd}")
+            nil
+        end
+
         # Create a temporary file holding smb.conf for the specified AD domain.
         # @return [File] a closed file, caller should #unlink after it is no longer used.
         def ad_create_tmp_smb_conf(ad_domain_name, workgroup_name)
+            installed_rpm_version = samba_version
+            if !installed_rpm_version
+                Yast::Report.Error(_('Failed to check the installed samba version.'))
+                return
+            end
+
+            system_keytab = krb_get_default(:default_keytab_name)
+            if is_installed_version_newer_or_equal?(installed_rpm_version, "4.21.0")
+                system_keytab_param = "sync machine password to keytab = #{system_keytab}:account_name:sync_etypes:sync_kvno:machine_password"
+            else
+                system_keytab_param = "kerberos method = secrets and keytab"
+            end
+
             out = Tempfile.new("tempfile")
             out.write("
 [global]
@@ -766,7 +816,7 @@ module Auth
     realm = #{ad_domain_name}
     workgroup = #{workgroup_name}
     log file = /var/log/samba/%m.log
-    kerberos method = secrets and keytab
+    #{system_keytab_param}
     client signing = yes
     client use spnego = yes
 ")
@@ -814,6 +864,9 @@ module Auth
                 return [false, false]
             end
             smb_conf = ad_create_tmp_smb_conf(ad_domain_name, ad_get_workgroup_name(ad_domain_name))
+            if smb_conf.nil?
+                return [false, false]
+            end
             _, status = Open3.capture2("net -s #{smb_conf.path} ads testjoin")
             ad_has_computer = status.exitstatus == 0
             klist, _ = Open3.capture2("klist -k")
@@ -871,6 +924,9 @@ module Auth
 
             # Create a temporary smb.conf to join this computer
             smb_conf = ad_create_tmp_smb_conf(@ad_domain, ad_get_workgroup_name(@ad_domain))
+            if smb_conf.nil?
+                return [false, _('Failed to create temporary smb.conf')]
+            end
             output = ''
             exitstatus = 0
             ou_param = @ad_ou.to_s == '' ? '' : "createcomputer=#{@ad_ou}"
