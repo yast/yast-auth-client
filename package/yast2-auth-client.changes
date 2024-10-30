@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Mon Oct 30 09:37:39 UTC 2023 - Samuel Cabrero <scabrero@suse.de>
+
+- Skip whitespace-only lines parsing krb5.conf; (bsc#1215297);
+- Remove duplicated when clause (dead code) in
+  src/lib/authui/ldapkrb/main_dialog.rb
+- Bug 1085084 yast2 client-auth tries to install nss_ldap and pam_ldap
+  All pam_ldap and nss_ldap stuff was removed
+- 4.2.7
+
+-------------------------------------------------------------------
 Tue May  4 16:15:36 UTC 2021 - Samuel Cabrero <scabrero@suse.de>
 
 - Fix an error importing the configuration when the json does not
