@@ -375,11 +375,17 @@ module i/j/k.l:RESIDUAL
     describe 'Auxiliary daemons/PAM' do
         it 'Read, lint, and export auxiliary configuration' do
             authconf.aux_read
-            expect(authconf.aux_export).to eq('autofs' => false, 'nscd' => false, 'mkhomedir' => false)
+            expect(authconf.aux_export).to eq('autofs' => false, 'mkhomedir' => false)
         end
         it 'Import and recreate the same configuration' do
+            conf = {'autofs' => true, 'mkhomedir' => true}
+            authconf.aux_import(conf)
+            expect(authconf.aux_export).to eq(conf)
+        end
+        it 'Import and recreate the same configuration ignoring nscd' do
             conf = {'autofs' => true, 'nscd' => true, 'mkhomedir' => true}
             authconf.aux_import(conf)
+            conf = {'autofs' => true, 'mkhomedir' => true}
             expect(authconf.aux_export).to eq(conf)
         end
     end
