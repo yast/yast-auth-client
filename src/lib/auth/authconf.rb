@@ -38,7 +38,7 @@ module Auth
         include Yast::Logger
 
         attr_accessor(:krb_conf, :krb_pam, :ldap_pam, :ldap_nss, :sssd_conf, :sssd_pam, :sssd_nss, :sssd_enabled)
-        attr_accessor(:autofs_enabled, :nscd_enabled, :mkhomedir_pam)
+        attr_accessor(:autofs_enabled, :mkhomedir_pam)
         attr_accessor(:ad_domain, :ad_user, :ad_ou, :ad_pass, :ad_overwrite_smb_conf, :ad_update_dns, :ad_dnshostname, :autoyast_editor_mode, :autoyast_modified)
 
         # Clear all configuration objects.
@@ -62,7 +62,6 @@ module Auth
             # - SSSD is providing automount
             # - LDAP is providing automount
             @autofs_enabled = false
-            @nscd_enabled = false
             @mkhomedir_pam = false
             # AD enrollment details
             @ad_domain = ''
@@ -695,26 +694,22 @@ module Auth
         # Load auxiliary daemon/PAM configuration.
         def aux_read
             @autofs_enabled = Yast::Service.Enabled('autofs')
-            @nscd_enabled = Yast::Service.Enabled('nscd')
             @mkhomedir_pam = Yast::Pam.Enabled('mkhomedir')
         end
 
         # Return auxiliary daemon configuration.
         def aux_export
-            return {'autofs' => @autofs_enabled, 'nscd' => @nscd_enabled, 'mkhomedir' => @mkhomedir_pam}
+            return {'autofs' => @autofs_enabled, 'mkhomedir' => @mkhomedir_pam}
         end
 
         # Set configuration for auxiliary daemons/PAM from exported objects.
         def aux_import(exported_conf)
             if exported_conf.nil?
                 @autofs_enabled = false
-                @nscd_enabled = false
                 @mkhomedir_pam = false
             else
                 @autofs_enabled = exported_conf['autofs']
                 @autofs_enabled = false if @autofs_enabled.nil?
-                @nscd_enabled = exported_conf['nscd']
-                @nscd_enabled = false if @nscd_enabled.nil?
                 @mkhomedir_pam = exported_conf['mkhomedir']
                 @mkhomedir_pam = false if @mkhomedir_pam.nil?
             end
@@ -730,13 +725,10 @@ module Auth
             if @autofs_enabled || @sssd_nss.include?('automount') || @ldap_nss.include?('automount')
                 pkgs += ['autofs']
             end
-            if @nscd_enabled
-                pkgs += ['nscd']
-            end
             pkgs.delete_if { |name| Yast::Package.Installed(name) }
             if pkgs.any?
                 if !Yast::Package.DoInstall(pkgs)
-                    Yast::Report.Error(_('Failed to install software packages required by autofs/nscd daemons.'))
+                    Yast::Report.Error(_('Failed to install software packages required by autofs daemon.'))
                 end
             end
             # Enable/disable mkhomedir
@@ -751,11 +743,6 @@ module Auth
                 service_enable_start('autofs')
             else
                 service_disable_stop('autofs')
-            end
-            if @nscd_enabled
-                service_enable_start('nscd')
-            else
-                service_disable_stop('nscd')
             end
         end
 
@@ -1005,9 +992,6 @@ module Auth
             end
             if @autofs_enabled || @sssd_nss.include?('automount') || @ldap_nss.include?('automount')
                 pkgs += ['autofs']
-            end
-            if @nscd_enabled
-                pkgs += ['nscd']
             end
             if @ad_domain.to_s != ''
                 pkgs += ['samba-client', 'krb5-client']

@@ -438,9 +438,6 @@ module SSSD
                               "Do you still wish to proceed?"))
                             redo
                         end
-                        if AuthConfInst.sssd_enabled
-                            AuthConfInst.nscd_enabled = false
-                        end
                         AuthConfInst.mkhomedir_pam = UI.QueryWidget(Id(:mkhomedir_enable), :Value)
                         AuthConfInst.sssd_apply
                         AuthConfInst.aux_apply
