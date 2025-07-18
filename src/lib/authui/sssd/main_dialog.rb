@@ -41,6 +41,7 @@ module SSSD
                 "pam" => _("Authentication"), "sudo" => _("Sudo"),
                 "autofs" => _("Auto-Mount"), "ssh" => _("SSH Public Keys"),
                 "pac" => _("Privilege Account Certificate (MS-PAC)"),
+                "ifp" => _("Information Pipe"),
             }
             # The reverse caption mapping
             @sect_caption_name = Hash[*@sect_name_caption.map { |name, caption| [caption, name] }.flatten]
@@ -83,6 +84,7 @@ module SSSD
                                         Left(CheckBox(Id(:nss_automount), Opt(:notify), _("Map Network Drives (automount)"), AuthConfInst.sssd_nss.include?('automount'))),
                                         Left(CheckBox(Id(:svc_ssh), Opt(:notify), _("SSH Public Keys"), AuthConfInst.sssd_conf['sssd']['services'].include?('ssh'))),
                                         Left(CheckBox(Id(:svc_pac), Opt(:notify), _("Privilege Account Certificate (MS-PAC)"), AuthConfInst.sssd_conf['sssd']['services'].include?('pac'))),
+                                        Left(CheckBox(Id(:svc_ifp), Opt(:notify), _("Information Pipe"), AuthConfInst.sssd_conf['sssd']['services'].include?('ifp'))),
                                     )
                                 ),
                                 VSpacing(0.2),
@@ -378,6 +380,16 @@ module SSSD
                             AuthConfInst.sssd_enable_svc('pac')
                         else
                             AuthConfInst.sssd_disable_svc('pac')
+                        end
+                        render_section_tree
+
+                    when :svc_ifp
+                        # enable information pipe
+                        enable = UI.QueryWidget(Id(:svc_ifp), :Value)
+                        if enable
+                            AuthConfInst.sssd_enable_svc('ifp')
+                        else
+                            AuthConfInst.sssd_disable_svc('ifp')
                         end
                         render_section_tree
 
