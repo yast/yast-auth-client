@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Sep 30 10:14:48 UTC 2025 - Samuel Cabrero <scabrero@suse.de>
+
+- Add support of sssd Information Pipe (bsc#1246696)
+- 4.6.2
+
+-------------------------------------------------------------------
 Mon Mar  6 16:47:05 UTC 2023 - Martin Vidner <mvidner@suse.com>
 
 - Stop using File.exists? which no longer works in Ruby 3.2
