@@ -804,7 +804,7 @@ module Auth
 
             system_keytab = krb_get_default(:default_keytab_name)
             if is_installed_version_newer_or_equal?(installed_rpm_version, "4.21.0")
-                system_keytab_param = "sync machine password to keytab = #{system_keytab}:account_name:sync_etypes:sync_kvno:machine_password"
+                system_keytab_param = "sync machine password to keytab = #{system_keytab}:account_name:sync_etypes:sync_kvno:sync_spns:machine_password"
             else
                 system_keytab_param = "kerberos method = secrets and keytab"
             end
