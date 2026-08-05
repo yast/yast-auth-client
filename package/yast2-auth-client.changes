@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Wed Aug 12 12:31:12 UTC 2026 - Noel Power <nopower@suse.com>
+
+- fix non specified optional params being unconditionally added to
+  net cmd arg list; (bsc#1274806).
+- CVE-2026-59681: yast2-auth-client: OS command injection via
+  unsanitized passed to net cmd.
+- Bump version to 3.3.18 for bsc#1272775.
+
+-------------------------------------------------------------------
 Tue Aug 29 13:54:21 UTC 2017 - hguo@suse.com
 
 - Bump to version 3.3.17 to fix two issues:
