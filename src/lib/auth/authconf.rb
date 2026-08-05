@@ -971,11 +971,20 @@ module Auth
             output = ''
             exitstatus = 0
             ou_param = @ad_ou.to_s == '' ? '' : "createcomputer=#{@ad_ou}"
-            netcmd = "net -s #{smb_conf.path} ads join #{ou_param} -U #{@ad_user}"
+            netcmd = [
+                "net",
+                "-s",
+                "#{smb_conf.path}",
+                "ads",
+                "join"
+            ]
+            netcmd << "#{ou_param}" unless ou_param.empty?
+            netcmd += ["-U", "#{@ad_user}"]
+
             if !@ad_update_dns
-                netcmd += ' --no-dns-updates'
+                netcmd << '--no-dns-updates'
             end
-            Open3.popen2(netcmd){ |stdin, stdout, control|
+            Open3.popen2(*netcmd){ |stdin, stdout, control|
                 stdin.print(@ad_pass + "\n")
                 stdin.close
                 output = stdout.read
