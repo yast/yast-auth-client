@@ -60,13 +60,13 @@ module Auth
         end
 
         def dialog_content
-            conf_buttons = [PushButton(Id(:change_settings), _('Change Settings')), PushButton(Id(:finish), Label.FinishButton)]
+            conf_buttons = [PushButton(Id(:change_settings), _('Change Settings')), PushButton(Id(:finish), Label.OKButton)]
             if @entry_point == :auto
                 # Allow entering both SSSD and ldapkrb settings
                 conf_buttons = [
                     PushButton(Id(:change_sssd_settings), _('User Logon Configuration')),
                     PushButton(Id(:change_ldapkrb_settings), _('LDAP/Kerberos Configuration')),
-                    PushButton(Id(:finish), Label.FinishButton)
+                    PushButton(Id(:finish), Label.OKButton)
                 ]
             end
             VBox(

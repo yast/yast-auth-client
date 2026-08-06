@@ -56,7 +56,7 @@ module LdapKrb
                 InputField(Id(:extra_addresses), Opt(:hstretch), _('Additional Addresses to be put in Ticket (Comma separated)'),
                     AuthConfInst.krb_conf_get(['libdefaults', 'extra_addresses'], '')),
                 VSpacing(1.0),
-                HBox(PushButton(Id(:reset), _('Reset')), PushButton(Id(:finish), Label.FinishButton)),
+                HBox(PushButton(Id(:reset), _('Reset')), PushButton(Id(:finish), Label.OKButton)),
             ))
         end
 

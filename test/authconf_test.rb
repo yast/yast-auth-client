@@ -25,17 +25,14 @@ require 'yast/rspec'
 require 'pp'
 require 'auth/authconf'
 
-include Yast
-include Auth
-
-describe AuthConf do
+describe Auth::AuthConf do
     before(:all) do
         change_scr_root(File.expand_path('../authconf_chroot', __FILE__))
     end
     after(:all) do
         reset_scr_root
     end
-    authconf = AuthConfInst
+    authconf = Auth::AuthConfInst
 
     describe 'SSSD' do
         it 'Read, lint, and export SSSD configuration' do
@@ -186,33 +183,9 @@ ssl start_tls
                             "auth_to_local"=>["RULE:[2:$1](johndoe)s/^.*$/guest/"]
                         },
                     },
-                    "domain_realm"=>{}, "logging"=>{}
+                    "domain_realms"=>{}, "logging"=>{}
                 }, "pam"=>false)
-            # The second tests for cruft in the section names
-            authconf.krb_parse_set('
-[libdefaultsXXXXXXXXX]
-    default_realm = ABC.ZZZ
-
-[realmsYYYZZZZXXXXX]
-        ABC.ZZZ = {
-            kdc = howie.suse.de
-            admin_server = howie.suse.de
-            auth_to_local = RULE:[2:$1](johndoe)s/^.*$/guest/
-        }
-')
-            expect(authconf.krb_export).to eq("conf"=>{
-                    "include"=>[],
-                    "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
-                    "realms"=>{
-                        "ABC.ZZZ"=>{
-                            "kdc"=>["howie.suse.de"],
-                            "admin_server"=>"howie.suse.de",
-                            "auth_to_local"=>["RULE:[2:$1](johndoe)s/^.*$/guest/"]
-                        },
-                    },
-                    "domain_realm"=>{}, "logging"=>{}
-                }, "pam"=>false)
-            # The third example is very comprehensive
+            # The second example is very comprehensive
             authconf.krb_parse_set('include a/b/c.d
 includedir e/f/g.h
 module i/j/k.l:RESIDUAL
@@ -221,6 +194,7 @@ module i/j/k.l:RESIDUAL
 #       default_realm = EXAMPLE.COM 
         default_realm = ABC.ZZZ
     forwardable = true
+    default_ccache_name = FILE:/tmp/krb5cc_%{uid}
 
 [realms]
 #       EXAMPLE.COM = {
@@ -249,7 +223,7 @@ module i/j/k.l:RESIDUAL
         EMPTY.NET = {
         }
 
-[domain_realm]
+[domain_realms]
 .suse.de = ABC.ZZZ
 suse.de = ABC.ZZZ
 
@@ -276,7 +250,7 @@ suse.de = ABC.ZZZ
 ')
             expect(authconf.krb_export).to eq("conf"=>{
                 "include"=>["include a/b/c.d", "includedir e/f/g.h", "module i/j/k.l:RESIDUAL"],
-                    "libdefaults"=>{"default_realm"=>"ABC.ZZZ", "forwardable"=>"true"},
+                    "libdefaults"=>{"default_realm"=>"ABC.ZZZ", "forwardable"=>"true", "default_ccache_name"=>"FILE:/tmp/krb5cc_%{uid}"},
                     "realms"=>{
                         "ABC.ZZZ"=>{
                             "kdc"=>["howie.suse.de", "backup.howie.suse.de"],
@@ -289,7 +263,7 @@ suse.de = ABC.ZZZ
                         },
                         "EMPTY.NET"=> {},
                     },
-                    "domain_realm"=>{".suse.de"=>"ABC.ZZZ", "suse.de"=>"ABC.ZZZ"},
+                    "domain_realms"=>{".suse.de"=>"ABC.ZZZ", "suse.de"=>"ABC.ZZZ"},
                     "logging"=>{"kdc"=>"FILE:/var/log/krb5/krb5kdc.log", "admin_server"=>"FILE:/var/log/krb5/kadmind.log", "default"=>"SYSLOG:NOTICE:DAEMON"},
                     "dbmodules"=>{
                         "openldap_ldapconf"=>{
@@ -313,8 +287,9 @@ module i/j/k.l:RESIDUAL
 [libdefaults]
     default_realm = ABC.ZZZ
     forwardable = true
+    default_ccache_name = FILE:/tmp/krb5cc_%{uid}
 
-[domain_realm]
+[domain_realms]
     .suse.de = ABC.ZZZ
     suse.de = ABC.ZZZ
 
@@ -363,7 +338,7 @@ module i/j/k.l:RESIDUAL
                 {"ABC.ZZZ"=>{"kdc"=>["howie.suse.de"], "admin_server"=>"howie.suse.de"},
                  "ABD.ZZZ"=>{"kdc"=>["howie2.suse.de"], "admin_server"=>"howie2.suse.de"}},
                "libdefaults"=>{"default_realm"=>"ABC.ZZZ", "forwardable"=>"true"},
-               "domain_realm"=>{".suse.de"=>"ABC.ZZZ", "suse.de"=>"ABC.ZZZ"},
+               "domain_realms"=>{".suse.de"=>"ABC.ZZZ", "suse.de"=>"ABC.ZZZ"},
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
@@ -376,7 +351,7 @@ module i/j/k.l:RESIDUAL
             conf = {"conf"=>
               {"realms"=>{},
                "libdefaults"=>{},
-               "domain_realm"=>{},
+               "domain_realms"=>{},
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
@@ -388,7 +363,7 @@ module i/j/k.l:RESIDUAL
               {"realms"=>
                 {"ABC.ZZZ"=>{"kdc"=>"howie.suse.de", "admin_server"=>"howie2.suse.de"}},
                "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
-               "domain_realm"=>{".abc.zzz"=>"ABC.ZZZ", "abc.zzz"=>"ABC.ZZZ"},
+               "domain_realms"=>{".abc.zzz"=>"ABC.ZZZ", "abc.zzz"=>"ABC.ZZZ"},
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
@@ -399,7 +374,7 @@ module i/j/k.l:RESIDUAL
               {"realms"=>
                 {"ABC.ZZZ"=>{"kdc"=>"3.suse.de", "admin_server"=>"4.suse.de"}},
                "libdefaults"=>{"default_realm"=>"ABC.ZZZ"},
-               "domain_realm"=>{},
+               "domain_realms"=>{},
                "logging"=>
                 {"kdc"=>"FILE:/var/log/krb5/krb5kdc.log",
                  "admin_server"=>"FILE:/var/log/krb5/kadmind.log",
@@ -422,7 +397,7 @@ module i/j/k.l:RESIDUAL
 
     describe 'Network facts' do
         it 'Read host name and network facts' do
-            facts = AuthConf.get_net_facts
+            facts = Auth::AuthConf.get_net_facts
             # No value can be nil
             expect(facts.any?{ |_k, v| v.nil? }).to eq(false)
             # There has to be at least one value that is present
@@ -452,6 +427,29 @@ auth    required        pam_ldap.so     use_first_pass
                 "auth    required    pam_deny.so"
             ]
         end
+
+        it 'Fix pam authentication configuration (unix2)' do
+            expect(authconf.pam_fix_auth("
+# comment
+auth    required        pam_env.so
+auth    optional        pam_gnome_keyring.so
+auth    sufficient      pam_unix2.so     try_first_pass
+auth    sufficient      pam_krb5.so     use_first_pass
+auth    sufficient      pam_sss.so      use_first_pass
+auth    required        pam_ldap.so     use_first_pass
+".split("\n"))).to eq [
+                "",
+                "# comment",
+                "auth    required        pam_env.so",
+                "auth    optional        pam_gnome_keyring.so",
+                "auth    sufficient    pam_unix2.so    try_first_pass",
+                "auth    sufficient    pam_krb5.so    use_first_pass",
+                "auth    sufficient    pam_sss.so    use_first_pass",
+                "auth    sufficient    pam_ldap.so    use_first_pass",
+                "auth    required    pam_deny.so"
+            ]
+        end
+
         it 'Fix pam account configuration' do
             expect(authconf.pam_fix_account("
 # comment
@@ -464,6 +462,25 @@ account required        pam_ldap.so     use_first_pass
                 "",
                 "# comment",
                 "account    requisite    pam_unix.so    try_first_pass",
+                "account    sufficient    pam_localuser.so",
+                "account required        pam_krb5.so     use_first_pass",
+                "account sufficient      pam_sss.so      use_first_pass",
+                "account required        pam_ldap.so     use_first_pass"
+            ]
+        end
+
+        it 'Fix pam account configuration (unix2)' do
+            expect(authconf.pam_fix_account("
+# comment
+account requisite       pam_unix2.so     try_first_pass
+account required        pam_krb5.so     use_first_pass
+account sufficient      pam_localuser.so
+account sufficient      pam_sss.so      use_first_pass
+account required        pam_ldap.so     use_first_pass
+".split("\n"))).to eq [
+                "",
+                "# comment",
+                "account    requisite    pam_unix2.so    try_first_pass",
                 "account    sufficient    pam_localuser.so",
                 "account required        pam_krb5.so     use_first_pass",
                 "account sufficient      pam_sss.so      use_first_pass",
