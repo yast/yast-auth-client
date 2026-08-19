@@ -830,7 +830,8 @@ module Auth
             if !ad_install_samba
                 return ''
             end
-            out, status = Open3.capture2("net ads lookup -S #{ad_host_or_domain}")
+            netcmd = ["net", "ads", "lookup", "-S", "#{ad_host_or_domain}"]
+            out, status = Open3.capture2(*netcmd)
             if status.exitstatus != 0
                 return ''
             end
@@ -854,7 +855,8 @@ module Auth
             if smb_conf.nil?
                 return [false, false]
             end
-            _, status = Open3.capture2("net -s #{smb_conf.path} ads testjoin")
+            netcmd = ["net","-s", "#{smb_conf.path}", "ads", "testjoin"]
+            _, status = Open3.capture2(*netcmd)
             ad_has_computer = status.exitstatus == 0
             klist, _ = Open3.capture2("klist -k")
             kerberos_has_key = klist.split("\n").any?{ |line| /#{Socket.gethostname}.*#{ad_domain_name.downcase}/.match(line.downcase) }
