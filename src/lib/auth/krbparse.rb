@@ -78,7 +78,7 @@ module Auth
                     next
                 end
                 # Note down key-value pairs in the current section
-                kv_match = /^\s*([.a-zA-Z0-9_-]+)\s*=\s*([^{}]+)\s*$/.match(line)
+                kv_match = /^\s*([.a-zA-Z0-9_-]+)\s*=\s*(.+)\s*$/.match(line)
                 if kv_match
                     if !new_krb_conf[sect]
                         new_krb_conf[sect] = {}
