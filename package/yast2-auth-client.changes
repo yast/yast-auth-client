@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Sep  2 08:51:37 UTC 2026 - Samuel Cabrero <scabrero@suse.de>
+
+- Use new smb.conf parameter "sync machine password to keytab"
+  (bsc#1271281)
+- Skip whitespace-only lines when parsing krb5.conf
+- 4.7.2
+
+-------------------------------------------------------------------
 Wed Aug 12 12:31:12 UTC 2026 - Noel Power <nopower@suse.com>
 
 - fix non specified optional params being unconditionally added to
