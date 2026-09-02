@@ -121,9 +121,22 @@ module Auth
 
         # Enable the specified NSS database.
         def nss_enable_module(db_name, module_name)
-            names = Yast::Nsswitch.ReadDb(db_name)
-            return if names.include?(module_name)
-            Yast::Nsswitch.WriteDb(db_name, names + [module_name])
+            existing_names = Yast::Nsswitch.ReadDb(db_name)
+            return if existing_names.include?(module_name)
+            # Place new module in front of first conditional module
+            new_names = []
+            new_module_is_placed = false
+            existing_names.each { |name|
+                if name[0] == '['
+                    new_names << module_name
+                    new_module_is_placed = true
+                end
+                new_names << name
+            }
+            if !new_module_is_placed
+                new_names << module_name
+            end
+            Yast::Nsswitch.WriteDb(db_name, new_names)
             Yast::Nsswitch.Write
         end
 
@@ -156,7 +169,7 @@ module Auth
         # Be extra careful with making changes.
         # Return replacement lines after adjustments.
         def pam_fix_auth(original_lines)
-            sufficient_auth = ['pam_unix.so', 'pam_sss.so', 'pam_ldap.so', 'pam_krb5.so']
+            sufficient_auth = ['pam_unix.so', 'pam_unix2.so', 'pam_sss.so', 'pam_ldap.so', 'pam_krb5.so']
             ret = []
             original_lines.each { |line|
                 line.strip!
@@ -196,7 +209,7 @@ module Auth
                 line.strip!
                 columns = line.split(/\s+/)
                 if !/\s*#/.match(line) && columns.length >= 3
-                    if columns[2] == 'pam_unix.so'
+                    if columns[2] == 'pam_unix.so' || columns[2] == 'pam_unix2.so'
                         ret.push(columns.join('    '))
                         ret.push('account    sufficient    pam_localuser.so')
                     elsif columns[2] != 'pam_localuser.so'
@@ -571,7 +584,7 @@ module Auth
             if exitstatus == 0
                 return ''
             end
-            return "#{_('ERROR: ')} #{out}\n#{errout}"
+            return _("ERROR: ") + "#{out}\n#{errout}"
         end
 
         # Parse and set Kerberos configuration
@@ -889,7 +902,8 @@ module Auth
             if !ad_install_samba
                 return ''
             end
-            out, status = Open3.capture2("net ads lookup -S #{ad_host_or_domain}")
+            netcmd = ["net", "ads", "lookup", "-S", "#{ad_host_or_domain}"]
+            out, status = Open3.capture2(*netcmd)
             if status.exitstatus != 0
                 return ''
             end
@@ -910,7 +924,8 @@ module Auth
                 return [false, false]
             end
             smb_conf = ad_create_tmp_smb_conf(ad_domain_name, ad_get_workgroup_name(ad_domain_name))
-            _, status = Open3.capture2("net -s #{smb_conf.path} ads testjoin")
+            netcmd = ["net","-s", "#{smb_conf.path}", "ads", "testjoin"]
+            _, status = Open3.capture2(*netcmd)
             ad_has_computer = status.exitstatus == 0
             klist, _ = Open3.capture2("klist -k")
             kerberos_has_key = klist.split("\n").any?{ |line| /#{Socket.gethostname}.*#{ad_domain_name.downcase}/.match(line.downcase) }
@@ -958,11 +973,20 @@ module Auth
             output = ''
             exitstatus = 0
             ou_param = @ad_ou.to_s == '' ? '' : "createcomputer=#{@ad_ou}"
-            netcmd = "net -s #{smb_conf.path} ads join #{ou_param} -U #{@ad_user}"
+            netcmd = [
+                "net",
+                "-s",
+                "#{smb_conf.path}",
+                "ads",
+                "join"
+            ]
+            netcmd << "#{ou_param}" unless ou_param.empty?
+            netcmd += ["-U", "#{@ad_user}"]
+
             if !@ad_update_dns
-                netcmd += ' --no-dns-updates'
+                netcmd << '--no-dns-updates'
             end
-            Open3.popen2(netcmd){ |stdin, stdout, control|
+            Open3.popen2(*netcmd){ |stdin, stdout, control|
                 stdin.print(@ad_pass + "\n")
                 stdin.close
                 output = stdout.read
@@ -986,7 +1010,7 @@ module Auth
         # Return the PDC host name of the given AD domain via DNS lookup. If it cannot be found, return an empty string.
         def ad_find_pdc(ad_domain_name)
             begin
-                return Resolv::DNS.new.getresource("_ldap._tcp.pdc._msdcs.#{ad_domain_name}", Resolv::DNS::Resource::IN::SRV).target.to_s
+                return Resolv::DNS.new.getresource("_ldap._tcp.pdc._msdcs.#{ad_domain_name}".downcase, Resolv::DNS::Resource::IN::SRV).target.to_s
             rescue Resolv::ResolvError
                 return ''
             end
@@ -996,7 +1020,7 @@ module Auth
         # Return the KDC host name of the given AD domain via DNS lookup. If it cannot be found, return an empty string.
         def ad_find_kdc(ad_domain_name)
             begin
-                return Resolv::DNS.new.getresource("_kerberos._tcp.dc._msdcs.#{ad_domain_name}", Resolv::DNS::Resource::IN::SRV).target.to_s
+                return Resolv::DNS.new.getresource("_kerberos._tcp.dc._msdcs.#{ad_domain_name}".downcase, Resolv::DNS::Resource::IN::SRV).target.to_s
             rescue Resolv::ResolvError
                 return ''
             end

@@ -28,7 +28,7 @@ describe SSSD::UIData do
             'extra_svcs'=>[],
             'enabled'=>false}
         # AuthConfInst is the backbone of uidata
-        AuthConf::AuthConfInst.sssd_import(preload_conf)
+        Auth::AuthConfInst.sssd_import(preload_conf)
 
         it "Retrieve global options from section sssd that does not yet have parameters " do
             # Section configuration is a list of ["name", "value", "desc"]

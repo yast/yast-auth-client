@@ -88,7 +88,7 @@ module SSSD
                                 VSpacing(0.2),
                                 Tree(Id(:section_tree), Opt(:immediate), "", []),
                                 Left(HBox(
-                                    PushButton(Id(:new_domain), _("Join Domain")),
+                                    PushButton(Id(:new_domain), _("Add Domain")),
                                     PushButton(Id(:del_domain), _("Leave Domain")),
                                     PushButton(Id(:clear_cache), _("Clear Domain Cache"))
                                 )),
@@ -217,7 +217,7 @@ module SSSD
                             Popup.Error(_("Please select a domain among the list."))
                             redo
                         end
-                        if !Popup.YesNo(_("Do you really wish to erase configuration for domain %s?" % sect_name))
+                        if !Popup.YesNo(_("Do you really wish to erase configuration for domain %s?") % sect_name)
                             redo
                         end
                         AuthConfInst.sssd_conf.delete(sect_name)
